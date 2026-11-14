@@ -1,0 +1,19 @@
+{
+  "note": "Valores orientativos por campaña para comparar secuencias, no para predecir rendimiento. Basados en rangos generales de literatura agronómica andina (FAO, CIP, INIA); deben validarse con la Agencia Agraria local.",
+  "crops": {
+    "papa":     {"name": "Papa nativa",           "water_mm": 500, "frost_tolerance": 0.3, "drought_sensitivity": 0.8, "n_balance": -120, "cover_months": 4, "potato_host": true,  "alt_min": 2800, "alt_max": 4200},
+    "papa_amarga": {"name": "Papa amarga (ruk'i)", "water_mm": 450, "frost_tolerance": 0.8, "drought_sensitivity": 0.6, "n_balance": -90,  "cover_months": 4, "potato_host": true,  "alt_min": 3800, "alt_max": 4400},
+    "oca":      {"name": "Oca / olluco / mashua", "water_mm": 450, "frost_tolerance": 0.5, "drought_sensitivity": 0.6, "n_balance": -60,  "cover_months": 5, "potato_host": false, "alt_min": 2800, "alt_max": 4100},
+    "cebada":   {"name": "Cebada",                "water_mm": 400, "frost_tolerance": 0.6, "drought_sensitivity": 0.4, "n_balance": -60,  "cover_months": 4, "potato_host": false, "alt_min": 2500, "alt_max": 4000},
+    "avena":    {"name": "Avena forrajera",       "water_mm": 400, "frost_tolerance": 0.6, "drought_sensitivity": 0.4, "n_balance": -50,  "cover_months": 5, "potato_host": false, "alt_min": 2500, "alt_max": 4100},
+    "quinua":   {"name": "Quinua",                "water_mm": 350, "frost_tolerance": 0.6, "drought_sensitivity": 0.2, "n_balance": -50,  "cover_months": 4, "potato_host": false, "alt_min": 2500, "alt_max": 4000},
+    "tarwi":    {"name": "Tarwi (chocho)",        "water_mm": 400, "frost_tolerance": 0.5, "drought_sensitivity": 0.3, "n_balance": 80,   "cover_months": 5, "potato_host": false, "alt_min": 2500, "alt_max": 3900},
+    "haba":     {"name": "Haba",                  "water_mm": 450, "frost_tolerance": 0.5, "drought_sensitivity": 0.5, "n_balance": 60,   "cover_months": 4, "potato_host": false, "alt_min": 2500, "alt_max": 3900},
+    "descanso": {"name": "Descanso (purum)",      "water_mm": 0,   "frost_tolerance": 1.0, "drought_sensitivity": 0.0, "n_balance": 40,   "cover_months": 5, "potato_host": false, "alt_min": 0,    "alt_max": 9000}
+  },
+  "presets": [
+    {"id": "laymi", "name": "Laymi completa (tradicional)", "sequence": ["papa", "oca", "cebada", "descanso", "descanso", "descanso"]},
+    {"id": "acortada", "name": "Rotación acortada (actual)", "sequence": ["papa", "cebada", "papa", "avena", "papa", "cebada"]},
+    {"id": "leguminosa", "name": "Alternativa con tarwi y haba", "sequence": ["papa", "tarwi", "oca", "haba", "descanso", "descanso"]}
+  ]
+}
