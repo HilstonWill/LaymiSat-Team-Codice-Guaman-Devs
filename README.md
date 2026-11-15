@@ -19,8 +19,8 @@ Challenge: **Field Shift: Adapting Farms with NASA Data**.
 
 ### 2. Clone
 ```bash
-git clone <REPOSITORY_URL>
-cd <REPOSITORY_FOLDER>/qullqasat
+git clone https://github.com/HilstonWill/LaymiSat-Team-Codice-Guaman-Devs.git
+cd LaymiSat-Team-Codice-Guaman-Devs/qullqasat
 ```
 
 ### 3. Backend (API) — terminal 1

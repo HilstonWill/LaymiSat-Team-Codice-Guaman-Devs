@@ -26,7 +26,7 @@ the people who decide.
 `<public link to the 30-second video (English subtitles) or to the 7-slide deck>`
 
 ## 4. Link to Final Project
-`<public URL of the deployed app>` · Code: `<public GitHub repository URL>`
+`<public URL of the deployed app>` · Code: https://github.com/HilstonWill/LaymiSat-Team-Codice-Guaman-Devs
 
 ## 5. Detailed Project Description
 **What it does**
