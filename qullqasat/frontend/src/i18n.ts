@@ -3,7 +3,7 @@ export type Lang = 'en' | 'es'
 const en = {
   tagline:
     'Agro-climate decision support for native potato farmers in Cusco, Peru: 40 years of NASA data read alongside the 1615 Andean farming calendar of Felipe Guaman Poma de Ayala.',
-  badges: ['NASA POWER · daily 1984–today', 'MODIS NDVI · SRTM', 'Mann-Kendall + Sen slope', '3,200–4,200 m a.s.l.', 'Open source'],
+  badges: ['NASA POWER · daily 1984–today', 'MODIS NDVI · SRTM', 'Mann-Kendall + Sen slope', '3,200–4,400 m a.s.l.', 'Open source'],
   challenge: 'NASA Space Apps 2026 · Field Shift: Adapting Farms with NASA Data',
   printHeader: 'Community sheet',
   generated: 'generated on',
@@ -34,13 +34,21 @@ const en = {
     terrainLoading: 'Reading NASA SRTM…',
     terrainError: "We couldn't read the satellite altitude. Adjust the altitude slider by hand.",
     clamped: (real: string, used: string) =>
-      `The climate model uses ${used} m (calibrated range 3,200–4,400 m); the real altitude is ${real} m.`,
+      `The real altitude (${real} m) is outside the range this tool covers (3,200–4,400 m), so the analysis uses ${used} m.`,
     outside: 'Outside the study area. Pick a point inside Cusco.',
     hint: 'Click any point on the terrain to analyse it',
     placeTag: 'Your point',
     analyzing: 'Updating the analysis…',
     dirs: ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'],
     hemi: { n: 'N', s: 'S', e: 'E', w: 'W' },
+  },
+  cell: {
+    title: 'Where the climate comes from',
+    body: (size: string, center: string, gridAlt: string) =>
+      `One NASA POWER cell of about ${size} km (centre ${center}, mean cell elevation ${gridAlt} m), not your plot.`,
+    correction: (alt: string, off: string, adj: string) =>
+      `Temperatures are moved to ${alt} m with 6.5 °C/km (${off} °C) plus a plant-level adjustment of ${adj} °C. Neither has been calibrated with a ground station yet.`,
+    shared: (names: string) => `${names} share this same cell: their differences come only from altitude.`,
   },
   map3d: {
     region: '3D map of the pilot zones in Cusco',
@@ -63,7 +71,7 @@ const en = {
   decade: '°C/decade',
   days: 'days',
   insight: (onset: string, from?: string, to?: string) =>
-    `In 1615 Guaman Poma placed the early sowing of potatoes and maize in Coya Raymi (September) and the rain-fed sowing of potatoes, oca, quinoa and tarwi in Capac Inti Raymi (December). Today the firm rains arrive on average on ${onset}` +
+    `In 1615 Guaman Poma placed the early sowing of potatoes and maize in Coya Raymi (September) and the sowing of potatoes, oca, quinoa and rain-fed maize in Capac Inti Raymi (December). Today the firm rains arrive on average on ${onset}` +
     (from ? `, within a window from ${from} to ${to}` : '') +
     ': sowing by a fixed date is no longer enough.',
   season: 'Season',
@@ -202,7 +210,7 @@ type Dict = typeof en
 const es: Dict = {
   tagline:
     'Apoyo a decisiones agroclimáticas para la papa nativa de Cusco: 40 años de datos de la NASA leídos junto al calendario agrícola de Felipe Guaman Poma de Ayala (1615).',
-  badges: ['NASA POWER · diario 1984–hoy', 'MODIS NDVI · SRTM', 'Mann-Kendall + pendiente de Sen', '3.200–4.200 m s. n. m.', 'Código abierto'],
+  badges: ['NASA POWER · diario 1984–hoy', 'MODIS NDVI · SRTM', 'Mann-Kendall + pendiente de Sen', '3.200–4.400 m s. n. m.', 'Código abierto'],
   challenge: 'NASA Space Apps 2026 · Field Shift: Adaptando chacras con datos de la NASA',
   printHeader: 'Ficha comunitaria',
   generated: 'generada el',
@@ -233,13 +241,21 @@ const es: Dict = {
     terrainLoading: 'Leyendo NASA SRTM…',
     terrainError: 'No pudimos leer la altitud satelital. Ajusta a mano el deslizador de altitud.',
     clamped: (real: string, used: string) =>
-      `El modelo climático usa ${used} m (rango calibrado 3.200–4.400 m); la altitud real es ${real} m.`,
+      `La altitud real (${real} m) está fuera del rango que cubre la herramienta (3.200–4.400 m), así que el análisis usa ${used} m.`,
     outside: 'Fuera del área de estudio. Elige un punto dentro de Cusco.',
     hint: 'Haz clic en cualquier punto del terreno para analizarlo',
     placeTag: 'Tu punto',
     analyzing: 'Actualizando el análisis…',
     dirs: ['N', 'NE', 'E', 'SE', 'S', 'SO', 'O', 'NO'],
     hemi: { n: 'N', s: 'S', e: 'E', w: 'O' },
+  },
+  cell: {
+    title: 'De dónde sale el clima',
+    body: (size: string, center: string, gridAlt: string) =>
+      `De una celda NASA POWER de unos ${size} km (centro ${center}, altitud media de la celda ${gridAlt} m), no de tu parcela.`,
+    correction: (alt: string, off: string, adj: string) =>
+      `Las temperaturas se llevan a ${alt} m con 6,5 °C/km (${off} °C) y un ajuste a nivel de planta de ${adj} °C. Ninguno está calibrado todavía con una estación en tierra.`,
+    shared: (names: string) => `${names} comparten esta misma celda: sus diferencias vienen solo de la altitud.`,
   },
   map3d: {
     region: 'Mapa 3D de las zonas piloto en Cusco',
@@ -262,7 +278,7 @@ const es: Dict = {
   decade: '°C/década',
   days: 'días',
   insight: (onset: string, from?: string, to?: string) =>
-    `En 1615 Guaman Poma situaba la siembra temprana de papa y maíz en Coya Raymi (septiembre) y la siembra de temporal de papa, oca, quinua y tarwi en Capac Inti Raymi (diciembre). Hoy las lluvias firmes llegan en promedio el ${onset}` +
+    `En 1615 Guaman Poma situaba la siembra temprana de papa y maíz en Coya Raymi (septiembre) y la siembra de papa, oca, quinua y maíz de temporal en Capac Inti Raymi (diciembre). Hoy las lluvias firmes llegan en promedio el ${onset}` +
     (from ? `, en una ventana que va del ${from} al ${to}` : '') +
     ': sembrar por una fecha fija ya no basta.',
   season: 'Campaña',

@@ -88,7 +88,7 @@
       "month": 12,
       "name": "Diciembre",
       "quechua": "Capac Inti Raymi Quilla",
-      "milestone": "Se siembran papas, ocas, quinua y tarwi de temporal, con las lluvias (papa oqa tarpuy pacha).",
+      "milestone": "Se siembran papas, ocas, quinua y maíz de temporal con las lluvias («se a de senbrar papas, oca s y quinua»).",
       "nasa_variables": [
         "PRECTOTCORR",
         "ALLSKY_SFC_SW_DWN"
@@ -96,7 +96,7 @@
       "criterion": "Lluvia > 25 mm en la segunda quincena para la siembra de temporal.",
       "indicator": "share_rain_2nd_half_gt25",
       "name_en": "December",
-      "milestone_en": "Rain-fed potatoes, oca, quinoa and tarwi are sown with the rains (papa oqa tarpuy pacha).",
+      "milestone_en": "Potatoes, oca, quinoa and rain-fed maize are sown with the rains (\"se a de senbrar papas, oca s y quinua\").",
       "criterion_en": "More than 25 mm of rain in the second half for the rain-fed sowing.",
       "action_en": "If firm rains arrive earlier, rain-fed sowing can move earlier, watching the frost risk.",
       "alternative_en": "Stagger sowing over two or three dates.",

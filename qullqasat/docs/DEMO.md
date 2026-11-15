@@ -1,7 +1,7 @@
 # Guion de demo (2 min) y pitch actualizado con datos reales
 
 ## Demo en vivo (2 minutos)
-1. **(0:00) Problema.** "En Pisac, a 3.900 m, la papa nativa depende de sembrar en el momento justo. Guaman Poma lo escribió en 1615: en Coya Raymi (septiembre) se siembra el maíz y la papa temprana, y en Capac Inti Raymi (diciembre) la papa, oca, quinua y tarwi de temporal (manuscrito, págs. 1165 y 1174)."
+1. **(0:00) Problema.** "En Pisac, a 3.900 m, la papa nativa depende de sembrar en el momento justo. Guaman Poma lo escribió en 1615: en Coya Raymi (septiembre) se siembra el maíz y la papa temprana, y en Capac Inti Raymi (diciembre) la papa, la oca, la quinua y el maíz de temporal (manuscrito, págs. 1165 y 1174)."
 2. **(0:15) Mapa 3D + ficha de la zona.** Dejar que la intro vuele del globo a los Andes. Activar **NDVI · MODIS** un segundo (es un dato NASA en vivo) y volver a Satélite. Elegir *Parque de la Papa (Pisac)*. Mostrar que las noches se calientan **+0,19 °C/década (p < 0,001)** y que la lluvia firme llega en promedio el **19 de octubre**, en una ventana del **26 sep al 13 nov**: no hay una fecha fija.
 3. **(0:40) Las 3 alertas.** AHS en rojo (helada en brotación en el 93 % de las campañas a 3.900 m), AEH y ADS con su detonador y su tendencia.
 4. **(1:00) Mover el deslizador de altitud a 3.600 m.** La helada pasa a verde. Enseñar el gráfico por bandas: la línea de helada está entre 3.600 y 3.800 m.

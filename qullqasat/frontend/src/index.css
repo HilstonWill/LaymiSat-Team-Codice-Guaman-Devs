@@ -595,3 +595,14 @@ section[id], [id^='alert-'], h2[id] { scroll-margin-top: 96px; }
   .seg button { white-space: nowrap; font-size: 0.8rem; }
   .map3d-hint { font-size: 0.75rem; }
 }
+
+/* Transparencia: de qué celda NASA POWER sale el clima */
+.cell-note {
+  margin-top: 12px; padding: 10px 12px; border-radius: 10px;
+  background: rgba(61, 111, 168, 0.07); border: 1px dashed rgba(61, 111, 168, 0.45);
+  font-size: 0.8rem; line-height: 1.45; color: var(--ink-soft);
+}
+.cell-note-head { display: flex; align-items: center; gap: 6px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--sky); margin-bottom: 4px; }
+.cell-note p + p { margin-top: 4px; }
+.cell-note-shared { color: var(--ink); font-weight: 600; }
+.place-card.is-stale .cell-note { opacity: 0.45; }

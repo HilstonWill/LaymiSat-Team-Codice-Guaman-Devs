@@ -132,6 +132,7 @@ El orden de las alertas es fijo (helada, agua, calendario). No se reordenan por 
 | **Pines** | Son `<button>` reales, con `aria-label` ("Seleccionar Chinchero, 3760 m") y `aria-pressed`. La etiqueta va a la derecha del punto para no tapar la columna, y la zona activa va en color maíz. |
 | **Panel flotante** | En pantallas de más de 1000 px, la ficha de la parcela es un panel de vidrio esmerilado sobre el mapa, a la derecha. En pantallas menores pasa debajo del mapa como una tarjeta normal. Las cifras (altitud y % de helada) se animan con `CountUp` (0,9 s, sin animación con movimiento reducido). |
 | **Rueda del ratón** | No hace zoom hasta que el usuario hace clic en el mapa, y deja de hacerlo al salir del mapa, para no "atrapar" el scroll de la página. |
+| **De dónde sale el clima** (`PowerCellNote.tsx`) | Al final de la ficha, un recuadro con borde punteado indica el tamaño y el centro de la celda NASA POWER (≈ 56 × 68 km), su altitud media, la corrección por altitud y el ajuste de planta, y deja claro que **ninguno está calibrado** con una estación en tierra. Si varias zonas piloto comparten la celda, lo dice. Nunca se presenta el clima como si fuera medido en la parcela. |
 
 ### Punto personalizado (`CustomPointCard.tsx`)
 | Pieza | Regla de UX |
@@ -140,7 +141,7 @@ El orden de las alertas es fijo (helada, agua, calendario). No se reordenan por 
 | **Título humano** | Nunca se usan coordenadas como título. Si el punto está a 25 km o menos de una zona piloto, se titula "Cerca de {zona}"; si no, "Punto elegido en el mapa". |
 | **Coordenadas** | Van en una línea aparte, en monoespaciada y con hemisferio (13,646° S · 71,855° O), junto a un botón **Copiar** que confirma con "✓ Copiado" (y lo anuncia en `aria-live`). |
 | **Terreno · NASA SRTM 30 m** | Bloque verde con 3 fichas: altitud real, pendiente (perfil inclinado dibujado a escala, con los grados y la clase) y zona piloto más cercana (km + rumbo), con el botón "Ir a {zona} →". Mientras se lee SRTM se muestran esqueletos con brillo; si falla, se dice en una frase qué hacer. |
-| **Altitud fuera de rango** | Si la altitud real cae fuera del rango calibrado (3.200–4.400 m), se explica qué altitud usa el modelo. Nunca se corrige en silencio. |
+| **Altitud fuera de rango** | Si la altitud real cae fuera del rango que cubre la herramienta (3.200–4.400 m, el del deslizador; no es un rango calibrado), se explica qué altitud usa el análisis. Nunca se corrige en silencio. |
 | **Análisis desactualizado** | Desde el clic hasta que llega el nuevo análisis, el semáforo, las cifras y el texto se atenúan (opacidad 0,45 y menos saturación) y aparece "Actualizando el análisis…" con un spinner (`role=status`). Así nunca se ven cifras del punto anterior como si fueran del nuevo. |
 | **En el mapa** | El punto lleva una etiqueta terracota "Tu punto · 4.130 m" y la columna 3D con el color de su peor alerta. Si el clic cae fuera de Cusco, aparece durante 3 s el aviso rojo "Fuera del área de estudio…" en lugar de no hacer nada. Por debajo del zoom 8,5 las etiquetas se ocultan para que no se amontonen. |
 

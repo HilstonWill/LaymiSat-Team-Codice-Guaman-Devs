@@ -49,7 +49,7 @@ Station calibration (SENAMHI): `python -m app.calibration station.csv --lat -13.
 Season Aug 1 → Jul 31 · lapse rate −6.5 °C/km · plant-level frost = 2 m Tmin −2 °C (adjustable, calibrate with stations) ·
 rain onset = first ≥25 mm in 10 days not followed by a 10-day dry spell · traditional window = Coya Raymi, Sep 16–30 ·
 crop values are indicative (`backend/app/data/crops.json`) · rotations are a plan scored with the observed 2011–2025 climate, **not a forecast** ·
-Guaman Poma is a qualitative cultural baseline, checked against the manuscript (Royal Danish Library, ch. 37, pp. 1140–1178): September (Coya Raymi) is the early sowing of maize and potato (*mawai*), December (Capac Inti Raymi) the rain-fed sowing of potato, oca, quinoa and tarwi.
+Guaman Poma is a qualitative cultural baseline, checked against the manuscript (Royal Danish Library, ch. 37, pp. 1140–1178): September (Coya Raymi) is the early sowing of maize and potato (*mawai*), December (Capac Inti Raymi) the sowing of potato, oca, quinoa and rain-fed maize (p. 1174; tarwi is not named there).
 
 ## AI disclosure
 See [AI_DISCLOSURE.md](AI_DISCLOSURE.md).

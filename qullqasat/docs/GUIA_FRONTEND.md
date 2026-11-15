@@ -193,7 +193,7 @@ Muestra la tabla de variables y su resolución, el origen de los datos (API en v
 
 ## 6. Puntos a verificar antes de presentar
 
-1. ✅ **Nombres de los meses del códice: VERIFICADOS** con el manuscrito (poma.kb.dk, cap. 37, págs. 1140–1178). Correcciones aplicadas: septiembre = siembra de maíz y papa temprana (mawai); diciembre = siembra de temporal de papa, oca, quinua y tarwi; noviembre = escasez de agua y riego; marzo = Pacha Pucuy; mayo = Hatun Cusqui Aymoray; junio = Haucai Cusqui. Cada tarjeta enlaza su página. (Texto original de este punto, conservado como historial:)
+1. ✅ **Nombres de los meses del códice: VERIFICADOS** con el manuscrito (poma.kb.dk, cap. 37, págs. 1140–1178). Correcciones aplicadas: septiembre = siembra de maíz y papa temprana (mawai); diciembre = siembra de papa, oca, quinua y maíz de temporal (el tarwi no aparece por nombre en la pág. 1174; corregido el 15-11-2026); noviembre = escasez de agua y riego; marzo = Pacha Pucuy; mayo = Hatun Cusqui Aymoray; junio = Haucai Cusqui. Cada tarjeta enlaza su página. (Texto original de este punto, conservado como historial:)
    - Se copiaron de la tabla de la sección 5 del documento del proyecto (.docx). **No se han verificado contra el manuscrito original.**
    - Posibles diferencias que hay que confirmar:
      - Junio: ¿"Haucai Cusqui" en lugar de "Inti Raymi"?

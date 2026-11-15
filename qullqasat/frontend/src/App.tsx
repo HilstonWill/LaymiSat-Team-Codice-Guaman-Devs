@@ -23,6 +23,7 @@ import CountUp from './components/CountUp'
 import CustomPointCard, { type TerrainState } from './components/CustomPointCard'
 import MapPicker from './components/MapPicker'
 import NdviPanel from './components/NdviPanel'
+import PowerCellNote from './components/PowerCellNote'
 import RotationComparator from './components/RotationComparator'
 import SourcesPanel from './components/SourcesPanel'
 import SectionBoundary from './components/SectionBoundary'
@@ -421,6 +422,13 @@ export default function App() {
                 <p className="insight">
                   {t.insight(String(insight.ads.mean_onset_recent ?? '—'), insight.win?.from, insight.win?.to)}
                 </p>
+                <PowerCellNote
+                  lang={lang}
+                  location={report.location}
+                  plantAdjust={report.assumptions.plant_adjust_c}
+                  zones={zones}
+                  labelOf={zoneLabel}
+                />
               </>
             )}
           </div>
