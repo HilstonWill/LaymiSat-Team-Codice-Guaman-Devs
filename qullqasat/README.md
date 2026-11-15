@@ -30,12 +30,9 @@ decides every season: *when to sow, with what risk, and with which crop rotation
 - Not confirmed: a significant delay of the rainy-season onset. The app shows this as it is.
 
 ## Run locally
-```bash
-cd backend && python -m venv .venv && .venv/Scripts/pip install -r requirements.txt -r requirements-dev.txt
-.venv/Scripts/python -m uvicorn app.main:app --port 8000
-cd ../frontend && npm install && npm run dev   # http://localhost:5173
-```
-Backend tests: `cd backend && .venv/Scripts/python -m pytest --cov=app` (70 tests, 97 % coverage).
+Step-by-step setup (Windows, macOS, Linux), checks and troubleshooting: see the **[repository README](../README.md#getting-started-for-contributors)**.
+
+Short version: API in `backend/` with `python -m uvicorn app.main:app --port 8000`, web app in `frontend/` with `npm run dev`, then open http://localhost:5173.
 
 Station calibration (SENAMHI): `python -m app.calibration station.csv --lat -13.40 --lon -71.85 --altitude 3850`.
 
