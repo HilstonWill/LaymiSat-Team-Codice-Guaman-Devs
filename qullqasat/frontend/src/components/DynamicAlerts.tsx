@@ -179,6 +179,59 @@ function ForecastStrip({ place, plantAdjust, t, lang }: Props) {
   )
 }
 
+const prefersReducedMotion = () =>
+  typeof window !== 'undefined' && Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)
+
+/**
+ * Escribe el texto palabra por palabra, como una persona tecleando (ver docs/ESTILO.md › Animación de escritura).
+ * - Duración total acotada (≈ 4–6 s) aunque el texto sea largo.
+ * - Con "reducir movimiento" el texto aparece completo.
+ * - El texto animado es aria-hidden; los lectores de pantalla reciben el texto completo una sola vez.
+ */
+function Typewriter({ text, skipLabel }: { text: string; skipLabel: string }) {
+  const tokens = useMemo(() => text.split(/(\s+)/), [text])
+  const [count, setCount] = useState(0)
+
+  useEffect(() => {
+    if (prefersReducedMotion()) {
+      setCount(tokens.length)
+      return
+    }
+    setCount(0)
+    const words = Math.ceil(tokens.length / 2)
+    const delay = Math.max(25, Math.min(70, 5000 / Math.max(1, words)))
+    const id = window.setInterval(() => {
+      setCount((c) => {
+        const next = c + 2 // palabra + espacio
+        if (next >= tokens.length) window.clearInterval(id)
+        return Math.min(next, tokens.length)
+      })
+    }, delay)
+    return () => window.clearInterval(id)
+  }, [tokens])
+
+  const done = count >= tokens.length
+  const lines = tokens.slice(0, count).join('').split(/\n+/)
+  return (
+    <>
+      <div className="typed" aria-hidden="true">
+        {lines.map((line, i) => (
+          <p key={i}>
+            {line.replace(/^\s*[-*•]\s*/, '• ')}
+            {!done && i === lines.length - 1 && <span className="caret" />}
+          </p>
+        ))}
+      </div>
+      <div className="sr-only">{text}</div>
+      {!done && (
+        <button type="button" className="link-btn" onClick={() => setCount(tokens.length)}>
+          {skipLabel}
+        </button>
+      )}
+    </>
+  )
+}
+
 function AiExplain({ place, plantAdjust, placeName, t, lang }: Props) {
   const [enabled, setEnabled] = useState<boolean | null>(null)
   const [question, setQuestion] = useState('')
@@ -228,9 +281,7 @@ function AiExplain({ place, plantAdjust, placeName, t, lang }: Props) {
             {result && (
               <div className="ai-answer">
                 <p className="ai-label">{t.alertAiLabel(result.model)}</p>
-                {result.text.split(/\n+/).map((line, i) => (
-                  <p key={i}>{line.replace(/^\s*[-*•]\s*/, '• ')}</p>
-                ))}
+                <Typewriter text={result.text} skipLabel={t.alertAiSkip} />
               </div>
             )}
           </div>

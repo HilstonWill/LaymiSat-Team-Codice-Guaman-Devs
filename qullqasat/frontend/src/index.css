@@ -369,3 +369,17 @@ section[id], [id^='alert-'], h2[id] { scroll-margin-top: 96px; }
   .fc-days { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 @media print { .ai, .sim-slider { display: none !important; } }
+
+/* --- animación de escritura de la IA (Cristian) · ver docs/ESTILO.md --- */
+.typed p { margin: 4px 0; }
+.caret {
+  display: inline-block; width: 2px; height: 1.05em; margin-left: 2px; vertical-align: -0.15em;
+  background: var(--potato); animation: caret-blink 0.9s steps(1) infinite;
+}
+@keyframes caret-blink { 50% { opacity: 0; } }
+.link-btn {
+  background: none; border: 0; padding: 6px 0; min-height: var(--tap); color: var(--sky);
+  font-weight: 600; cursor: pointer; text-decoration: underline;
+}
+.link-btn:focus-visible { outline: 3px solid var(--maize); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .caret { animation: none; } }

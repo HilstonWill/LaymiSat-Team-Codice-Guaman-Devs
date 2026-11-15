@@ -157,6 +157,7 @@ const en = {
   alertAiLabel: (model: string) => `Generated with AI (${model}) only from the results above. Check it with your extension agent.`,
   alertAiOff: 'AI explanations are not enabled on this server.',
   alertAiPrivacy: 'Do not include names, phone numbers or other personal data.',
+  alertAiSkip: 'Show it all now',
 }
 
 type Dict = typeof en
@@ -318,6 +319,7 @@ const es: Dict = {
   alertAiLabel: (model: string) => `Generado con IA (${model}) solo a partir de los resultados de arriba. Verifícalo con tu técnico agrario.`,
   alertAiOff: 'Las explicaciones con IA no están activadas en este servidor.',
   alertAiPrivacy: 'No incluyas nombres, teléfonos ni otros datos personales.',
+  alertAiSkip: 'Mostrar todo ya',
 }
 
 export const DICTS: Record<Lang, Dict> = { en, es }

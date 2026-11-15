@@ -117,6 +117,7 @@ El orden de las alertas es fijo (helada, agua, calendario). No se reordenan por 
 | **Simulador "¿Y si siembro el…?"** | Un solo control (deslizador de fecha); arranca en la fecha de hoy; la respuesta (Buena fecha / Fecha riesgosa / Muy temprano) cambia al instante, con `aria-live`. La ventana recomendada va en verde si cumple los umbrales y en ámbar si no, explicando por qué. Las líneas punteadas de maíz marcan las fechas del códice. |
 | **Próximos 7 días** | Una tira de 7 días con ícono (gota o copo) y la Tmin a nivel de planta; las noches con helada en fondo rojo y con texto oculto para lectores. Si no hay internet, aviso y nada roto. Siempre se dice que la fuente no es la NASA. |
 | **Explicación con IA** | Botón explícito (nunca automático); pregunta opcional de 300 caracteres como máximo, con aviso de privacidad; la respuesta va en un bloque morado con la etiqueta "Generado con IA…". Si el servidor no tiene clave, se dice en una frase y no se muestra el botón. |
+| **Animación de escritura** | La respuesta aparece palabra por palabra con un cursor parpadeante (≈ 14 palabras/s, como máximo ~5 s en total) y un enlace "Mostrar todo ya". El texto animado es `aria-hidden`; los lectores de pantalla reciben el texto completo una sola vez. Con `prefers-reduced-motion` aparece completo y sin cursor. Solo se anima el texto generado: nunca las cifras ni las alertas, que deben verse al instante. |
 
 ## 6. Íconos
 - Trazo de 2 px, cuadrícula de 24×24, `currentColor`, extremos redondeados. Están en `components/Icons.tsx`.
