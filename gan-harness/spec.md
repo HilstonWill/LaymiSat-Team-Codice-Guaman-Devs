@@ -1,4 +1,4 @@
-# QullqaSat — Spec MVP (derivado del SDD "Proyecto NASA Space Apps 2026 - QullqaSat.docx")
+# LaymiSat — Spec MVP (derivado del SDD "Proyecto NASA Space Apps 2026 - QullqaSat.docx")
 
 Reto: "Be An Earth System Trend Detective!" + "Field Shift: adaptando cultivos con datos NASA".
 Usuario principal: técnico de agencia agraria / ONG que asesora a comunidades altoandinas de Cusco

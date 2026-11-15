@@ -1,4 +1,4 @@
-# Evaluación 001 — QullqaSat MVP (S1–S5)
+# Evaluación 001 — LaymiSat MVP (S1–S5)
 
 Modo: evaluación en el navegador integrado (desktop 1366×900 y móvil 375×812) + revisión de código y de seguridad.
 (El MCP de Playwright/Chrome DevTools no estaba disponible; la evaluación se hizo con el navegador del app.)

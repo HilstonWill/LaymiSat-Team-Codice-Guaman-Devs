@@ -10,6 +10,6 @@
 7. **(1:50) Imprimir ficha y panel de límites.** "No predecimos cosechas: damos evidencia a la asamblea comunal."
 
 ## Pitch de 30 s (inglés)
-"In the high Andes of Cusco, native potato farmers still sow by a calendar written in 1615 by Guaman Poma de Ayala. We tested it against 40 years of NASA POWER data. Nights are warming about 0.2 °C per decade, the frost line for sprouting potatoes now sits between 3,600 and 3,800 meters, and the firm rains arrive anywhere in a seven-week window, around four weeks after the traditional sowing date. QullqaSat turns this into three plain-language alerts (frost, drought stress and calendar shift) for any plot and altitude, and compares crop rotations so communities can choose. Ancestral wisdom, checked by space data."
+"In the high Andes of Cusco, native potato farmers still sow by a calendar written in 1615 by Guaman Poma de Ayala. We tested it against 40 years of NASA POWER data. Nights are warming about 0.2 °C per decade, the frost line for sprouting potatoes now sits between 3,600 and 3,800 meters, and the firm rains arrive anywhere in a seven-week window, around four weeks after the traditional sowing date. LaymiSat turns this into three plain-language alerts (frost, drought stress and calendar shift) for any plot and altitude, and compares crop rotations so communities can choose. Ancestral wisdom, checked by space data."
 
 > Cifras de Pisac a 3.900 m (celda POWER −13,5°, −71,875°). Se recalculan en vivo para cada zona y pueden variar un poco cuando se actualiza la caché.

@@ -1,4 +1,4 @@
-"""API de QullqaSat (FastAPI)."""
+"""API de LaymiSat (FastAPI)."""
 
 from __future__ import annotations
 
@@ -17,16 +17,16 @@ from .rotations import compare, load_crops
 from .service import DEFAULT_PLANT_ADJUST, build_report, rotation_context
 from .zones import ZONES
 
-_public_docs = os.environ.get("QULLQA_PUBLIC_DOCS", "1") == "1"
+_public_docs = os.environ.get("LAYMI_PUBLIC_DOCS", "1") == "1"
 app = FastAPI(
-    title="QullqaSat API",
+    title="LaymiSat API",
     version="1.0.0",
     description="Alertas agroclimáticas con NASA POWER + Guaman Poma",
     docs_url="/docs" if _public_docs else None,
     redoc_url=None,
 )
 
-_origins = os.environ.get("QULLQA_CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173")
+_origins = os.environ.get("LAYMI_CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[o.strip() for o in _origins.split(",") if o.strip()],

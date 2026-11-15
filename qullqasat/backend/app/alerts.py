@@ -1,4 +1,4 @@
-"""Las 3 alertas de QullqaSat (definiciones tomadas del SDD).
+"""Las 3 alertas de LaymiSat (definiciones tomadas del SDD).
 
 AHS  Heladas severas:   >=2 días seguidos con Tmin <= 0 °C en oct–dic (brotación de la papa).
 AEH  Estrés hídrico:    lluvia sep–nov por debajo del percentil 20 de 1991–2020, veranillos

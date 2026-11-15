@@ -108,7 +108,7 @@ export default function App() {
               <circle cx="48" cy="14" r="5" fill="#f4e7cf" />
             </svg>
             <h1>
-              Qullqa<span>Sat</span>
+              Laymi<span>Sat</span>
             </h1>
           </div>
           <p className="tagline">
@@ -321,7 +321,7 @@ export default function App() {
       </main>
 
       <footer className="wrap">
-        QullqaSat · NASA Space Apps Challenge 2026 · Datos: NASA POWER (power.larc.nasa.gov). Calendario: Felipe Guaman
+        LaymiSat · NASA Space Apps Challenge 2026 · Datos: NASA POWER (power.larc.nasa.gov). Calendario: Felipe Guaman
         Poma de Ayala, Nueva corónica y buen gobierno (1615). Mapa © OpenStreetMap. Herramienta de apoyo, no sustituye el
         criterio de la comunidad ni del técnico agrario.
       </footer>

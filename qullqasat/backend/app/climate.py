@@ -32,7 +32,7 @@ GRID_LAT, GRID_LON = 0.5, 0.625
 _KEY_LOCKS: dict[str, threading.Lock] = {}
 _KEY_LOCKS_GUARD = threading.Lock()
 _FETCH_SLOTS = threading.BoundedSemaphore(2)
-DEFAULT_CACHE_DIR = Path(os.environ.get("QULLQA_CACHE_DIR", Path(__file__).resolve().parent.parent / "cache"))
+DEFAULT_CACHE_DIR = Path(os.environ.get("LAYMI_CACHE_DIR", Path(__file__).resolve().parent.parent / "cache"))
 
 # Región Cusco (bbox generosa). Evita usar el servicio como proxy para cualquier punto del planeta.
 LAT_RANGE = (-15.5, -11.0)
