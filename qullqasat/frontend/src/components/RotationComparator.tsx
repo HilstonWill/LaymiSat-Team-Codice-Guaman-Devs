@@ -131,6 +131,11 @@ export default function RotationComparator(p: Props) {
     .sort((a, b) => a.d - b.d)
     .slice(0, 2)
   const sameAsCurrent = !!bestSeq && !!currentSeq && bestSeq.id === currentSeq.id
+  // Las demás estrategias (p. ej. la laymi tradicional) quedan como una línea de referencia.
+  const others = sequences
+    .filter((x) => x.id !== currentSeq?.id && x.id !== bestSeq?.id)
+    .map((x) => ({ s: x, r: byId[x.id] }))
+    .filter((x) => x.r)
 
   return (
     <>
@@ -194,7 +199,23 @@ export default function RotationComparator(p: Props) {
         ))}
       </ul>
 
-      <div className="rot-summary" aria-busy={p.loading}>
+      {others.length > 0 && (
+        <ul className="rot-others">
+          {others.map(({ s: o, r }) => (
+            <li key={o.id}>
+              <span className="rot-others-label">{t.rotReference}:</span> <b>{seqName(o)}</b> · {r.overall}/100{' '}
+              <span className={`pill ${r.level}`}>{t.verdict[r.level]}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <details className="rot-custom">
+        <summary>
+          <span className="rot-custom-title">{t.rotCustomize}</span>
+          <span className="rot-custom-hint">{t.rotCustomizeHint}</span>
+        </summary>
+      <div className="rot-summary rot-summary-in" aria-busy={p.loading}>
         {sequences.map((s) => {
           const info = strengths(s.id)
           const isBest = result?.best_id === s.id
@@ -231,11 +252,6 @@ export default function RotationComparator(p: Props) {
         })}
       </div>
 
-      <details className="rot-custom">
-        <summary>
-          <span className="rot-custom-title">{t.rotCustomize}</span>
-          <span className="rot-custom-hint">{t.rotCustomizeHint}</span>
-        </summary>
       <div className="rot-settings no-print">
         <fieldset className="card">
           <legend>{t.priorities}</legend>

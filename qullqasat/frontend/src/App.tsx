@@ -241,6 +241,12 @@ export default function App() {
     return () => window.clearTimeout(id)
   }, [gps])
 
+  // Frase de portada con el dato del problema: cuántos días después del calendario llega la lluvia firme.
+  const adsShift = report
+    ? Number((report.alerts.find((a) => a.id === 'ADS')?.metrics as Record<string, unknown> | undefined)?.recent_mean_shift_days)
+    : NaN
+  const heroProblem = Number.isFinite(adsShift) && adsShift > 7 ? t.heroProblem(placeName, Math.round(adsShift)) : null
+
   const worstLevel = report?.alerts.reduce<Level>(
     (w, a) => (LEVEL_RANK[a.level] > LEVEL_RANK[w] ? a.level : w),
     'verde',
@@ -279,8 +285,8 @@ export default function App() {
               </button>
             </div>
           </div>
-          <p className="tagline">{t.heroTagline}</p>
-          <p className="hero-sub">{t.heroSub}</p>
+          <p className="hero-problem">{heroProblem ?? t.heroTagline}</p>
+          <p className="hero-sub">{heroProblem ? t.heroTagline : t.heroSub}</p>
           <div className="hero-actions no-print">
             <a className="btn btn-cta" href="#alertas">
               {t.heroCta} <ArrowDownIcon size={18} />
@@ -467,9 +473,6 @@ export default function App() {
                     <b>{insight.win ? `${insight.win.from} – ${insight.win.to}` : '—'}</b>
                   </div>
                 </div>
-                <p className="insight">
-                  {t.insight(String(insight.ads.mean_onset_recent ?? '—'), insight.win?.from, insight.win?.to)}
-                </p>
                 <PowerCellNote
                   lang={lang}
                   location={report.location}
@@ -487,8 +490,8 @@ export default function App() {
             <section aria-labelledby="alertas">
               <div className="section-head">
                 <div>
-                  <div className="kicker">
-                    {t.season} {report.data.current_campaign} · {t.dataTo} {report.data.last_date}
+                  <div className="kicker keep">
+                    {t.season} {report.data.current_campaign}, {t.dataTo} {report.data.last_date}
                   </div>
                   <h2 id="alertas">{t.alertsTitle}</h2>
                 </div>
@@ -608,16 +611,19 @@ export default function App() {
         )}
 
         {report && (
-          <section aria-labelledby="fuentes">
-            <div className="section-head">
-              <div>
-                <div className="kicker">{t.sourcesKicker}</div>
-                <h2 id="fuentes">{t.sourcesTitle}</h2>
-              </div>
-            </div>
-            <SectionBoundary message={t.sectionError} resetKey={report}>
-              <SourcesPanel report={report} t={t} lang={lang} />
-            </SectionBoundary>
+          <section aria-labelledby="fuentes" className="evidence">
+            <details>
+              <summary>
+                <span className="kicker">{t.sourcesKicker}</span>
+                <span id="fuentes" className="evidence-title">
+                  {t.sourcesTitle}
+                </span>
+                <span className="evidence-hint">{t.sourcesHint}</span>
+              </summary>
+              <SectionBoundary message={t.sectionError} resetKey={report}>
+                <SourcesPanel report={report} t={t} lang={lang} />
+              </SectionBoundary>
+            </details>
           </section>
         )}
 

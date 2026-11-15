@@ -148,7 +148,7 @@ export default function CustomPointCard({ lang, place, zones, terrain, labelOf, 
                     {fmtNum(near.km, lang, 1)} km {dir}
                   </b>
                   <button type="button" className="cp-go" onClick={() => onGoZone(near.zone)}>
-                    {c.goNearest(nearName)} →
+                    {c.goNearest(nearName)}
                   </button>
                 </div>
               </div>

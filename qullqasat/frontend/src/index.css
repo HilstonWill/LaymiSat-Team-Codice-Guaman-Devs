@@ -843,3 +843,134 @@ section[id], [id^='alert-'], h2[id] { scroll-margin-top: 96px; }
 .cp-gps.is-weak { color: var(--ambar-text, #855800); background: var(--ambar-bg); }
 @media (max-width: 560px) { .map3d-locate { min-height: 44px; } }
 @media (prefers-reduced-motion: reduce) { .map3d-locate[aria-busy='true'] svg { animation: none; } }
+
+/* ---------- Recortes del Product Lens ---------- */
+.cell-note > summary { list-style: none; cursor: pointer; margin-bottom: 0; }
+.cell-note > summary::-webkit-details-marker { display: none; }
+.cell-note > summary::after { content: '+'; margin-left: auto; font-size: 1rem; }
+.cell-note[open] > summary::after { content: '−'; }
+.cell-note[open] > summary { margin-bottom: 6px; }
+.cell-note > summary:focus-visible { outline: 3px solid var(--sky); outline-offset: 2px; border-radius: 6px; }
+.rot-others { list-style: none; padding: 0; margin: 0 0 4px; display: grid; gap: 6px; font-size: 0.9rem; color: var(--ink-soft); }
+.rot-others-label { color: var(--muted); }
+.rot-summary-in { margin-bottom: 14px; }
+.cell-note > summary { text-transform: none; letter-spacing: 0; font-size: 0.82rem; line-height: 1.35; }
+
+/* ¿A qué altura hiela?: la frase es la respuesta (izquierda), el gráfico la respalda (derecha, más bajo) */
+.alt-frost { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 16px; align-items: stretch; }
+.alt-frost .alt-takeaway { margin: 0; display: flex; align-items: center; font-size: 1.1rem; font-weight: 500; }
+.alt-frost .chart-card { padding: 12px 14px; }
+.alt-frost .chart-card h3 { display: none; }
+.alt-frost .chart-card .meta { font-size: 0.75rem; margin-bottom: 4px; }
+.alt-frost .chart { height: 190px; }
+.alt-frost .legend { margin-top: 2px; }
+@media (max-width: 860px) {
+  .alt-frost { grid-template-columns: 1fr; }
+  .alt-frost .chart { height: 180px; }
+}
+
+/* =========================================================================
+   Pulido (ecc:make-interfaces-feel-better): solo detalles, sin cambiar contenido
+   ========================================================================= */
+:root { -moz-osx-font-smoothing: grayscale; }
+
+/* Texto: titulares equilibrados, párrafos sin viudas */
+h1, h2, h3, .evidence-title, .rot-hero-name, .gp-title h3, .rot-custom-title { text-wrap: balance; }
+p, li, .meta, .alt-takeaway, .evidence-hint, .rot-custom-hint, .cell-note > summary { text-wrap: pretty; }
+
+/* Cifras que cambian: ancho fijo para que no "bailen" al animarse o al cambiar de parcela */
+.fact b, .score-big, .rot-hero-arrow b, .controls b, .gp-summary, .gp-before, .gp-line b,
+.cp-stat b, .rot-others, .alt-takeaway, .summary-chip b { font-variant-numeric: tabular-nums; }
+
+/* Ritmo vertical: secciones principales con aire; las plegadas se agrupan como notas al pie */
+main > section { padding: 44px 0 8px; }
+main > section.evidence { padding: 14px 0 0; }
+main > section.evidence + section:not(.evidence) { padding-top: 44px; }
+.section-head { margin-bottom: 18px; }
+
+/* Áreas táctiles mínimas de 40 px (44 px en celular ya estaba) */
+.seg button, .controls select, .controls input[type='range'] { min-height: 40px; }
+.cp-copy, .cp-go, .gp-tech summary { min-height: 40px; }
+
+/* Radios concéntricos: exterior = interior + relleno */
+.cp-terrain { border-radius: 20px; }
+.cp-stat { border-radius: 8px; }
+.lang-toggle button { min-height: 40px; min-width: 44px; }
+
+/* Estados táctiles: respuesta al presionar, transiciones con propiedades explícitas */
+.btn, .seg button, .map3d-locate, .cp-copy, .cp-go, .gp-nav, .summary-chip, .lang-toggle button {
+  transition-property: transform, background-color, color, box-shadow;
+  transition-duration: 150ms;
+  transition-timing-function: ease-out;
+}
+.btn:active, .seg button:active, .map3d-locate:active, .cp-copy:active, .cp-go:active, .gp-nav:active,
+.summary-chip:active, .lang-toggle button:active { transform: scale(0.96); }
+
+/* Al abrir una sección plegada, el contenido entra suave (una sola vez) */
+.evidence details[open] > :not(summary),
+.rot-custom[open] > :not(summary),
+.cell-note[open] > :not(summary),
+.gp-tech[open] > :not(summary) { animation: fold-in 220ms ease-out both; }
+@keyframes fold-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+.evidence summary, .rot-custom > summary { transition-property: background-color; transition-duration: 150ms; }
+.evidence summary:hover, .rot-custom > summary:hover { background-color: rgba(31, 42, 68, 0.03); }
+
+@media (prefers-reduced-motion: reduce) {
+  .btn:active, .seg button:active, .map3d-locate:active, .cp-copy:active, .cp-go:active, .gp-nav:active,
+  .summary-chip:active, .lang-toggle button:active { transform: none; }
+  .evidence details[open] > :not(summary), .rot-custom[open] > :not(summary),
+  .cell-note[open] > :not(summary), .gp-tech[open] > :not(summary) { animation: none; }
+}
+
+/* =========================================================================
+   Pasada para quitar lo "de plantilla" (frontend-design): paleta propia,
+   sin MAYÚSCULAS ni etiquetas sobrantes, superficies planas con borde de tinta
+   ========================================================================= */
+:root {
+  --accent: #5b2a6e;       /* papa morada: el acento de la marca */
+  --puna: #13213d;         /* cielo de puna */
+  --ichu: #c9a24a;         /* ichu */
+  --tinta: #1c1a17;        /* tinta */
+  --paper: #f2f1ec;        /* piedra (antes crema #f7f2e8) */
+  --card: #fcfbf8;
+  --line: #d9d6cc;
+  --rule: rgba(28, 26, 23, 0.16);
+  --radius: 8px;
+  --shadow: none;
+}
+body { background: var(--paper); }
+
+/* Acento: papa morada donde antes iba terracota como marca (el rojo queda solo para el semáforo) */
+input[type='range'] { accent-color: var(--accent); }
+.kicker, .action b, .action-label { color: var(--accent); }
+.place-tag { background: var(--accent); }
+.loading-bar { background: linear-gradient(90deg, var(--ichu), var(--accent)); }
+
+/* Sin MAYÚSCULAS: etiquetas en tipo normal */
+.kicker, .month .m, .cal-label, .action-label, .ai-label, .ai-md .ai-h, .cp-coord-label, .cp-terrain-head,
+.cell-note-head, .gp-chip, .gp-label, .rot-hero-tag, .gp-c-sub {
+  text-transform: none; letter-spacing: 0;
+}
+.kicker, .cal-label, .gp-label, .rot-hero-tag, .cp-coord-label, .cp-terrain-head, .action-label { font-size: 0.82rem; font-weight: 600; }
+.gp-chip { font-size: 0.78rem; }
+
+/* Menos etiquetas sobre los títulos: solo queda la de las alertas (dice de qué fecha son los datos) */
+.section-head .kicker:not(.keep), .evidence summary .kicker { display: none; }
+
+/* Superficies planas: borde de tinta fino en lugar de sombra suave en todo */
+.card, .gp-detail, .rot-card, .rot-hero, .rot-hero-side, .evidence details, .rot-custom, .alt-takeaway,
+.cp-stat, .fact, .cp-terrain {
+  box-shadow: none;
+}
+.card, .gp-detail, .rot-card, .rot-hero, .evidence details, .rot-custom { border: 1px solid var(--rule); }
+.rot-hero { background: var(--card); }
+.rot-hero-side.is-best { box-shadow: none; outline: 2px solid var(--ichu); outline-offset: -2px; }
+.rot-card.best { outline-color: var(--ichu); }
+
+/* Portada: el problema como titular */
+.hero-problem {
+  margin-top: 14px; max-width: 26ch; font-size: clamp(1.6rem, 3.6vw, 2.5rem); font-weight: 700;
+  line-height: 1.15; letter-spacing: -0.02em; color: #fff; text-wrap: balance;
+}
+.hero-sub { max-width: 60ch; }
+.controls { background: rgba(242, 241, 236, 0.94); }

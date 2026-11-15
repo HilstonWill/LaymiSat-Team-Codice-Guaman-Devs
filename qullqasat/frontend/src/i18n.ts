@@ -44,6 +44,7 @@ const en = {
   },
   cell: {
     title: 'Where the climate comes from',
+    summary: (size: string) => `Climate from one NASA POWER cell of about ${size} km, not from your plot`,
     body: (size: string, center: string, gridAlt: string) =>
       `One NASA POWER cell of about ${size} km (centre ${center}, mean cell elevation ${gridAlt} m), not your plot.`,
     correction: (alt: string, off: string, adj: string) =>
@@ -115,6 +116,7 @@ const en = {
   rotAlreadyBest: (name: string, score: number) =>
     `Your current rotation (${name}, ${score}/100) is already the best option with these priorities.`,
   rotHeroSr: (a: string, sa: number, b: string, sb: number) => `${a} scores ${sa} out of 100; ${b} scores ${sb}.`,
+  rotReference: 'For reference',
   rotDisclaimer: 'Indicative scores to discuss in the community assembly: they do not predict yield.',
   families: { papa: 'Potato', tuberculo: 'Other tubers', grano: 'Grains', leguminosa: 'Legumes', descanso: 'Fallow (purum)' },
   rotWeak: 'Weak in',
@@ -193,6 +195,7 @@ const en = {
   weightsLine: 'Weights from your priorities:',
   sourcesKicker: 'Transparency',
   sourcesTitle: 'Sources, assumptions and uncertainty',
+  sourcesHint: 'NASA datasets and their resolution, the limits you should know and a plain-language glossary.',
   glossaryTitle: 'Glossary (plain language)',
   glossary: [
     ['NDVI', 'A satellite measure of how green and dense the vegetation is (0 = bare soil, 1 = very green).'],
@@ -209,6 +212,8 @@ const en = {
   aiNote:
     'AI disclosure: the software was written with the help of an AI coding assistant (Claude) from the team’s own design; data analysis uses NASA data and explicit rules, not generative AI.',
   // --- portada y alertas (Cristian) ---
+  heroProblem: (place: string, days: number) =>
+    `In ${place}, the firm rains now arrive ${days} days after the sowing date of the 1615 Andean calendar.`,
   heroTagline: 'When to sow, with what risk, and which crop rotation — for native-potato farms in the high Andes of Cusco.',
   heroSub: '40 years of NASA satellite data read alongside the 1615 Andean farming calendar of Guaman Poma de Ayala.',
   heroCta: "See this plot's alerts",
@@ -302,6 +307,7 @@ const es: Dict = {
   },
   cell: {
     title: 'De dónde sale el clima',
+    summary: (size: string) => `Clima de una celda NASA POWER de unos ${size} km, no de tu parcela`,
     body: (size: string, center: string, gridAlt: string) =>
       `De una celda NASA POWER de unos ${size} km (centro ${center}, altitud media de la celda ${gridAlt} m), no de tu parcela.`,
     correction: (alt: string, off: string, adj: string) =>
@@ -373,6 +379,7 @@ const es: Dict = {
   rotAlreadyBest: (name: string, score: number) =>
     `Tu rotación actual (${name}, ${score}/100) ya es la mejor opción con estas prioridades.`,
   rotHeroSr: (a: string, sa: number, b: string, sb: number) => `${a} obtiene ${sa} de 100; ${b} obtiene ${sb}.`,
+  rotReference: 'Como referencia',
   rotDisclaimer: 'Puntajes orientativos para conversar en la asamblea comunal: no predicen la cosecha.',
   families: { papa: 'Papa', tuberculo: 'Otros tubérculos', grano: 'Granos', leguminosa: 'Leguminosas', descanso: 'Descanso (purum)' },
   rotWeak: 'Débil en',
@@ -451,6 +458,7 @@ const es: Dict = {
   weightsLine: 'Pesos según tus prioridades:',
   sourcesKicker: 'Transparencia',
   sourcesTitle: 'Fuentes, supuestos e incertidumbre',
+  sourcesHint: 'Datos de la NASA y su resolución, los límites que debes conocer y un glosario en palabras sencillas.',
   glossaryTitle: 'Glosario (en palabras sencillas)',
   glossary: [
     ['NDVI', 'Medida satelital de qué tan verde y densa está la vegetación (0 = suelo desnudo, 1 = muy verde).'],
@@ -467,6 +475,8 @@ const es: Dict = {
   aiNote:
     'Uso de IA: el software se escribió con ayuda de un asistente de programación con IA (Claude) a partir del diseño del propio equipo; el análisis usa datos de la NASA y reglas explícitas, no IA generativa.',
   // --- portada y alertas (Cristian) ---
+  heroProblem: (place: string, days: number) =>
+    `En ${place}, la lluvia firme hoy llega ${days} días después de la siembra que marca el calendario andino de 1615.`,
   heroTagline: 'Cuándo sembrar, con qué riesgo y con qué rotación de cultivos, para las chacras de papa nativa de los Andes de Cusco.',
   heroSub: '40 años de datos satelitales de la NASA leídos junto al calendario agrícola andino de Guaman Poma de Ayala (1615).',
   heroCta: 'Ver las alertas de esta parcela',

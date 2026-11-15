@@ -231,7 +231,7 @@ export default function CalendarGP({ rows, t, lang }: { rows: CalendarRow[]; t: 
           <p>{row.milestone}</p>
           {row.source_url && row.page && (
             <a className="gp-src" href={row.source_url} target="_blank" rel="noopener noreferrer">
-              {w.seeManuscript(row.page)} ↗
+              {w.seeManuscript(row.page)}
             </a>
           )}
         </section>

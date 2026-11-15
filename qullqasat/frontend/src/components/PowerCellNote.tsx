@@ -40,19 +40,19 @@ export default function PowerCellNote({ lang, location, plantAdjust, zones, labe
   })
 
   return (
-    <aside className="cell-note" aria-label={c.title}>
-      <div className="cell-note-head">
+    <details className="cell-note">
+      <summary className="cell-note-head">
         <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
           <rect x="1" y="1" width="12" height="12" rx="2" fill="none" stroke="currentColor" strokeWidth="1.6" />
           <path d="M7 1v12M1 7h12" stroke="currentColor" strokeWidth="1.2" opacity="0.6" />
         </svg>
-        {c.title}
-      </div>
+        {c.summary(size)}
+      </summary>
       <p>{c.body(size, center, fmtNum(location.grid_elevation, lang))}</p>
       <p>
         {c.correction(fmtNum(location.altitude, lang), sign(location.temperature_offset_c, 1), sign(plantAdjust, 1))}
       </p>
       {sharing.length > 1 && <p className="cell-note-shared">{c.shared(joinNames(sharing.map(labelOf), lang))}</p>}
-    </aside>
+    </details>
   )
 }
