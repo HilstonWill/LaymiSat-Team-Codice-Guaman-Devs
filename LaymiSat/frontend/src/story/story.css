@@ -900,3 +900,26 @@ details.today-alert .ta-action { padding: 0 12px 12px 56px; }
 .rpw-mark.is-close.is-now b, .rpw-mark.is-close.is-now small { left: auto; right: 2px; text-align: right; }
 .rpw-mark.is-close.is-goal b, .rpw-mark.is-close.is-goal small { right: auto; left: 2px; text-align: left; }
 .rpw-mark.is-same small { color: #f4e7cf; }
+
+/* ---------- Celular: el mapa va primero y a la vista; las tarjetas van debajo, nunca encima ---------- */
+@media (max-width: 900px) {
+  .story:not(.v-rotaciones):not(.v-calendario) .story-stage { height: auto; order: -1; display: flex; flex-direction: column; }
+  .story.v-zonas .story-side, .story.v-hoy .story-side { order: 0; border-top: 1px solid var(--s-line); }
+  .story:not(.v-rotaciones):not(.v-calendario) .story-stage .story-map {
+    position: relative; inset: auto; flex: none; width: 100%; height: clamp(230px, 38dvh, 400px);
+  }
+  /* Tarjeta de la escena y resumen: salen del mapa y ocupan su propio espacio justo debajo. */
+  .story-stage .scene, .story-stage .summary-card {
+    position: static; transform: none; width: auto; margin: 0; left: auto; top: auto; bottom: auto;
+    border-radius: 0; border-width: 1px 0 0; backdrop-filter: none; -webkit-backdrop-filter: none;
+  }
+  .story-stage .summary-card { margin: 12px; border-radius: 16px; border-width: 0; }
+  .story-stage > .error { position: static; margin: 12px; }
+  .flat-note { bottom: 10px; max-width: calc(100% - 24px); text-align: center; }
+}
+@media (max-width: 900px) {
+  /* La atribución (requisito de licencia) se queda visible, pero en letra pequeña para no tapar el mapa. */
+  .story-map .maplibregl-ctrl-attrib { max-width: calc(100% - 20px); }
+  .story-map .maplibregl-ctrl-attrib-inner { font-size: 9px; line-height: 1.25; }
+  .story-map .maplibregl-ctrl-attrib.maplibregl-compact { min-height: 20px; }
+}
