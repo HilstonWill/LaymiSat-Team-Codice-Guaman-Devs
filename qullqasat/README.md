@@ -26,6 +26,7 @@ decides every season: *when to sow, with what risk, and with which crop rotation
 - Nights are warming: annual mean Tmin **+0.19 °C/decade** (Pisac cell) and **+0.22 °C/decade** (Ccatcca cell), Mann-Kendall p < 0.001.
 - The **frost line** at sprouting sits between **3,600 and 3,800 m** (7 % → 67 % of seasons).
 - In Pisac the firm rains arrive on average on **Oct 19**, within a **7-week window** (Sep 26 – Nov 13): later than the codex's early sowing (September) and well before its rain-fed sowing (December).
+- MODIS NDVI (2001–2005 vs 2021–2025): Pisac and Colquepata are greener today, while **Chinchero now has bare-soil months from July to November** (NDVI < 0.30), i.e. more erosion risk when the rains start.
 - Not confirmed: a significant delay of the rainy-season onset. The app shows this as it is.
 
 ## Run locally
