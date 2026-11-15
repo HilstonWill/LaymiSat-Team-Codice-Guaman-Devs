@@ -183,8 +183,6 @@
 .ta-action span { color: var(--s-text); font-weight: 600; }
 .today-links { display: flex; flex-direction: column; gap: 10px; align-items: stretch; }
 .today-links .btn-cta { justify-content: center; border: 0; cursor: pointer; }
-.today-more { color: var(--s-muted); font-size: 0.85rem; text-align: center; }
-.today-more:hover { color: var(--s-text); }
 
 /* Calendario: hoja de papel sobre el panel oscuro (la rueda usa los estilos de la app) */
 .story-side:has(.cal-sheet) { background: var(--paper); color: var(--ink); }

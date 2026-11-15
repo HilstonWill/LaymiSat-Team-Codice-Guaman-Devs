@@ -469,9 +469,6 @@ export default function StoryMode({ initialView = 'zonas' }: { initialView?: Vie
                 <button className="btn btn-cta" onClick={() => goView('historia')}>
                   {t.why}
                 </button>
-                <a className="today-more" href="?modo=tecnico">
-                  {t.more}
-                </a>
               </div>
               <p className="story-note">{t.sources}</p>
             </>
