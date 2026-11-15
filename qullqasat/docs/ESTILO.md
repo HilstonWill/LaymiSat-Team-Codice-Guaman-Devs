@@ -121,6 +121,29 @@ El orden de las alertas es fijo (helada, agua, calendario). No se reordenan por 
 | **IA en cada alerta** | Botón-píldora "✦ Explicar esta alerta con IA" entre "Qué hacer" y "Detalle técnico". Explica solo esa alerta (como máximo 70 palabras), se abre y se cierra sin volver a consultar, y se reinicia al cambiar de parcela. Solo aparece si el servidor tiene un proveedor de IA activo. |
 | **Animación de escritura** | La respuesta aparece palabra por palabra con un cursor parpadeante (≈ 14 palabras/s, como máximo ~5 s en total) y un enlace "Mostrar todo ya". El texto animado es `aria-hidden`; los lectores de pantalla reciben el texto completo una sola vez. Con `prefers-reduced-motion` aparece completo y sin cursor. Solo se anima el texto generado: nunca las cifras ni las alertas, que deben verse al instante. |
 
+### Mapa 3D y panel de la parcela (`Map3D.tsx`)
+| Pieza | Regla de UX |
+|---|---|
+| **Motor** | MapLibre GL 5, cargado con `lazy()` en su propio chunk. Si el equipo no tiene WebGL, se usa el mapa 2D de Leaflet (`MapPicker.tsx`). No usa API keys. |
+| **Intro** | Se abre en el globo y vuela unos 5 s hasta la parcela (pitch 60°, rumbo −25°). Al terminar pasa a mercator, porque en el globo no se dibujan bien las columnas ni los pines sobre el relieve. Con `prefers-reduced-motion` no hay vuelo: abre directo en la vista final. |
+| **Relieve** | Terreno Terrarium (AWS Open Data, incluye SRTM) con exageración ×1,6 y sombreado. El botón **2D** quita el relieve y la inclinación; **Recentrar** vuelve a la parcela. |
+| **Capas NASA** | Control segmentado: **Satélite** (Esri), **NDVI · MODIS** (8 días) y **Temp. superficie · MODIS** (8 días), las dos desde NASA GIBS con la última imagen disponible y opacidad 0,72. Cuando hay una capa NASA activa se muestra la etiqueta "NASA GIBS · última imagen disponible". No uses productos diarios: en los Andes suelen salir vacíos por las nubes. |
+| **Columnas 3D** | Cada zona piloto es una columna color maíz cuya altura depende de la altitud. La parcela activa es una columna más fina y alta con el color de su peor alerta (verde, ámbar o rojo), más un pulso blanco. |
+| **Pines** | Son `<button>` reales, con `aria-label` ("Seleccionar Chinchero, 3760 m") y `aria-pressed`. La etiqueta va a la derecha del punto para no tapar la columna, y la zona activa va en color maíz. |
+| **Panel flotante** | En pantallas de más de 1000 px, la ficha de la parcela es un panel de vidrio esmerilado sobre el mapa, a la derecha. En pantallas menores pasa debajo del mapa como una tarjeta normal. Las cifras (altitud y % de helada) se animan con `CountUp` (0,9 s, sin animación con movimiento reducido). |
+| **Rueda del ratón** | No hace zoom hasta que el usuario hace clic en el mapa, y deja de hacerlo al salir del mapa, para no "atrapar" el scroll de la página. |
+
+### Punto personalizado (`CustomPointCard.tsx`)
+| Pieza | Regla de UX |
+|---|---|
+| **Invitación** | Mientras no haya un punto propio, el mapa muestra la pista "Haz clic en cualquier punto del terreno para analizarlo", con un punto maíz que late. El cursor es una cruz. |
+| **Título humano** | Nunca se usan coordenadas como título. Si el punto está a 25 km o menos de una zona piloto, se titula "Cerca de {zona}"; si no, "Punto elegido en el mapa". |
+| **Coordenadas** | Van en una línea aparte, en monoespaciada y con hemisferio (13,646° S · 71,855° O), junto a un botón **Copiar** que confirma con "✓ Copiado" (y lo anuncia en `aria-live`). |
+| **Terreno · NASA SRTM 30 m** | Bloque verde con 3 fichas: altitud real, pendiente (perfil inclinado dibujado a escala, con los grados y la clase) y zona piloto más cercana (km + rumbo), con el botón "Ir a {zona} →". Mientras se lee SRTM se muestran esqueletos con brillo; si falla, se dice en una frase qué hacer. |
+| **Altitud fuera de rango** | Si la altitud real cae fuera del rango calibrado (3.200–4.400 m), se explica qué altitud usa el modelo. Nunca se corrige en silencio. |
+| **Análisis desactualizado** | Desde el clic hasta que llega el nuevo análisis, el semáforo, las cifras y el texto se atenúan (opacidad 0,45 y menos saturación) y aparece "Actualizando el análisis…" con un spinner (`role=status`). Así nunca se ven cifras del punto anterior como si fueran del nuevo. |
+| **En el mapa** | El punto lleva una etiqueta terracota "Tu punto · 4.130 m" y la columna 3D con el color de su peor alerta. Si el clic cae fuera de Cusco, aparece durante 3 s el aviso rojo "Fuera del área de estudio…" en lugar de no hacer nada. Por debajo del zoom 8,5 las etiquetas se ocultan para que no se amontonen. |
+
 ## 6. Íconos
 - Trazo de 2 px, cuadrícula de 24×24, `currentColor`, extremos redondeados. Están en `components/Icons.tsx`.
 - Siempre llevan `aria-hidden`: el significado lo dan el texto y la etiqueta, no el dibujo.

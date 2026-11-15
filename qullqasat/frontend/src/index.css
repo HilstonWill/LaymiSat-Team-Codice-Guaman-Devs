@@ -405,3 +405,193 @@ section[id], [id^='alert-'], h2[id] { scroll-margin-top: 96px; }
 .ai-chip:disabled { opacity: 0.7; cursor: progress; }
 .ai-chip:focus-visible { outline: 3px solid var(--maize); outline-offset: 2px; }
 .ai-thinking::after { content: '…'; animation: caret-blink 0.9s steps(1) infinite; }
+
+/* ---------- Mapa 3D (MapLibre) + panel flotante ---------- */
+.top.stage { display: block; position: relative; }
+.stage .map { height: 600px; border-color: #0d1426; background: #0d1426; }
+.map3d .map3d-canvas { position: absolute; inset: 0; }
+.map-loading { background: radial-gradient(circle at 50% 60%, #22305a, #0d1426 70%); }
+
+.stage .place-card.glass {
+  position: absolute; top: 16px; right: 16px; bottom: 16px; width: min(400px, 42%);
+  overflow-y: auto; z-index: 2;
+  background: rgba(255, 253, 248, 0.84);
+  backdrop-filter: blur(14px) saturate(1.2); -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 12px 40px rgba(8, 14, 30, 0.35);
+  animation: glass-in 0.6s ease-out both;
+}
+@keyframes glass-in { from { opacity: 0; transform: translateX(16px); } to { opacity: 1; transform: none; } }
+
+.map3d-controls {
+  position: absolute; top: 14px; left: 14px; z-index: 2;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 8px;
+  max-width: calc(100% - 28px - min(400px, 42%) - 16px);
+}
+.seg {
+  display: inline-flex; flex-wrap: wrap; gap: 2px; padding: 3px;
+  background: rgba(13, 20, 38, 0.72); border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+}
+.seg button {
+  min-height: 36px; padding: 0 14px; border: 0; border-radius: 999px; cursor: pointer;
+  background: transparent; color: #e8edf7; font: inherit; font-size: 0.85rem; font-weight: 600;
+}
+.seg button:hover { background: rgba(255, 255, 255, 0.12); }
+.seg button[aria-pressed='true'] { background: var(--maize); color: #1f2a44; }
+.seg button:focus-visible { outline: 3px solid #fff; outline-offset: 1px; }
+.map3d-note {
+  font-size: 0.75rem; color: #e8edf7; background: rgba(13, 20, 38, 0.72);
+  padding: 4px 10px; border-radius: 999px;
+}
+
+/* Pines de zona (botones accesibles) */
+.zone-pin {
+  display: flex; flex-direction: row; align-items: center; gap: 6px;
+  background: none; border: 0; padding: 0; cursor: pointer;
+}
+.zone-label {
+  white-space: nowrap; font-size: 0.75rem; font-weight: 600; color: #fff;
+  background: rgba(13, 20, 38, 0.78); padding: 3px 9px; border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18); transition: transform 0.15s ease;
+}
+.zone-dot {
+  flex: none; width: 16px; height: 16px; box-sizing: border-box; border-radius: 50%;
+  background: var(--maize); border: 2px solid #1f2a44; box-shadow: 0 0 0 3px rgba(224, 164, 58, 0.35);
+}
+.zone-pin:hover .zone-label, .zone-pin:focus-visible .zone-label { transform: translateX(2px); background: #1f2a44; }
+.zone-pin:focus-visible { outline: none; }
+.zone-pin:focus-visible .zone-label { outline: 3px solid #fff; }
+.zone-pin.is-active .zone-label { background: var(--maize); color: #1f2a44; border-color: #fff; }
+
+/* Pulso de la parcela activa */
+.place-pulse { width: 22px; height: 22px; border-radius: 50%; border: 3px solid #fff; background: rgba(184, 83, 47, 0.9); pointer-events: none; }
+.place-pulse::after {
+  content: ''; position: absolute; inset: -3px; border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.9); animation: pulse 2s ease-out infinite;
+}
+@keyframes pulse { from { transform: scale(1); opacity: 0.9; } to { transform: scale(3.2); opacity: 0; } }
+
+.stage .maplibregl-ctrl-group { background: rgba(13, 20, 38, 0.78); }
+.stage .maplibregl-ctrl-group button .maplibregl-ctrl-icon { filter: invert(1); }
+.stage .maplibregl-ctrl-attrib { font-size: 0.7rem; }
+
+@media (max-width: 1000px) {
+  .stage .map { height: 460px; }
+  .stage .place-card.glass {
+    position: static; width: auto; margin-top: 12px; overflow: visible;
+    background: var(--card); backdrop-filter: none; -webkit-backdrop-filter: none;
+    border: 1px solid var(--line); box-shadow: var(--shadow); animation: none;
+  }
+  .map3d-controls { max-width: calc(100% - 28px); }
+}
+@media (max-width: 560px) {
+  .stage .map { height: 380px; }
+  .seg button { min-height: 44px; padding: 0 12px; }
+  .zone-label { font-size: 0.7rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .place-pulse::after, .stage .place-card.glass { animation: none; }
+}
+@media print {
+  .stage .place-card.glass { position: static; width: auto; background: #fff; box-shadow: none; }
+}
+
+/* ---------- Punto personalizado ---------- */
+.place-marker { display: flex; align-items: center; gap: 8px; pointer-events: none; }
+.place-marker .place-pulse { position: relative; flex: none; }
+.place-tag {
+  /* Se desplaza a la derecha para que el pulso quede centrado en el punto. */
+  position: absolute; left: 30px; white-space: nowrap;
+  font-size: 0.78rem; font-weight: 700; color: #fff;
+  background: var(--terracotta); padding: 4px 10px; border-radius: 999px;
+  border: 2px solid #fff; box-shadow: 0 4px 14px rgba(8, 14, 30, 0.35);
+}
+.place-tag[hidden] { display: none; }
+
+.map3d .maplibregl-canvas-container.maplibregl-interactive { cursor: crosshair; }
+.map3d .maplibregl-canvas-container.maplibregl-interactive:active { cursor: grabbing; }
+
+.map3d-hint {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 0.8rem; font-weight: 600; color: #fff;
+  background: rgba(13, 20, 38, 0.72); padding: 6px 12px; border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.14); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+}
+.hint-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--maize); box-shadow: 0 0 0 0 rgba(224, 164, 58, 0.7); animation: hint 1.8s ease-out infinite; }
+@keyframes hint { to { box-shadow: 0 0 0 10px rgba(224, 164, 58, 0); } }
+
+.map3d-toast { position: absolute; left: 50%; bottom: 56px; transform: translateX(-50%); z-index: 3; pointer-events: none; }
+.map3d-toast span {
+  display: inline-block; white-space: nowrap; font-size: 0.85rem; font-weight: 600;
+  color: #fff; background: rgba(179, 54, 31, 0.95); padding: 8px 14px; border-radius: 999px;
+  box-shadow: 0 8px 24px rgba(8, 14, 30, 0.4); animation: toast-in 0.25s ease-out;
+}
+@keyframes toast-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+.cp h3 { font-size: 1.4rem; margin-top: 2px; }
+.cp-coords { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin-top: 8px; }
+.cp-coord-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.cp-coord {
+  font-family: ui-monospace, 'SFMono-Regular', Consolas, monospace; font-size: 0.85rem; color: var(--ink);
+  background: rgba(31, 42, 68, 0.06); border: 1px solid var(--line); padding: 3px 8px; border-radius: 8px;
+}
+.cp-copy, .cp-go {
+  min-height: 32px; padding: 0 12px; border-radius: 999px; cursor: pointer; font: inherit;
+  font-size: 0.8rem; font-weight: 700; transition: background 0.15s ease, color 0.15s ease;
+}
+.cp-copy { background: transparent; color: var(--sky); border: 1px solid currentColor; }
+.cp-copy:hover { background: rgba(61, 111, 168, 0.1); }
+.cp-copy.is-done { color: var(--verde-text, var(--verde)); }
+.cp-copy:focus-visible, .cp-go:focus-visible { outline: 3px solid var(--sky); outline-offset: 2px; }
+
+.cp-terrain {
+  margin-top: 14px; padding: 12px; border-radius: 12px;
+  background: linear-gradient(135deg, rgba(63, 125, 78, 0.1), rgba(61, 111, 168, 0.08));
+  border: 1px solid rgba(63, 125, 78, 0.25);
+}
+.cp-terrain-head { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--leaf); margin-bottom: 8px; }
+.cp-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.cp-stat { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; min-height: 64px; }
+.cp-stat > span { display: block; font-size: 0.75rem; color: var(--muted); margin-bottom: 4px; }
+.cp-stat b { font-size: 1.1rem; font-variant-numeric: tabular-nums; color: var(--ink); }
+.cp-stat small { display: block; font-size: 0.75rem; color: var(--ink-soft); }
+.cp-stat-wide { grid-column: 1 / -1; min-height: 0; }
+.cp-slope { display: flex; align-items: center; gap: 8px; }
+.slope-gauge { color: var(--leaf); flex: none; }
+.cp-near { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.cp-go { background: var(--ink); color: #fff; border: 0; }
+.cp-go:hover { background: var(--night); }
+.cp-note { margin-top: 8px; font-size: 0.8rem; color: var(--ink-soft); }
+.cp-error { font-size: 0.85rem; color: var(--rojo); }
+
+.skeleton {
+  display: block; height: 22px; width: 70%; border-radius: 6px;
+  background: linear-gradient(90deg, #ece5d6 25%, #f7f2e8 50%, #ece5d6 75%); background-size: 200% 100%;
+  animation: shimmer 1.2s linear infinite;
+}
+@keyframes shimmer { to { background-position: -200% 0; } }
+
+/* Análisis desactualizado mientras llega el del nuevo punto */
+.stale-status { display: flex; align-items: center; gap: 8px; min-height: 0; font-size: 0.8rem; font-weight: 600; color: var(--sky); }
+.stale-status:not(:empty) { margin-top: 12px; }
+.spinner { width: 14px; height: 14px; border-radius: 50%; border: 2px solid rgba(61, 111, 168, 0.25); border-top-color: var(--sky); animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.place-card .summary, .place-card .facts, .place-card .insight { transition: opacity 0.25s ease, filter 0.25s ease; }
+.place-card.is-stale .summary, .place-card.is-stale .facts, .place-card.is-stale .insight { opacity: 0.45; filter: saturate(0.4); }
+
+@media (max-width: 560px) {
+  .cp-copy, .cp-go { min-height: 44px; }
+  .map3d-toast span { white-space: normal; text-align: center; max-width: 80vw; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hint-dot, .skeleton, .spinner, .map3d-toast span { animation: none; }
+}
+.map3d-canvas.is-far .zone-label, .map3d-canvas.is-far .place-tag { display: none; }
+@media (max-width: 560px) {
+  .map3d-controls { gap: 6px; }
+  .seg { flex-wrap: nowrap; max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+  .seg::-webkit-scrollbar { display: none; }
+  .seg button { white-space: nowrap; font-size: 0.8rem; }
+  .map3d-hint { font-size: 0.75rem; }
+}

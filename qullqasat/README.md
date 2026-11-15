@@ -59,5 +59,5 @@ See [AI_DISCLOSURE.md](AI_DISCLOSURE.md).
 - Team guides (Spanish): [docs/GUIA_FRONTEND.md](docs/GUIA_FRONTEND.md), [docs/CUMPLIMIENTO_SPACE_APPS.md](docs/CUMPLIMIENTO_SPACE_APPS.md), [docs/DEMO.md](docs/DEMO.md)
 
 ## Credits and license
-NASA POWER Project (NASA LaRC), MODIS (NASA LP DAAC / ORNL DAAC), NASA SRTM, OpenTopoData, OpenStreetMap, Leaflet, React, Recharts,
+NASA POWER Project (NASA LaRC), MODIS (NASA LP DAAC / ORNL DAAC), NASA SRTM, OpenTopoData, NASA GIBS, Esri World Imagery, AWS Terrain Tiles (Mapzen), OpenStreetMap, MapLibre GL, Leaflet, React, Recharts,
 FastAPI, pandas, NumPy, Google Fonts (Fraunces, IBM Plex Sans). Guaman Poma de Ayala, *Nueva corónica y buen gobierno* (1615). MIT License.

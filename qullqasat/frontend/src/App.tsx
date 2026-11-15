@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 import {
   api,
   dynamicApi,
@@ -12,12 +12,15 @@ import {
   type RotationResponse,
   type Slope,
   type SoilInput,
+  type Level,
   type Zone,
 } from './api'
 import AlertCards from './components/AlertCards'
 import { ALERT_ICONS, ArrowDownIcon, PinIcon, PrintIcon } from './components/Icons'
 import CalendarGP from './components/CalendarGP'
 import DynamicAlerts from './components/DynamicAlerts'
+import CountUp from './components/CountUp'
+import CustomPointCard, { type TerrainState } from './components/CustomPointCard'
 import MapPicker from './components/MapPicker'
 import NdviPanel from './components/NdviPanel'
 import RotationComparator from './components/RotationComparator'
@@ -25,6 +28,19 @@ import SourcesPanel from './components/SourcesPanel'
 import SectionBoundary from './components/SectionBoundary'
 import TrendCharts from './components/TrendCharts'
 import { DICTS, fmtNum, type Lang } from './i18n'
+
+const Map3D = lazy(() => import('./components/Map3D'))
+
+function supportsWebGL() {
+  try {
+    const c = document.createElement('canvas')
+    return !!(c.getContext('webgl2') || c.getContext('webgl'))
+  } catch {
+    return false
+  }
+}
+const HAS_WEBGL = typeof document !== 'undefined' && supportsWebGL()
+const LEVEL_RANK: Record<Level, number> = { verde: 0, ambar: 1, rojo: 2 }
 
 const DEFAULT_PLACE: Place = { lat: -13.4, lon: -71.85, altitude: 3900, name: 'Potato Park (Pisac)' }
 
@@ -67,7 +83,7 @@ export default function App() {
   const [rotError, setRotError] = useState<string | null>(null)
   const [ndvi, setNdvi] = useState<NdviSummary | null>(null)
   const [ndviStatus, setNdviStatus] = useState<'loading' | 'ok' | 'not_pilot' | 'error'>('loading')
-  const [srtmNote, setSrtmNote] = useState<string | null>(null)
+  const [terrain, setTerrain] = useState<TerrainState>({ status: 'idle' })
   const [aiEnabled, setAiEnabled] = useState(false)
 
   useEffect(() => {
@@ -153,31 +169,38 @@ export default function App() {
     return () => ctrl.abort()
   }, [dPlace, dAdjust, slope, soil, dPrio, lang, dSeqs])
 
-  const zoneLabel = (z: Zone) => (lang === 'en' ? z.name_en ?? z.name : z.name)
+  const zoneLabel = useCallback((z: Zone) => (lang === 'en' ? z.name_en ?? z.name : z.name), [lang])
   const zone = zones.find((z) => z.id === zoneId)
   const placeName = zone ? zoneLabel(zone) : place.name
 
   const selectZone = (z: Zone) => {
     setZoneId(z.id)
-    setSrtmNote(null)
+    setTerrain({ status: 'idle' })
     setPlace({ lat: z.lat, lon: z.lon, altitude: z.altitude, name: z.name })
   }
 
   const pickPoint = (lat: number, lon: number) => {
     setZoneId('custom')
     setPlace((p) => ({ lat, lon, altitude: p.altitude, name: `${lat.toFixed(2)}, ${lon.toFixed(2)}` }))
-    setSrtmNote(null)
+    setTerrain({ status: 'loading' })
+    const isCurrent = (p: Place) => p.lat === lat && p.lon === lon
     api
       .terrain(lat, lon)
       .then((tr) => {
         const alt = Math.min(4400, Math.max(3200, Math.round(tr.elevation_m / 50) * 50))
-        setPlace((p) => (p.lat === lat && p.lon === lon ? { ...p, altitude: alt } : p))
+        setPlace((p) => (isCurrent(p) ? { ...p, altitude: alt } : p))
         setSlope(tr.slope_class)
-        setSrtmNote(`${fmtNum(tr.elevation_m, lang)} m · ${fmtNum(tr.slope_deg, lang, 1)}°`)
+        setTerrain((prev) => (prev.status === 'loading' ? { status: 'ok', data: tr } : prev))
       })
-      .catch(() => setSrtmNote(null))
+      .catch(() => setTerrain((prev) => (prev.status === 'loading' ? { status: 'error' } : prev)))
   }
 
+  // Mientras llega el análisis del nuevo punto, las cifras viejas se atenúan.
+  const stale = loading || dPlace !== place || dAdjust !== plantAdjust
+  const worstLevel = report?.alerts.reduce<Level>(
+    (w, a) => (LEVEL_RANK[a.level] > LEVEL_RANK[w] ? a.level : w),
+    'verde',
+  )
   const best = rot?.results.find((r) => r.id === rot.best_id)
 
   const insight = useMemo(() => {
@@ -299,19 +322,56 @@ export default function App() {
           </div>
         )}
 
-        <section className="top">
-          <MapPicker zones={zones} place={place} onZone={selectZone} onPick={pickPoint} labelOf={zoneLabel} />
-          <div className="card place-card">
-            <div className="kicker">
-              <PinIcon size={14} /> {zone ? `${t.province} ${zone.province}` : t.customPoint}
-            </div>
-            <h3>{placeName}</h3>
-            <p className="meta">{zone ? (lang === 'en' ? zone.note_en ?? zone.note : zone.note) : t.clickMap}</p>
-            {srtmNote && (
-              <p className="meta srtm">
-                {t.srtmTaken}: {srtmNote}
-              </p>
+        <section className="top stage">
+          {HAS_WEBGL ? (
+            <Suspense fallback={<div className="map map3d map-loading" aria-hidden="true" />}>
+              <Map3D
+                zones={zones}
+                place={place}
+                selectedZoneId={zoneId}
+                level={worstLevel}
+                onZone={selectZone}
+                onPick={pickPoint}
+                labelOf={zoneLabel}
+                labels={t.map3d}
+                hint={t.custom.hint}
+                outsideMsg={t.custom.outside}
+                placeTag={
+                  zone
+                    ? undefined
+                    : `${t.custom.placeTag}${terrain.status === 'ok' ? ` · ${fmtNum(terrain.data.elevation_m, lang)} m` : ''}`
+                }
+              />
+            </Suspense>
+          ) : (
+            <MapPicker zones={zones} place={place} onZone={selectZone} onPick={pickPoint} labelOf={zoneLabel} />
+          )}
+          <div className={`card place-card glass${stale ? ' is-stale' : ''}`} aria-busy={stale}>
+            {zone ? (
+              <>
+                <div className="kicker">
+                  <PinIcon size={14} /> {`${t.province} ${zone.province}`}
+                </div>
+                <h3>{placeName}</h3>
+                <p className="meta">{lang === 'en' ? zone.note_en ?? zone.note : zone.note}</p>
+              </>
+            ) : (
+              <CustomPointCard
+                lang={lang}
+                place={place}
+                zones={zones}
+                terrain={terrain}
+                labelOf={zoneLabel}
+                onGoZone={selectZone}
+              />
             )}
+            <div className="stale-status" role="status">
+              {stale && report ? (
+                <>
+                  <span className="spinner" aria-hidden="true" /> {t.custom.analyzing}
+                </>
+              ) : null}
+            </div>
             {report && insight && (
               <>
                 <nav className="summary" aria-label={t.heroSummary}>
@@ -339,12 +399,18 @@ export default function App() {
                   </div>
                   <div className="fact">
                     <span>{t.heroPlotAltitude}</span>
-                    <b>{fmtNum(report.location.altitude, lang)} m</b>
+                    <b>
+                      <CountUp value={report.location.altitude} format={(n) => `${fmtNum(Math.round(n), lang)} m`} />
+                    </b>
                   </div>
                   <div className="fact">
                     <span>{t.factFrost}</span>
                     <b>
-                      {fmtNum((insight.ahs.event_probability_recent ?? 0) * 100, lang)} % {t.ofSeasons}
+                      <CountUp
+                        value={(insight.ahs.event_probability_recent ?? 0) * 100}
+                        format={(n) => `${fmtNum(Math.round(n), lang)} %`}
+                      />{' '}
+                      {t.ofSeasons}
                     </b>
                   </div>
                   <div className="fact">
