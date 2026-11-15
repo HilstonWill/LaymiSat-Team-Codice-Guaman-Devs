@@ -895,3 +895,8 @@ details.today-alert .ta-action { padding: 0 12px 12px 56px; }
   .story-tabs { padding: 3px 2px; }
   .story-tabs button { padding: 7px 7px; font-size: 0.8rem; }
 }
+
+/* Medidor de rotaciones: hoy y meta casi iguales → los rótulos se reparten a cada lado del punto, sin pisarse. */
+.rpw-mark.is-close.is-now b, .rpw-mark.is-close.is-now small { left: auto; right: 2px; text-align: right; }
+.rpw-mark.is-close.is-goal b, .rpw-mark.is-close.is-goal small { right: auto; left: 2px; text-align: left; }
+.rpw-mark.is-same small { color: #f4e7cf; }

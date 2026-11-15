@@ -368,14 +368,32 @@ export default function RotationPlanner(p: Props) {
                   </span>
                   <div className="rpw-meter" role="img" aria-label={`${cur.overall} → ${goalRes.overall} / 100`}>
                     <i className="rpw-meter-fill" style={{ width: `${goalRes.overall}%` }} />
-                    <span className="rpw-mark is-now" style={{ left: `${cur.overall}%` }}>
-                      <b>{cur.overall}</b>
-                      <small>{r.today}</small>
-                    </span>
-                    <span className="rpw-mark is-goal" style={{ left: `${goalRes.overall}%` }}>
-                      <b>{goalRes.overall}</b>
-                      <small>{r.goalWord}</small>
-                    </span>
+                    {cur.overall === goalRes.overall ? (
+                      // Misma nota hoy y en la meta: una sola marca con los dos rótulos, sin superposición.
+                      <span className="rpw-mark is-goal is-same" style={{ left: `${goalRes.overall}%` }}>
+                        <b>{goalRes.overall}</b>
+                        <small>
+                          {r.today} · {r.goalWord}
+                        </small>
+                      </span>
+                    ) : (
+                      <>
+                        <span
+                          className={`rpw-mark is-now${Math.abs(cur.overall - goalRes.overall) < 14 ? ' is-close' : ''}`}
+                          style={{ left: `${cur.overall}%` }}
+                        >
+                          <b>{cur.overall}</b>
+                          <small>{r.today}</small>
+                        </span>
+                        <span
+                          className={`rpw-mark is-goal${Math.abs(cur.overall - goalRes.overall) < 14 ? ' is-close' : ''}`}
+                          style={{ left: `${goalRes.overall}%` }}
+                        >
+                          <b>{goalRes.overall}</b>
+                          <small>{r.goalWord}</small>
+                        </span>
+                      </>
+                    )}
                   </div>
                 </div>
 
