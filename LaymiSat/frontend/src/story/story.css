@@ -923,3 +923,11 @@ details.today-alert .ta-action { padding: 0 12px 12px 56px; }
   .story-map .maplibregl-ctrl-attrib-inner { font-size: 9px; line-height: 1.25; }
   .story-map .maplibregl-ctrl-attrib.maplibregl-compact { min-height: 20px; }
 }
+
+/* Calendario: el recuadro "Qué hacer" sale al borde de la tarjeta (margen negativo) y debe conservar siempre el relleno lateral
+   igual al de la tarjeta; antes ".gp-line" (más abajo, mismo peso) se lo quitaba en pantallas bajas o con zoom. */
+.story.v-calendario .gp-line.gp-todo { margin-inline: -16px; padding-inline: 16px; }
+@media (max-width: 900px) {
+  .story.v-calendario .gp-detail { padding-inline: 14px; }
+  .story.v-calendario .gp-line.gp-todo { margin-inline: -14px; padding-inline: 14px; }
+}
