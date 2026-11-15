@@ -11,8 +11,11 @@ const q = new URLSearchParams(window.location.search)
 const isTech = q.get('modo') === 'tecnico' || q.get('full') === '1'
 // ?demo=1 abre en la historia y la reproduce sola (presentación); ?historia=1 abre en la historia.
 const isDemo = q.get('demo') === '1'
+// Sin parámetros abre el panel de zonas; ?vista=hoy|calendario abre esa pestaña.
+const VIEWS: View[] = ['zonas', 'hoy', 'rotaciones', 'calendario', 'historia']
+const asked = q.get('vista') as View | null
 const initialView: View =
-  isDemo || q.get('historia') === '1' ? 'historia' : q.get('vista') === 'calendario' ? 'calendario' : 'hoy'
+  isDemo || q.get('historia') === '1' ? 'historia' : asked && VIEWS.includes(asked) ? asked : 'zonas'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -21,7 +24,7 @@ createRoot(document.getElementById('root')!).render(
         <App />
       </Suspense>
     ) : (
-      <StoryMode initialView={initialView} autoplay={isDemo} />
+      <StoryMode initialView={initialView} />
     )}
   </StrictMode>,
 )

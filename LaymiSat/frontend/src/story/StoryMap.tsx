@@ -89,7 +89,18 @@ function frostRamp(line: number): ExpressionSpecification {
   ]
 }
 
-export default function StoryMap({ zone, frostLine, playing, level, t, onFail }: {
+/** Una comunidad en el panel de zonas: dónde está, cómo se llama y su semáforo de la campaña. */
+export interface OverviewZone {
+  id: string
+  lat: number
+  lon: number
+  name: string
+  /** Texto para lectores de pantalla, p. ej. "Chinchero: riesgo alto". */
+  label: string
+  level: Level | null
+}
+
+export default function StoryMap({ zone, frostLine, playing, level, t, onFail, overview = null, onZonePick }: {
   zone: Zone | undefined
   frostLine: number | null
   playing: boolean
@@ -97,12 +108,21 @@ export default function StoryMap({ zone, frostLine, playing, level, t, onFail }:
   level: Level | null
   t: StoryDict
   onFail: () => void
+  /** Panel de zonas: todas las comunidades a la vista, cada una con su semáforo. */
+  overview?: OverviewZone[] | null
+  onZonePick?: (id: string) => void
 }) {
   const box = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MLMap | null>(null)
   const marker = useRef<maplibregl.Marker | null>(null)
+  const pins = useRef<maplibregl.Marker[]>([])
+  const pickRef = useRef(onZonePick)
+  useEffect(() => {
+    pickRef.current = onZonePick
+  })
   const [ready, setReady] = useState(false)
   const intro = useRef(true)
+  const isOverview = overview !== null
 
   useEffect(() => {
     const container = box.current
@@ -154,12 +174,63 @@ export default function StoryMap({ zone, frostLine, playing, level, t, onFail }:
     if (level) el.classList.add(`lv-${level}`)
   }, [level])
 
-  // Vuelo a la zona (el primero es la intro desde el globo).
+  // Pines de todas las comunidades (solo en el panel de zonas). Tocar uno abre su "Hoy".
   useEffect(() => {
     const map = mapRef.current
-    if (!map || !ready || !zone) return
-    marker.current?.setLngLat([zone.lon, zone.lat])
+    pins.current.forEach((p) => p.remove())
+    pins.current = []
+    if (!map || !overview) return
+    pins.current = overview.map((z) => {
+      const el = document.createElement('button')
+      el.type = 'button'
+      el.className = `zone-pin${z.level ? ` lv-${z.level}` : ''}`
+      el.setAttribute('aria-label', z.label)
+      const dot = document.createElement('i')
+      dot.setAttribute('aria-hidden', 'true')
+      const name = document.createElement('span')
+      name.textContent = z.name
+      el.append(dot, name)
+      el.addEventListener('click', () => pickRef.current?.(z.id))
+      return new maplibregl.Marker({ element: el, anchor: 'left', offset: [-9, 0] }).setLngLat([z.lon, z.lat]).addTo(map)
+    })
+    return () => {
+      pins.current.forEach((p) => p.remove())
+      pins.current = []
+    }
+  }, [overview, ready])
+
+  // Cámara: vista general de todas las zonas, o vuelo a la zona elegida (el primero sale del globo).
+  const overviewKey = overview?.map((z) => z.id).join(',') ?? ''
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !ready) return
+    const plot = marker.current?.getElement()
+    // '' (no 'visible'): así hereda el visibility:hidden del escenario cuando la pestaña Calendario lo oculta.
+    if (plot) plot.style.visibility = isOverview ? 'hidden' : ''
     const first = intro.current
+    if (isOverview && overview && overview.length) {
+      intro.current = false
+      if (first && !reducedMotion()) map.once('moveend', () => map.setProjection({ type: 'mercator' }))
+      const lons = overview.map((z) => z.lon)
+      const lats = overview.map((z) => z.lat)
+      map.fitBounds(
+        [
+          [Math.min(...lons), Math.min(...lats)],
+          [Math.max(...lons), Math.max(...lats)],
+        ],
+        {
+          padding: { top: 70, bottom: 60, left: 50, right: 140 },
+          pitch: 52,
+          bearing: -15,
+          maxZoom: 10,
+          duration: reducedMotion() ? 0 : first ? 2800 : 1800,
+          essential: true,
+        },
+      )
+      return
+    }
+    if (isOverview || !zone) return
+    marker.current?.setLngLat([zone.lon, zone.lat])
     intro.current = false
     if (first && !reducedMotion()) map.once('moveend', () => map.setProjection({ type: 'mercator' }))
     map.flyTo({
@@ -167,11 +238,12 @@ export default function StoryMap({ zone, frostLine, playing, level, t, onFail }:
       zoom: 10.6,
       pitch: 62,
       bearing: -25,
-      duration: reducedMotion() ? 0 : first ? 5200 : 2400,
+      // La entrada desde el globo es corta: en una demo nadie espera 5 segundos.
+      duration: reducedMotion() ? 0 : first ? 2800 : 2000,
       curve: 1.5,
       essential: true,
     })
-  }, [zone, ready])
+  }, [zone, ready, isOverview, overviewKey]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Línea de helada de la campaña.
   useEffect(() => {

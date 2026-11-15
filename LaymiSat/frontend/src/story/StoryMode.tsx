@@ -1,7 +1,23 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
-import { api, type Alert, type Level, type Place, type Report, type StoryData, type Zone } from '../api'
-import CalendarGP from '../components/CalendarGP'
-import { DecisionCard } from '../components/FarmerViews'
+import {
+  api,
+  DEFAULT_PRIORITIES,
+  type Alert,
+  type Criterion,
+  type CropsCatalog,
+  type Level,
+  type Place,
+  type Preset,
+  type Report,
+  type RotationResponse,
+  type Slope,
+  type SoilInput,
+  type StoryData,
+  type Zone,
+} from '../api'
+import { BestRotation } from '../components/FarmerViews'
+import RotationComparator from '../components/RotationComparator'
+import SeasonCalendar from './SeasonCalendar'
 import { ALERT_ICONS } from '../components/Icons'
 import SectionBoundary from '../components/SectionBoundary'
 import { DICTS, fmtNum, type Dict, type Lang } from '../i18n'
@@ -67,15 +83,34 @@ function supportsWebGL() {
   }
 }
 
-export type View = 'hoy' | 'calendario' | 'historia'
+/** Espera a que el valor deje de cambiar (p. ej. mientras se arrastra una prioridad) antes de recalcular. */
+function useDebounced<T>(value: T, ms: number): T {
+  const [v, setV] = useState(value)
+  useEffect(() => {
+    const id = setTimeout(() => setV(value), ms)
+    return () => clearTimeout(id)
+  }, [value, ms])
+  return v
+}
+
+export type View = 'zonas' | 'hoy' | 'rotaciones' | 'calendario' | 'historia'
+
+/** Lo esencial de un informe para decidir: peor semáforo, la alerta que lo causa y la ventana de siembra. */
+function summarize(r: Report) {
+  const ads = r.alerts.find((a) => a.id === 'ADS')?.metrics as Record<string, unknown> | undefined
+  const win = (ads?.suggested_window as { from: string; to: string } | null | undefined) ?? null
+  const worstAlert = r.alerts.reduce((w, a) => (RANK[a.level] > RANK[w.level] ? a : w), r.alerts[0])
+  return { win, worst: (worstAlert?.level ?? 'verde') as Level, worstAlert }
+}
 
 /**
  * Pantalla única del MVP sobre el terreno 3D:
+ *  - Zonas: todas las comunidades piloto con su semáforo (lo que ve quien compra o coordina).
  *  - Hoy: qué hago esta campaña (decisión + tres alertas) y dónde suele helar hoy.
  *  - Calendario: la rueda de Guaman Poma frente a los datos.
  *  - 40 años: la historia que explica por qué (línea de tiempo).
  */
-export default function StoryMode({ initialView = 'hoy', autoplay = false }: { initialView?: View; autoplay?: boolean }) {
+export default function StoryMode({ initialView = 'zonas' }: { initialView?: View }) {
   const [lang, setLang] = useState<Lang>(initialLang)
   const t = STORY_TEXT[lang]
   const d = DICTS[lang]
@@ -85,17 +120,39 @@ export default function StoryMode({ initialView = 'hoy', autoplay = false }: { i
   const zone = zones.find((z) => z.id === zoneId)
   const [report, setReport] = useState<Report | null>(null)
   const [story, setStory] = useState<StoryData | null>(null)
+  // Informe de cada comunidad para el panel de zonas (llegan en paralelo; cada uno aparece al llegar).
+  const [allReports, setAllReports] = useState<Record<string, Report>>({})
+  // Comparador de rotaciones (el mismo de la vista técnica): secuencias editables, ladera, suelo y prioridades.
+  const [catalog, setCatalog] = useState<CropsCatalog | null>(null)
+  const [sequences, setSequences] = useState<Preset[]>([])
+  const [slope, setSlope] = useState<Slope>('moderada')
+  const [soil, setSoil] = useState<SoilInput>({ texture: 'franco', organic_matter: 'media', declared: false })
+  const [priorities, setPriorities] = useState<Record<Criterion, number>>(DEFAULT_PRIORITIES)
+  const [rot, setRot] = useState<RotationResponse | null>(null)
+  const [rotLoading, setRotLoading] = useState(false)
+  const [rotError, setRotError] = useState<string | null>(null)
+  const dSeqs = useDebounced(sequences, 300)
+  const dPrio = useDebounced(priorities, 300)
   const [error, setError] = useState(false)
   const [idx, setIdx] = useState(0)
   const [playing, setPlaying] = useState(false)
   const [speed, setSpeed] = useState(1)
   const [finished, setFinished] = useState(false)
   const [flat, setFlat] = useState(() => !supportsWebGL())
-  const pendingAutoplay = useRef(autoplay)
+  const firstPlay = useRef(initialView === 'historia')
 
   useEffect(() => {
     document.documentElement.lang = lang
-    const section = view === 'historia' ? t.title : view === 'calendario' ? t.tabCalendar : t.todayKicker
+    const section =
+      view === 'historia'
+        ? t.title
+        : view === 'calendario'
+          ? t.tabCalendar
+          : view === 'zonas'
+            ? t.tabZones
+            : view === 'rotaciones'
+              ? t.tabRotations
+              : t.todayKicker
     document.title = `LaymiSat · ${section}`
     try {
       localStorage.setItem('laymisat-lang', lang)
@@ -107,6 +164,54 @@ export default function StoryMode({ initialView = 'hoy', autoplay = false }: { i
   useEffect(() => {
     api.zones().then(setZones).catch(() => setError(true))
   }, [])
+
+  useEffect(() => {
+    api
+      .crops()
+      .then((c) => {
+        setCatalog(c)
+        setSequences(c.presets.map((p) => ({ ...p, sequence: [...p.sequence] })))
+      })
+      .catch((e: Error) => setRotError(e.message))
+  }, [])
+
+  // Se recalcula al cambiar de zona, idioma o cualquier ajuste del comparador.
+  useEffect(() => {
+    if (!zone || !dSeqs.length) return
+    const place: Place = { lat: zone.lat, lon: zone.lon, altitude: zone.altitude, name: zone.name }
+    const ctrl = new AbortController()
+    setRotLoading(true)
+    setRotError(null)
+    api
+      .rotations(
+        { place, plantAdjust: PLANT_ADJUST, slope, soil, priorities: dPrio, lang, sequences: dSeqs },
+        ctrl.signal,
+      )
+      .then((r) => setRot(r))
+      .catch((e: Error) => {
+        if (ctrl.signal.aborted) return
+        setRot(null)
+        setRotError(e.message)
+      })
+      .finally(() => !ctrl.signal.aborted && setRotLoading(false))
+    return () => ctrl.abort()
+  }, [zone, lang, slope, soil, dPrio, dSeqs])
+
+  useEffect(() => {
+    if (!zones.length) return
+    const ctrl = new AbortController()
+    setAllReports({})
+    zones.forEach((z) => {
+      const place: Place = { lat: z.lat, lon: z.lon, altitude: z.altitude, name: z.name }
+      api
+        .report(place, PLANT_ADJUST, lang, ctrl.signal)
+        .then((r) => setAllReports((prev) => ({ ...prev, [z.id]: r })))
+        .catch(() => {
+          /* una comunidad sin datos no tumba el panel: queda sin semáforo */
+        })
+    })
+    return () => ctrl.abort()
+  }, [zones, lang])
 
   useEffect(() => {
     if (!zone) return
@@ -148,11 +253,18 @@ export default function StoryMode({ initialView = 'hoy', autoplay = false }: { i
     setFinished(false)
   }, [rows])
 
-  // Demo (?demo=1): la historia arranca sola cuando llegan los datos y termina el vuelo de entrada.
+  // Al entrar en "40 años" (pestaña, botón "¿Por qué?", ?historia=1 o ?demo=1) la historia se reproduce sola,
+  // y con ella la órbita lenta de la cámara. Si ya había terminado, vuelve a empezar desde 1984.
   useEffect(() => {
-    if (!pendingAutoplay.current || !rows.length || view !== 'historia') return
-    pendingAutoplay.current = false
-    const id = window.setTimeout(() => setPlaying(true), reducedMotion() ? 0 : 5600)
+    if (view !== 'historia' || !rows.length) return
+    // Si la app abre directo aquí, se espera el vuelo de entrada del mapa (~2,8 s); si no, arranca enseguida.
+    const wait = reducedMotion() ? 0 : firstPlay.current ? 3200 : 600
+    const id = window.setTimeout(() => {
+      firstPlay.current = false
+      setIdx((i) => (i >= rows.length - 1 ? 0 : i))
+      setFinished(false)
+      setPlaying(true)
+    }, wait)
     return () => window.clearTimeout(id)
   }, [rows, view])
 
@@ -189,13 +301,24 @@ export default function StoryMode({ initialView = 'hoy', autoplay = false }: { i
   const recentLine = story?.recent.frost_line ?? null
   const mapFrostLine = view === 'historia' ? (row?.frostLine ?? null) : recentLine
 
-  const insight = useMemo(() => {
-    if (!report) return null
-    const ads = report.alerts.find((a) => a.id === 'ADS')?.metrics as Record<string, unknown> | undefined
-    const win = (ads?.suggested_window as { from: string; to: string } | null | undefined) ?? null
-    const worst = report.alerts.reduce<Level>((w, a) => (RANK[a.level] > RANK[w] ? a.level : w), 'verde')
-    return { win, worst }
-  }, [report])
+  const insight = useMemo(() => (report && report.alerts.length ? summarize(report) : null), [report])
+  const bestRot = rot?.results.find((r) => r.id === rot.best_id) ?? null
+
+  const zoneName = (z: Zone) => (lang === 'en' ? z.name_en ?? z.name : z.name)
+  // Pines del panel de zonas (memo: el mapa solo los rehace cuando cambia un semáforo o el idioma).
+  const overview = useMemo(() => {
+    if (view !== 'zonas') return null
+    return zones.map((z) => {
+      const r = allReports[z.id]
+      const level = r && r.alerts.length ? summarize(r).worst : null
+      const name = lang === 'en' ? z.name_en ?? z.name : z.name
+      return { id: z.id, lat: z.lat, lon: z.lon, name, level, label: level ? `${name}: ${d.levels[level]}` : name }
+    })
+  }, [view, zones, allReports, lang, d])
+  const openZone = (id: string) => {
+    setZoneId(id)
+    goView('hoy')
+  }
 
   const play = () => {
     if (finished || idx >= rows.length - 1) {
@@ -211,11 +334,13 @@ export default function StoryMode({ initialView = 'hoy', autoplay = false }: { i
   }
 
   const tabs: { id: View; label: string }[] = [
+    { id: 'zonas', label: t.tabZones },
     { id: 'hoy', label: t.tabToday },
+    { id: 'rotaciones', label: t.tabRotations },
     { id: 'calendario', label: t.tabCalendar },
     { id: 'historia', label: t.tabStory },
   ]
-  const ready = Boolean(report && story)
+  const ready = view === 'zonas' ? Object.keys(allReports).length > 0 : Boolean(report && story)
 
   return (
     <div className={`story v-${view}`}>
@@ -259,11 +384,13 @@ export default function StoryMode({ initialView = 'hoy', autoplay = false }: { i
               ) : (
                 <StoryMap
                   zone={zone}
-                  frostLine={mapFrostLine}
+                  frostLine={view === 'zonas' ? null : mapFrostLine}
                   playing={playing}
-                  level={view === 'historia' ? null : insight?.worst ?? null}
+                  level={view === 'historia' || view === 'zonas' ? null : insight?.worst ?? null}
                   t={t}
                   onFail={() => setFlat(true)}
+                  overview={overview}
+                  onZonePick={openZone}
                 />
               )}
             </Suspense>
@@ -271,7 +398,9 @@ export default function StoryMode({ initialView = 'hoy', autoplay = false }: { i
           {view === 'historia' && row && report && (
             <SceneCard row={row} t={t} lang={lang} refLabel={refLabel} altitude={altitude} />
           )}
-          {view !== 'historia' && story && <TodayScene story={story} altitude={altitude} t={t} lang={lang} />}
+          {(view === 'hoy' || view === 'calendario') && story && (
+            <TodayScene story={story} altitude={altitude} t={t} lang={lang} />
+          )}
           {view === 'historia' && finished && report && story && (
             <Summary
               rows={rows}
@@ -283,17 +412,49 @@ export default function StoryMode({ initialView = 'hoy', autoplay = false }: { i
               onCta={() => goView('hoy')}
             />
           )}
-          {!ready && <div className="story-state">{error ? t.error : t.loading}</div>}
+          {!ready && (
+            <div className="story-state">{error ? t.error : view === 'zonas' ? t.zonesLoading : t.loading}</div>
+          )}
         </div>
 
         <aside className="story-side" aria-live="polite">
+          {view === 'zonas' && (
+            <ZonesPanel zones={zones} reports={allReports} t={t} d={d} lang={lang} nameOf={zoneName} onOpen={openZone} />
+          )}
+
           {view === 'hoy' && report && insight && (
             <>
-              <DecisionCard alerts={report.alerts} window={insight.win} t={d} />
+              <button type="button" className="back-zones" onClick={() => goView('zonas')}>
+                {t.allZones}
+              </button>
+              <div className={`hoy-decision ${insight.worst}`} role="status">
+                <span className="hd-kicker">
+                  {zone ? `${zoneName(zone)} · ` : ''}
+                  {d.farmer.decideKicker}
+                </span>
+                <strong className="hd-title">{d.farmer.decideTitle[insight.worst]}</strong>
+                {insight.win ? (
+                  <p className="hd-window">
+                    <span>{t.sowBetween}</span>
+                    <b>
+                      {insight.win.from} – {insight.win.to}
+                    </b>
+                  </p>
+                ) : (
+                  <p className="hd-window none">{d.farmer.noWindow}</p>
+                )}
+                <p className="hd-action">{insight.worstAlert.action}</p>
+              </div>
               <section>
                 <h2>{t.alertsTitle}</h2>
                 <TodayAlerts alerts={report.alerts} d={d} />
               </section>
+              {bestRot && (
+                <section className="today-rot">
+                  <h2>{d.farmer.sowTitle}</h2>
+                  <BestRotation best={bestRot} t={d} onMore={() => goView('rotaciones')} />
+                </section>
+              )}
               <div className="today-links">
                 <button className="btn btn-cta" onClick={() => goView('historia')}>
                   {t.why}
@@ -306,13 +467,53 @@ export default function StoryMode({ initialView = 'hoy', autoplay = false }: { i
             </>
           )}
 
-          {view === 'calendario' && report && (
-            <section className="cal-sheet">
-              <div className="kicker">{d.calendarKicker}</div>
-              <h2 className="cal-title">{d.calendarTitle}</h2>
-              <p className="cal-tip">{t.calendarTip}</p>
-              <CalendarGP rows={report.calendar} t={d} lang={lang} />
+          {view === 'rotaciones' && (
+            <section className="rot-sheet" aria-labelledby="rot-title">
+              <div className="rot-sheet-inner">
+                <div className="section-head">
+                  <div>
+                    <div className="kicker">
+                      {zone ? `${zoneName(zone)} · ` : ''}
+                      {d.rotKicker}
+                    </div>
+                    <h2 id="rot-title">{d.rotTitle}</h2>
+                  </div>
+                  <p>
+                    {d.rotIntro} {bestRot && <b>{d.bestNow(bestRot.name, bestRot.overall)}</b>}
+                  </p>
+                </div>
+                {rotError && (
+                  <div className="error">
+                    {d.loadError}: {rotError}
+                  </div>
+                )}
+                {catalog ? (
+                  <SectionBoundary message={d.sectionError} resetKey={rot}>
+                    <RotationComparator
+                      catalog={catalog}
+                      sequences={sequences}
+                      onChange={setSequences}
+                      slope={slope}
+                      onSlope={setSlope}
+                      soil={soil}
+                      onSoil={setSoil}
+                      priorities={priorities}
+                      onPriorities={setPriorities}
+                      result={rot}
+                      loading={rotLoading}
+                      t={d}
+                      lang={lang}
+                    />
+                  </SectionBoundary>
+                ) : (
+                  !rotError && <p className="rot-loading">{t.rotLoading}</p>
+                )}
+              </div>
             </section>
+          )}
+
+          {view === 'calendario' && report && (
+            <SeasonCalendar rows={report.calendar} t={t} d={d} lang={lang} />
           )}
 
           {view === 'historia' && (
@@ -415,47 +616,132 @@ function TodayScene({ story, altitude, t, lang }: { story: StoryData; altitude: 
   const r = story.recent
   if (r.frost_line === null) return null
   const inside = r.frost_line <= altitude
+  // Dos líneas y la leyenda: el detalle (años, método) vive en "40 años".
   return (
     <div className="scene scene-today">
-      <span className="scene-kicker">{t.todayKicker}</span>
       <p className="scene-frost">
-        {t.recentFrost(String(r.from ?? '—'), String(r.to ?? '—'), fmtNum(r.frost_line, lang))}
+        <i className="lg-frost" aria-hidden="true" /> {t.frostShort(fmtNum(r.frost_line, lang))}
       </p>
       <p className={`scene-plot ${inside ? 'is-frost' : 'is-ok'}`}>
-        {inside ? t.recentPlotFrost(fmtNum(altitude, lang)) : t.recentPlotOk(fmtNum(altitude, lang))}
-      </p>
-      <p className="scene-legend">
-        <i className="lg-frost" aria-hidden="true" /> {t.legendRecent}
+        {inside ? t.plotIn(fmtNum(altitude, lang)) : t.plotOut(fmtNum(altitude, lang))}
       </p>
     </div>
   )
 }
 
-/** Las tres alertas, una por fila: tema, semáforo, veredicto y qué hacer. */
+/** Las tres alertas: una línea cada una (tema, veredicto, semáforo); "qué hacer" se abre al tocarla. */
 function TodayAlerts({ alerts, d }: { alerts: Alert[]; d: Dict }) {
   return (
     <ul className="today-alerts">
       {alerts.map((a) => {
         const Icon = ALERT_ICONS[a.id]
         return (
-          <li key={a.id} className={`today-alert ${a.level}`}>
-            <span className="ta-icon" aria-hidden="true">
-              <Icon size={20} />
-            </span>
-            <div className="ta-body">
-              <div className="ta-head">
-                <b>{d.alertShort[a.id]}</b>
+          <li key={a.id}>
+            <details className={`today-alert ${a.level}`}>
+              <summary>
+                <span className="ta-icon" aria-hidden="true">
+                  <Icon size={20} />
+                </span>
+                <span className="ta-main">
+                  <b>{d.alertShort[a.id]}</b>
+                  <span className="ta-verdict">{d.alertVerdict[a.id]?.[a.level]}</span>
+                </span>
                 <span className={`ta-pill ${a.level}`}>{d.levels[a.level]}</span>
-              </div>
-              <p className="ta-verdict">{d.alertVerdict[a.id]?.[a.level]}</p>
+                <svg className="ta-chev" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                </svg>
+              </summary>
               <p className="ta-action">
                 <span>{d.whatToDo}</span> {a.action}
               </p>
-            </div>
+            </details>
           </li>
         )
       })}
     </ul>
+  )
+}
+
+/** Panel de zonas: cuántas comunidades están en cada semáforo y una tarjeta por comunidad. */
+function ZonesPanel({ zones, reports, t, d, lang, nameOf, onOpen }: {
+  zones: Zone[]
+  reports: Record<string, Report>
+  t: StoryDict
+  d: Dict
+  lang: Lang
+  nameOf: (z: Zone) => string
+  onOpen: (id: string) => void
+}) {
+  const items = zones
+    .map((z) => {
+      const r = reports[z.id]
+      return { z, r, s: r && r.alerts.length ? summarize(r) : null }
+    })
+    // Primero las de mayor riesgo: es lo que hay que atender.
+    .sort((a, b) => (b.s ? RANK[b.s.worst] : -1) - (a.s ? RANK[a.s.worst] : -1))
+  const counts: Record<Level, number> = { rojo: 0, ambar: 0, verde: 0 }
+  items.forEach((it) => it.s && counts[it.s.worst]++)
+  return (
+    <>
+      <div className="zones-head">
+        <span className="zones-kicker">{t.zonesKicker}</span>
+        <h2 className="zones-title">{t.zonesTitle(zones.length)}</h2>
+        <div className="zones-counts">
+          {(['rojo', 'ambar', 'verde'] as const).map(
+            (l) =>
+              counts[l] > 0 && (
+                <span key={l} className={`zc ${l}`}>
+                  <b>{counts[l]}</b> {d.levels[l]}
+                </span>
+              ),
+          )}
+        </div>
+        <p className="zones-hint">{t.zonesHint}</p>
+      </div>
+      <ul className="zone-list">
+        {items.map(({ z, r, s }) => (
+          <li key={z.id}>
+            <button type="button" className={`zone-card${s ? ` ${s.worst}` : ''}`} onClick={() => onOpen(z.id)}>
+              <span className="zcard-head">
+                <span className="zcard-name">
+                  <b>{nameOf(z)}</b>
+                  <span>
+                    {z.province} · {fmtNum(z.altitude, lang)} m
+                  </span>
+                </span>
+                {s ? <span className={`ta-pill ${s.worst}`}>{d.levels[s.worst]}</span> : <span className="spinner" aria-hidden="true" />}
+              </span>
+              {r && (
+                <span className="zcard-alerts">
+                  {r.alerts.map((a) => {
+                    const Icon = ALERT_ICONS[a.id]
+                    return (
+                      <span key={a.id} className={`zdot ${a.level}`} title={`${d.alertShort[a.id]}: ${d.levels[a.level]}`}>
+                        <Icon size={14} /> {d.alertShort[a.id]}
+                      </span>
+                    )
+                  })}
+                </span>
+              )}
+              {s && (
+                <span className="zcard-foot">
+                  <span>
+                    {s.win ? (
+                      <>
+                        {t.zoneSow}: <b>{s.win.from} – {s.win.to}</b>
+                      </>
+                    ) : (
+                      d.farmer.noWindow
+                    )}
+                  </span>
+                  <span className="zcard-cta">{t.zoneOpen} →</span>
+                </span>
+              )}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </>
   )
 }
 
