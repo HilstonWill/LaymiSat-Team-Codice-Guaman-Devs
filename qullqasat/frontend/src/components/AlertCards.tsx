@@ -12,7 +12,7 @@ export default function AlertCards({ alerts, t, lang }: { alerts: Alert[]; t: Di
               <span className="code">{a.id}</span>
               <span className={`pill ${a.level}`}>{t.levels[a.level]}</span>
             </div>
-            <h3 className="question">{a.question}</h3>
+            <h3 className="question">{a.question ?? a.name}</h3>
             <p className="headline">{a.headline}</p>
             <div className="action">
               <b>{t.whatToDo}</b> {a.action}

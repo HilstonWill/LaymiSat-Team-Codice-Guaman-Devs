@@ -19,6 +19,7 @@ import MapPicker from './components/MapPicker'
 import NdviPanel from './components/NdviPanel'
 import RotationComparator from './components/RotationComparator'
 import SourcesPanel from './components/SourcesPanel'
+import SectionBoundary from './components/SectionBoundary'
 import TrendCharts from './components/TrendCharts'
 import { DICTS, fmtNum, type Lang } from './i18n'
 
@@ -338,7 +339,9 @@ export default function App() {
                 </div>
                 <p>{t.alertsIntro(fmtNum(report.location.altitude, lang))}</p>
               </div>
-              <AlertCards alerts={report.alerts} t={t} lang={lang} />
+              <SectionBoundary message={t.sectionError} resetKey={report}>
+                <AlertCards alerts={report.alerts} t={t} lang={lang} />
+              </SectionBoundary>
             </section>
 
             <section aria-labelledby="tendencias">
@@ -348,7 +351,9 @@ export default function App() {
                   <h2 id="tendencias">{t.trendsTitle}</h2>
                 </div>
               </div>
-              <TrendCharts report={report} lang={lang} />
+              <SectionBoundary message={t.sectionError} resetKey={report}>
+                <TrendCharts report={report} lang={lang} />
+              </SectionBoundary>
             </section>
 
             <section aria-labelledby="ndvi">
@@ -358,7 +363,9 @@ export default function App() {
                   <h2 id="ndvi">{t.ndviTitle}</h2>
                 </div>
               </div>
-              <NdviPanel ndvi={ndvi} status={ndviStatus} t={t} lang={lang} />
+              <SectionBoundary message={t.sectionError} resetKey={ndvi}>
+                <NdviPanel ndvi={ndvi} status={ndviStatus} t={t} lang={lang} />
+              </SectionBoundary>
             </section>
 
             <section aria-labelledby="calendario">
@@ -369,7 +376,9 @@ export default function App() {
                 </div>
                 <p>{t.calendarIntro}</p>
               </div>
-              <CalendarGP rows={report.calendar} t={t} lang={lang} />
+              <SectionBoundary message={t.sectionError} resetKey={report}>
+                <CalendarGP rows={report.calendar} t={t} lang={lang} />
+              </SectionBoundary>
             </section>
           </>
         )}
@@ -390,6 +399,7 @@ export default function App() {
                 {t.loadError}: {rotError}
               </div>
             )}
+            <SectionBoundary message={t.sectionError} resetKey={rot}>
             <RotationComparator
               catalog={catalog}
               sequences={sequences}
@@ -405,6 +415,7 @@ export default function App() {
               t={t}
               lang={lang}
             />
+            </SectionBoundary>
           </section>
         )}
 
@@ -416,7 +427,9 @@ export default function App() {
                 <h2 id="fuentes">{t.sourcesTitle}</h2>
               </div>
             </div>
-            <SourcesPanel report={report} t={t} lang={lang} />
+            <SectionBoundary message={t.sectionError} resetKey={report}>
+              <SourcesPanel report={report} t={t} lang={lang} />
+            </SectionBoundary>
           </section>
         )}
 

@@ -180,7 +180,7 @@ export default function RotationComparator(p: Props) {
                           </span>
                         ))}
                       </div>
-                      {r.timeline.map((y, yi) => (
+                      {(r.timeline ?? []).map((y, yi) => (
                         <div className="cover-row" key={yi} role="row">
                           <span className="cover-name" title={y.name}>
                             {yi + 1}
@@ -202,7 +202,7 @@ export default function RotationComparator(p: Props) {
                     <summary>{t.why}</summary>
                     <ul>
                       {active.flatMap((c) =>
-                        r.reasons[c].map((x, i) => (
+                        (r.reasons?.[c] ?? []).map((x, i) => (
                           <li key={`${c}${i}`}>
                             <b>{t.criteria[c]}:</b> {x}
                           </li>
@@ -213,7 +213,7 @@ export default function RotationComparator(p: Props) {
                   <details>
                     <summary>{t.risks}</summary>
                     <ul>
-                      {r.risks.map((x, i) => (
+                      {(r.risks ?? []).map((x, i) => (
                         <li key={i}>{x}</li>
                       ))}
                     </ul>
@@ -221,7 +221,7 @@ export default function RotationComparator(p: Props) {
                   <details>
                     <summary>{t.gaps}</summary>
                     <ul>
-                      {r.info_gaps.map((x, i) => (
+                      {(r.info_gaps ?? []).map((x, i) => (
                         <li key={i}>{x}</li>
                       ))}
                     </ul>
