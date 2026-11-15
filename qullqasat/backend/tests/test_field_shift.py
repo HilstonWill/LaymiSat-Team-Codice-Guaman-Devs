@@ -96,8 +96,10 @@ def test_report_in_english(climate):
     assert rep["tmin_trend"]["unit"] == "°C/decade"
     assert rep["calendar"][0]["name"] == "August"
     assert rep["calendar"][0]["data_sentence"] in {
-        "Higher now than before", "Lower now than before", "About the same as before",
+        "Better than before", "Worse than before", "About the same as before",
+        "Higher than before", "Lower than before",
     }
+    assert rep["calendar"][0]["plain_now"].endswith(("years", "a month", "mm", "°C"))
     json.dumps(rep, allow_nan=False)
 
 

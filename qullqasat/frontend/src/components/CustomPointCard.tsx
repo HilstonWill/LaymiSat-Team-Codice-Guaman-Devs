@@ -55,9 +55,10 @@ interface Props {
   terrain: TerrainState
   labelOf: (z: Zone) => string
   onGoZone: (z: Zone) => void
+  gpsAccuracy?: number | null
 }
 
-export default function CustomPointCard({ lang, place, zones, terrain, labelOf, onGoZone }: Props) {
+export default function CustomPointCard({ lang, place, zones, terrain, labelOf, onGoZone, gpsAccuracy = null }: Props) {
   const t = DICTS[lang]
   const c = t.custom
   const [copied, setCopied] = useState(false)
@@ -104,6 +105,12 @@ export default function CustomPointCard({ lang, place, zones, terrain, labelOf, 
           {copied ? c.copied : ''}
         </span>
       </div>
+      {gpsAccuracy !== null && (
+        <p className={`cp-gps${gpsAccuracy > 100 ? ' is-weak' : ''}`}>
+          <span aria-hidden="true">◉</span> {t.gps.located(fmtNum(gpsAccuracy, lang))}
+          {gpsAccuracy > 100 && <> {t.gps.weak}</>}
+        </p>
+      )}
 
       <div className="cp-terrain" aria-busy={terrain.status === 'loading'}>
         <div className="cp-terrain-head">{c.terrainHead}</div>

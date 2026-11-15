@@ -39,6 +39,9 @@ const TXT = {
     frostMeta:
       'Plant-level frost days in Oct–Dec (mean per season) by altitude band: first 15 seasons vs last 15. The red line marks your plot.',
     first15: 'first 15 seasons',
+    altTakeaway: (plot: string, band: string, now: string, before: string) =>
+      `Your plot (${plot} m) is in the ${band} m band: there are now ${now} frost days per season while the potato sprouts (before: ${before}).`,
+    altSafe: (m: string) => `At ${m} m and below it hardly freezes (under 1 day per season).`,
     last15: 'last 15 seasons',
     rainTitle: 'Sowing rainfall Sep–Nov (mm)',
     rainMeta: 'Total for each complete season. Line: 20th percentile of 1991–2020 (AEH alert threshold).',
@@ -66,6 +69,9 @@ const TXT = {
     frostMeta:
       'Días con helada a nivel de planta en oct–dic (promedio por campaña) por banda de altitud: primeras 15 campañas frente a las últimas 15. La línea roja marca tu parcela.',
     first15: 'primeras 15 campañas',
+    altTakeaway: (plot: string, band: string, now: string, before: string) =>
+      `Tu parcela (${plot} m) está en la franja de ${band} m: hoy hay ${now} días de helada por campaña mientras brota la papa (antes: ${before}).`,
+    altSafe: (m: string) => `A ${m} m o menos casi no hiela (menos de 1 día por campaña).`,
     last15: 'últimas 15 campañas',
     rainTitle: 'Lluvia de siembra sep–nov (mm)',
     rainMeta: 'Total por campaña con datos completos. Línea: percentil 20 de 1991–2020 (umbral de la alerta AEH).',
@@ -96,7 +102,16 @@ function linearFit(xs: number[], ys: number[]) {
   return (x: number) => my + b * (x - mx)
 }
 
-export default function TrendCharts({ report, lang }: { report: Report; lang: Lang }) {
+/** part: 'all' (todo), 'altitude' (solo "¿a qué altura hiela?") o 'evidence' (los otros 3 gráficos). */
+export default function TrendCharts({
+  report,
+  lang,
+  part = 'all',
+}: {
+  report: Report
+  lang: Lang
+  part?: 'all' | 'altitude' | 'evidence'
+}) {
   const x = TXT[lang]
   const { series, traditional_sowing: ts } = report
   const ads = report.alerts.find((a) => a.id === 'ADS')!
@@ -128,6 +143,59 @@ export default function TrendCharts({ report, lang }: { report: Report; lang: La
   ).altitude
   const altData = [...report.frost_by_altitude].reverse().map((r) => ({ ...r, label: `${r.altitude} m` }))
   const tt = report.tmin_trend
+
+  const frostCard = (
+        <div className="card chart-card">
+          <h3>{x.frostTitle}</h3>
+          <p className="meta">{x.frostMeta}</p>
+          <div className="chart">
+            <ResponsiveContainer>
+              <BarChart data={altData} layout="vertical" margin={{ top: 8, right: 16, left: 8, bottom: 0 }}>
+                <CartesianGrid stroke={C.grid} horizontal={false} />
+                <XAxis type="number" tick={{ fontSize: 11 }} />
+                <YAxis type="category" dataKey="label" tick={{ fontSize: 11 }} width={60} />
+                <Tooltip formatter={(v: number, n) => [`${fmtNum(v, lang, 1)} ${x.days}`, n]} />
+                <ReferenceLine y={`${nearestBand} m`} stroke={C.terracotta} strokeWidth={2} ifOverflow="extendDomain" />
+                <Bar dataKey="frost_days_early" name={x.first15} fill={C.muted} />
+                <Bar dataKey="frost_days_recent" name={x.last15} fill={C.potato} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="legend">
+            <span>
+              <i className="swatch" style={{ background: C.muted }} />
+              {x.first15}
+            </span>
+            <span>
+              <i className="swatch" style={{ background: C.potato }} />
+              {x.last15}
+            </span>
+          </div>
+        </div>
+  )
+
+  const near = report.frost_by_altitude.find((r) => r.altitude === nearestBand)
+  const bandsAsc = [...report.frost_by_altitude].sort((a, b) => a.altitude - b.altitude)
+  const safe = bandsAsc.filter((r) => r.frost_days_recent < 1).pop()
+
+  if (part === 'altitude') {
+    return (
+      <div className="alt-frost">
+        {near && (
+          <p className="alt-takeaway">
+            {x.altTakeaway(
+              fmtNum(alt, lang),
+              fmtNum(nearestBand, lang),
+              fmtNum(near.frost_days_recent, lang, 1),
+              fmtNum(near.frost_days_early, lang, 1),
+            )}
+            {safe && <> {x.altSafe(fmtNum(safe.altitude, lang))}</>}
+          </p>
+        )}
+        {frostCard}
+      </div>
+    )
+  }
 
   return (
     <div className="grid grid-2">
@@ -183,33 +251,7 @@ export default function TrendCharts({ report, lang }: { report: Report; lang: La
         </div>
       </div>
 
-      <div className="card chart-card">
-        <h3>{x.frostTitle}</h3>
-        <p className="meta">{x.frostMeta}</p>
-        <div className="chart">
-          <ResponsiveContainer>
-            <BarChart data={altData} layout="vertical" margin={{ top: 8, right: 16, left: 8, bottom: 0 }}>
-              <CartesianGrid stroke={C.grid} horizontal={false} />
-              <XAxis type="number" tick={{ fontSize: 11 }} />
-              <YAxis type="category" dataKey="label" tick={{ fontSize: 11 }} width={60} />
-              <Tooltip formatter={(v: number, n) => [`${fmtNum(v, lang, 1)} ${x.days}`, n]} />
-              <ReferenceLine y={`${nearestBand} m`} stroke={C.terracotta} strokeWidth={2} ifOverflow="extendDomain" />
-              <Bar dataKey="frost_days_early" name={x.first15} fill={C.muted} />
-              <Bar dataKey="frost_days_recent" name={x.last15} fill={C.potato} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-        <div className="legend">
-          <span>
-            <i className="swatch" style={{ background: C.muted }} />
-            {x.first15}
-          </span>
-          <span>
-            <i className="swatch" style={{ background: C.potato }} />
-            {x.last15}
-          </span>
-        </div>
-      </div>
+      {part === 'all' && frostCard}
 
       <div className="card chart-card">
         <h3>{x.rainTitle}</h3>

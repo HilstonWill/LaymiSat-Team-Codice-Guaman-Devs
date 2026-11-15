@@ -29,6 +29,7 @@ import SourcesPanel from './components/SourcesPanel'
 import SectionBoundary from './components/SectionBoundary'
 import TrendCharts from './components/TrendCharts'
 import { DICTS, fmtNum, type Lang } from './i18n'
+import { FEATURES } from './features'
 
 const Map3D = lazy(() => import('./components/Map3D'))
 
@@ -42,6 +43,13 @@ function supportsWebGL() {
 }
 const HAS_WEBGL = typeof document !== 'undefined' && supportsWebGL()
 const LEVEL_RANK: Record<Level, number> = { verde: 0, ambar: 1, rojo: 2 }
+// Mismos límites que acepta el backend (región Cusco).
+const GPS_BOUNDS = { lat: [-15.5, -11.0], lon: [-73.9, -70.3] }
+type GpsState =
+  | { status: 'idle' }
+  | { status: 'locating' }
+  | { status: 'ok'; accuracy: number }
+  | { status: 'error'; message: string }
 
 const DEFAULT_PLACE: Place = { lat: -13.4, lon: -71.85, altitude: 3900, name: 'Potato Park (Pisac)' }
 
@@ -85,9 +93,11 @@ export default function App() {
   const [ndvi, setNdvi] = useState<NdviSummary | null>(null)
   const [ndviStatus, setNdviStatus] = useState<'loading' | 'ok' | 'not_pilot' | 'error'>('loading')
   const [terrain, setTerrain] = useState<TerrainState>({ status: 'idle' })
+  const [gps, setGps] = useState<GpsState>({ status: 'idle' })
   const [aiEnabled, setAiEnabled] = useState(false)
 
   useEffect(() => {
+    if (!FEATURES.aiExplain && !FEATURES.dynamicAlerts) return
     dynamicApi.health().then((h) => setAiEnabled(Boolean(h.ai))).catch(() => setAiEnabled(false))
   }, [])
 
@@ -134,6 +144,7 @@ export default function App() {
 
   const ndviKey = `${dPlace.lat.toFixed(2)},${dPlace.lon.toFixed(2)}`
   useEffect(() => {
+    if (!FEATURES.ndvi) return // panel oculto en el MVP: no pedimos ~23 consultas al ORNL
     const ctrl = new AbortController()
     setNdvi(null)
     setNdviStatus('loading')
@@ -177,11 +188,13 @@ export default function App() {
   const selectZone = (z: Zone) => {
     setZoneId(z.id)
     setTerrain({ status: 'idle' })
+    setGps({ status: 'idle' })
     setPlace({ lat: z.lat, lon: z.lon, altitude: z.altitude, name: z.name })
   }
 
-  const pickPoint = (lat: number, lon: number) => {
+  const pickPoint = (lat: number, lon: number, accuracy?: number) => {
     setZoneId('custom')
+    setGps(accuracy ? { status: 'ok', accuracy } : { status: 'idle' })
     setPlace((p) => ({ lat, lon, altitude: p.altitude, name: `${lat.toFixed(2)}, ${lon.toFixed(2)}` }))
     setTerrain({ status: 'loading' })
     const isCurrent = (p: Place) => p.lat === lat && p.lon === lon
@@ -198,6 +211,36 @@ export default function App() {
 
   // Mientras llega el análisis del nuevo punto, las cifras viejas se atenúan.
   const stale = loading || dPlace !== place || dAdjust !== plantAdjust
+  // GPS del dispositivo: ubica al técnico en la parcela donde está parado.
+  const locate = () => {
+    if (!('geolocation' in navigator)) {
+      setGps({ status: 'error', message: t.gps.unsupported })
+      return
+    }
+    setGps({ status: 'locating' })
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude: lat, longitude: lon, accuracy } = pos.coords
+        if (lat < GPS_BOUNDS.lat[0] || lat > GPS_BOUNDS.lat[1] || lon < GPS_BOUNDS.lon[0] || lon > GPS_BOUNDS.lon[1]) {
+          setGps({ status: 'error', message: t.gps.outside })
+          return
+        }
+        pickPoint(lat, lon, Math.round(accuracy))
+      },
+      (err) => {
+        const message =
+          err.code === err.PERMISSION_DENIED ? t.gps.denied : err.code === err.TIMEOUT ? t.gps.timeout : t.gps.unavailable
+        setGps({ status: 'error', message })
+      },
+      { enableHighAccuracy: true, timeout: 20000, maximumAge: 30000 },
+    )
+  }
+  useEffect(() => {
+    if (gps.status !== 'error') return
+    const id = window.setTimeout(() => setGps({ status: 'idle' }), 6000)
+    return () => window.clearTimeout(id)
+  }, [gps])
+
   const worstLevel = report?.alerts.reduce<Level>(
     (w, a) => (LEVEL_RANK[a.level] > LEVEL_RANK[w] ? a.level : w),
     'verde',
@@ -337,6 +380,10 @@ export default function App() {
                 labels={t.map3d}
                 hint={t.custom.hint}
                 outsideMsg={t.custom.outside}
+                onLocate={locate}
+                locating={gps.status === 'locating'}
+                gpsAccuracy={gps.status === 'ok' ? gps.accuracy : null}
+                message={gps.status === 'error' ? gps.message : null}
                 placeTag={
                   zone
                     ? undefined
@@ -364,6 +411,7 @@ export default function App() {
                 terrain={terrain}
                 labelOf={zoneLabel}
                 onGoZone={selectZone}
+                gpsAccuracy={gps.status === 'ok' ? gps.accuracy : null}
               />
             )}
             <div className="stale-status" role="status">
@@ -451,53 +499,76 @@ export default function App() {
                   alerts={report.alerts}
                   t={t}
                   lang={lang}
-                  aiEnabled={aiEnabled}
+                  aiEnabled={FEATURES.aiExplain && aiEnabled}
                   resetKey={report}
                   explain={(id) => dynamicApi.explain(dPlace, dAdjust, lang, placeName, undefined, id)}
                 />
               </SectionBoundary>
-              <SectionBoundary message={t.sectionError} resetKey={dPlace}>
-                <DynamicAlerts place={dPlace} plantAdjust={dAdjust} placeName={placeName} t={t} lang={lang} />
-              </SectionBoundary>
+              {FEATURES.dynamicAlerts && (
+                <SectionBoundary message={t.sectionError} resetKey={dPlace}>
+                  <DynamicAlerts place={dPlace} plantAdjust={dAdjust} placeName={placeName} t={t} lang={lang} />
+                </SectionBoundary>
+              )}
             </section>
 
-            <section aria-labelledby="tendencias">
+            <section aria-labelledby="altura-helada">
               <div className="section-head">
                 <div>
-                  <div className="kicker">{t.trendsKicker}</div>
-                  <h2 id="tendencias">{t.trendsTitle}</h2>
+                  <div className="kicker">{t.altFrost.kicker}</div>
+                  <h2 id="altura-helada">{t.altFrost.title}</h2>
                 </div>
               </div>
               <SectionBoundary message={t.sectionError} resetKey={report}>
-                <TrendCharts report={report} lang={lang} />
+                <TrendCharts report={report} lang={lang} part="altitude" />
               </SectionBoundary>
             </section>
 
-            <section aria-labelledby="ndvi">
-              <div className="section-head">
-                <div>
-                  <div className="kicker">{t.ndviKicker}</div>
-                  <h2 id="ndvi">{t.ndviTitle}</h2>
+            {FEATURES.ndvi && (
+              <section aria-labelledby="ndvi">
+                <div className="section-head">
+                  <div>
+                    <div className="kicker">{t.ndviKicker}</div>
+                    <h2 id="ndvi">{t.ndviTitle}</h2>
+                  </div>
                 </div>
-              </div>
-              <SectionBoundary message={t.sectionError} resetKey={ndvi}>
-                <NdviPanel ndvi={ndvi} status={ndviStatus} t={t} lang={lang} />
-              </SectionBoundary>
-            </section>
+                <SectionBoundary message={t.sectionError} resetKey={ndvi}>
+                  <NdviPanel ndvi={ndvi} status={ndviStatus} t={t} lang={lang} />
+                </SectionBoundary>
+              </section>
+            )}
 
-            <section aria-labelledby="calendario">
-              <div className="section-head">
-                <div>
-                  <div className="kicker">{t.calendarKicker}</div>
-                  <h2 id="calendario">{t.calendarTitle}</h2>
+            {FEATURES.calendar && (
+              <section aria-labelledby="calendario">
+                <div className="section-head">
+                  <div>
+                    <div className="kicker">{t.calendarKicker}</div>
+                    <h2 id="calendario">{t.calendarTitle}</h2>
+                  </div>
+                  <p>{t.calendarIntro}</p>
                 </div>
-                <p>{t.calendarIntro}</p>
-              </div>
-              <SectionBoundary message={t.sectionError} resetKey={report}>
-                <CalendarGP rows={report.calendar} t={t} lang={lang} />
-              </SectionBoundary>
-            </section>
+                <SectionBoundary message={t.sectionError} resetKey={report}>
+                  <CalendarGP rows={report.calendar} t={t} lang={lang} />
+                </SectionBoundary>
+              </section>
+            )}
           </>
+        )}
+
+        {report && (
+          <section aria-labelledby="tendencias" className="evidence">
+            <details>
+              <summary>
+                <span className="kicker">{t.trendsKicker}</span>
+                <span id="tendencias" className="evidence-title">
+                  {t.altFrost.evidence}
+                </span>
+                <span className="evidence-hint">{t.altFrost.evidenceHint}</span>
+              </summary>
+              <SectionBoundary message={t.sectionError} resetKey={report}>
+                <TrendCharts report={report} lang={lang} part="evidence" />
+              </SectionBoundary>
+            </details>
+          </section>
         )}
 
         {catalog && (

@@ -61,13 +61,16 @@ export interface CalendarRow {
   action: string
   alternative: string
   data_sentence: string
+  trend: 'better' | 'worse' | 'same' | 'up' | 'down'
+  plain_before: string
+  plain_now: string
   nasa_variables: string[]
   indicator_label: string
   unit: string
   early: number | null
   recent: number | null
   change: number | null
-  status: 'se_desfasa' | 'se_mantiene' | 'informativo'
+  status: 'se_desfasa' | 'se_mantiene' | 'no_coincide' | 'informativo'
   early_period: string
   recent_period: string
 }

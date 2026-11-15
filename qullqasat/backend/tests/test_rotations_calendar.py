@@ -60,5 +60,17 @@ def test_calendar_has_twelve_months_and_indicators(climate):
     assert len(load_calendar()["months"]) == 12
     rows = calendar_comparison(at_altitude(climate, 3900), plant_adjust=-2)
     assert len(rows) == 12
-    assert {r["status"] for r in rows} <= {"se_desfasa", "se_mantiene", "informativo"}
+    assert {r["status"] for r in rows} <= {"se_desfasa", "se_mantiene", "no_coincide", "informativo"}
     assert all(r["early"] is not None for r in rows)
+
+
+def test_calendar_trend_and_plain_language():
+    from app.calendar_gp import plain_value, trend_of
+
+    # noviembre: veranillos 13,3 % -> 26,7 % de años es "peor"
+    assert trend_of(13.3, 26.7, "lower_is_better", "% de años") == "worse"
+    # ruido: 0,0 -> 0,1 días/mes no es un cambio
+    assert trend_of(0.0, 0.1, "lower_is_better", "días/mes") == "same"
+    assert trend_of(6.7, 13.3, "higher_is_better", "% de años") == "same"
+    assert plain_value(13.33, 15, "% de años", "es") == "2 de 15 años"
+    assert plain_value(0.7, 15, "días/mes", "es") == "0,7 días al mes"

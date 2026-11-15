@@ -62,7 +62,7 @@ npm run dev        # abre http://localhost:5173
 | `src/components/SourcesPanel.tsx` | Fuentes, resolución y límites |
 | `src/index.css` | Tokens de color (`--maize`, `--terracotta`, `--potato`…), *layout* responsive y estilos de impresión (`@media print`) |
 
-**Librerías:** React 19, Vite 6, TypeScript, Recharts 2.15, react-leaflet 5 y Leaflet 1.9. Fuentes: Fraunces (títulos) e IBM Plex Sans (texto).
+**Librerías:** React 19, Vite 6, TypeScript, Recharts 2.15, react-leaflet 5 y Leaflet 1.9. Fuente: Poppins (títulos y texto, Google Fonts).
 
 ### Contrato con la API
 

@@ -27,6 +27,69 @@ interface Props {
   lang: Lang
 }
 
+// Familia de cada cultivo: alternar familias corta plagas (papa) y repone nitrógeno (leguminosas, descanso).
+type Family = 'papa' | 'tuberculo' | 'grano' | 'leguminosa' | 'descanso'
+const FAMILY: Record<string, Family> = {
+  papa: 'papa',
+  papa_amarga: 'papa',
+  oca: 'tuberculo',
+  cebada: 'grano',
+  avena: 'grano',
+  quinua: 'grano',
+  tarwi: 'leguminosa',
+  haba: 'leguminosa',
+  descanso: 'descanso',
+}
+const FAMILIES: Family[] = ['papa', 'tuberculo', 'grano', 'leguminosa', 'descanso']
+const SHORT_CROP: Record<Lang, Record<string, string>> = {
+  es: {
+    papa: 'Papa',
+    papa_amarga: "Ruk'i",
+    oca: 'Oca',
+    cebada: 'Cebada',
+    avena: 'Avena',
+    quinua: 'Quinua',
+    tarwi: 'Tarwi',
+    haba: 'Haba',
+    descanso: 'Purum',
+  },
+  en: {
+    papa: 'Potato',
+    papa_amarga: "Ruk'i",
+    oca: 'Oca',
+    cebada: 'Barley',
+    avena: 'Oats',
+    quinua: 'Quinoa',
+    tarwi: 'Tarwi',
+    haba: 'Bean',
+    descanso: 'Fallow',
+  },
+}
+const CURRENT_ID = 'acortada'
+
+function CropLine({
+  sequence,
+  lang,
+  label,
+  name,
+}: {
+  sequence: string[]
+  lang: Lang
+  label: string
+  name: (id: string) => string
+}) {
+  return (
+    <ol className="crop-line" aria-label={label}>
+      {sequence.map((c, i) => (
+        <li key={i} className={`fam-${FAMILY[c] ?? 'grano'}`} title={`${i + 1}. ${name(c)}`}>
+          <span className="sr-only">{`${i + 1}. ${name(c)}`}</span>
+          <span aria-hidden="true">{SHORT_CROP[lang][c] ?? name(c)}</span>
+        </li>
+      ))}
+    </ol>
+  )
+}
+
 const CAMPAIGN_MONTHS = [8, 9, 10, 11, 12, 1, 2, 3, 4, 5, 6, 7]
 const RAINY = new Set([11, 12, 1, 2, 3])
 
@@ -42,8 +105,137 @@ export default function RotationComparator(p: Props) {
   const setCrop = (si: number, yi: number, crop: string) =>
     onChange(sequences.map((s, i) => (i === si ? { ...s, sequence: s.sequence.map((c, j) => (j === yi ? crop : c)) } : s)))
 
+  // Lo más fuerte y lo más débil de cada estrategia, tomado de sus puntajes (no es texto inventado).
+  const strengths = (id: string) => {
+    const r = byId[id]
+    if (!r) return null
+    const sorted = [...active].sort((a, b) => r.scores[b] - r.scores[a])
+    const strong = sorted.filter((c) => r.scores[c] >= 70).slice(0, 2)
+    const weak = sorted.filter((c) => r.scores[c] < 45).slice(-2).reverse()
+    return { strong, weak, r }
+  }
+
+  // Antes y después: la rotación actual frente a la mejor opción, con lo que mejora y lo que se cede.
+  const currentSeq = sequences.find((x) => x.id === CURRENT_ID) ?? sequences[0]
+  const cur = currentSeq ? byId[currentSeq.id] : undefined
+  const bestSeq = sequences.find((x) => x.id === result?.best_id)
+  const best = bestSeq ? byId[bestSeq.id] : undefined
+  const deltas =
+    cur && best ? active.map((c) => ({ c, d: best.scores[c] - cur.scores[c] })).filter((x) => x.d !== 0) : []
+  const gains = deltas
+    .filter((x) => x.d > 0)
+    .sort((a, b) => b.d - a.d)
+    .slice(0, 3)
+  const losses = deltas
+    .filter((x) => x.d < 0)
+    .sort((a, b) => a.d - b.d)
+    .slice(0, 2)
+  const sameAsCurrent = !!bestSeq && !!currentSeq && bestSeq.id === currentSeq.id
+
   return (
     <>
+      {cur && best && currentSeq && bestSeq && (
+        <section className="rot-hero" aria-label={t.rotHeroLabel}>
+          {sameAsCurrent ? (
+            <p className="rot-hero-same">{t.rotAlreadyBest(seqName(currentSeq), cur.overall)}</p>
+          ) : (
+            <>
+              <div className="rot-hero-grid">
+                <div className={`rot-hero-side lvl-${cur.level}`}>
+                  <span className="rot-hero-tag">{t.rotYourCurrent}</span>
+                  <b className="rot-hero-name">{seqName(currentSeq)}</b>
+                  <span className="rot-hero-score">
+                    {cur.overall}
+                    <small>/100</small>
+                  </span>
+                  <CropLine sequence={currentSeq.sequence} lang={lang} label={seqName(currentSeq)} name={cropName} />
+                </div>
+                <div className="rot-hero-arrow" aria-hidden="true">
+                  <span>→</span>
+                  <b>
+                    {best.overall - cur.overall > 0 ? '+' : ''}
+                    {best.overall - cur.overall}
+                  </b>
+                </div>
+                <div className={`rot-hero-side lvl-${best.level} is-best`}>
+                  <span className="rot-hero-tag">{t.rotBestAlt}</span>
+                  <b className="rot-hero-name">{seqName(bestSeq)}</b>
+                  <span className="rot-hero-score">
+                    {best.overall}
+                    <small>/100</small>
+                  </span>
+                  <CropLine sequence={bestSeq.sequence} lang={lang} label={seqName(bestSeq)} name={cropName} />
+                </div>
+              </div>
+              <p className="sr-only">{t.rotHeroSr(seqName(currentSeq), cur.overall, seqName(bestSeq), best.overall)}</p>
+              <ul className="rot-deltas">
+                {gains.map(({ c, d }) => (
+                  <li key={c} className="gain">
+                    {t.criteria[c]} +{d}
+                  </li>
+                ))}
+                {losses.map(({ c, d }) => (
+                  <li key={c} className="loss">
+                    {t.rotTradeoff}: {t.criteria[c]} {d}
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+          <p className="rot-disclaimer">{t.rotDisclaimer}</p>
+        </section>
+      )}
+
+      <ul className="fam-legend" aria-hidden="true">
+        {FAMILIES.map((f) => (
+          <li key={f} className={`fam-${f}`}>
+            {t.families[f]}
+          </li>
+        ))}
+      </ul>
+
+      <div className="rot-summary" aria-busy={p.loading}>
+        {sequences.map((s) => {
+          const info = strengths(s.id)
+          const isBest = result?.best_id === s.id
+          return (
+            <article key={s.id} className={`rot-card${isBest ? ' best' : ''}${info ? ` lvl-${info.r.level}` : ''}`}>
+              <div className="rot-card-top">
+                <h3>{seqName(s)}</h3>
+                {isBest && <span className="crown">{t.bestOption}</span>}
+              </div>
+              <CropLine sequence={s.sequence} lang={lang} label={seqName(s)} name={cropName} />
+              {info ? (
+                <>
+                  <div className="rot-score">
+                    <span className="score-big">{info.r.overall}</span>
+                    <span className="meta">/ 100</span>
+                    <span className={`pill ${info.r.level}`}>{t.verdict[info.r.level]}</span>
+                  </div>
+                  {info.strong.length > 0 && (
+                    <p className="rot-why good">
+                      <b>{t.rotStrong}:</b> {info.strong.map((c) => `${t.criteria[c]} (${info.r.scores[c]})`).join(', ')}
+                    </p>
+                  )}
+                  {info.weak.length > 0 && (
+                    <p className="rot-why bad">
+                      <b>{t.rotWeak}:</b> {info.weak.map((c) => `${t.criteria[c]} (${info.r.scores[c]})`).join(', ')}
+                    </p>
+                  )}
+                </>
+              ) : (
+                <i className="skeleton" aria-hidden="true" />
+              )}
+            </article>
+          )
+        })}
+      </div>
+
+      <details className="rot-custom">
+        <summary>
+          <span className="rot-custom-title">{t.rotCustomize}</span>
+          <span className="rot-custom-hint">{t.rotCustomizeHint}</span>
+        </summary>
       <div className="rot-settings no-print">
         <fieldset className="card">
           <legend>{t.priorities}</legend>
@@ -239,6 +431,7 @@ export default function RotationComparator(p: Props) {
           {result.assumptions.join(' ')}
         </p>
       )}
+      </details>
     </>
   )
 }

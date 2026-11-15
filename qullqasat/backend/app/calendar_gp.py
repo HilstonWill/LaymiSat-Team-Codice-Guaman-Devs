@@ -40,21 +40,65 @@ INDICATORS_EN = {
     "tmax_mean": ("Mean Tmax", "°C"),
     "tmean_mean": ("Mean temperature", "°C"),
 }
-# Frase simple de "qué dicen los datos": (sube, baja, igual)
+# Frase simple de "qué dicen los datos", según si el cambio es bueno o malo para la chacra.
 SENTENCES = {
-    "es": ("Ahora hay más que antes", "Ahora hay menos que antes", "Casi igual que antes"),
-    "en": ("Higher now than before", "Lower now than before", "About the same as before"),
+    "es": {
+        "better": "Mejor que antes",
+        "worse": "Peor que antes",
+        "same": "Casi igual que antes",
+        "up": "Sube respecto a antes",
+        "down": "Baja respecto a antes",
+    },
+    "en": {
+        "better": "Better than before",
+        "worse": "Worse than before",
+        "same": "About the same as before",
+        "up": "Higher than before",
+        "down": "Lower than before",
+    },
 }
+# Cambio mínimo para no llamar "cambio" al ruido (además del 15 % relativo).
+MIN_ABS_CHANGE = {"días/mes": 0.5, "% de años": 10.0, "mm": 0.0, "°C": 0.3}
+REL_CHANGE = 0.15
+# Si la condición del códice se cumple en menos de la mitad de los años recientes, el mes "no coincide".
+RARELY_MET_SHARE = 50.0
 
 
-def data_sentence(early: float, recent: float, lang: str) -> str:
+def trend_of(early: float, recent: float, polarity: str, unit_es: str) -> str:
+    """'better' | 'worse' | 'same' para indicadores con polaridad; 'up' | 'down' | 'same' si es neutral."""
     if math.isnan(early) or math.isnan(recent):
-        return ""
-    up, down, same = SENTENCES["en" if lang == "en" else "es"]
+        return "same"
     diff = recent - early
-    if abs(diff) / max(abs(early), 1.0) < 0.10:
-        return same
-    return up if diff > 0 else down
+    if abs(diff) / max(abs(early), 1.0) < REL_CHANGE or abs(diff) < MIN_ABS_CHANGE.get(unit_es, 0.0):
+        return "same"
+    if polarity == "neutral":
+        return "up" if diff > 0 else "down"
+    worse = diff > 0 if polarity == "lower_is_better" else diff < 0
+    return "worse" if worse else "better"
+
+
+def data_sentence(trend: str, lang: str) -> str:
+    return SENTENCES["en" if lang == "en" else "es"].get(trend, "")
+
+
+def _num(v: float, digits: int, lang: str) -> str:
+    s = f"{v:.{digits}f}"
+    return s if lang == "en" else s.replace(".", ",")
+
+
+def plain_value(mean: float, n_years: int, unit_es: str, lang: str) -> str:
+    """Valor en lenguaje simple: '2 de 15 años', '0,7 días al mes', '106 mm', '13,2 °C'."""
+    if math.isnan(mean):
+        return "—"
+    en = lang == "en"
+    if unit_es == "% de años":
+        k = int(round(mean * n_years / 100.0))
+        return f"{k} of {n_years} years" if en else f"{k} de {n_years} años"
+    if unit_es == "días/mes":
+        return f"{_num(mean, 1, lang)} days a month" if en else f"{_num(mean, 1, lang)} días al mes"
+    if unit_es == "mm":
+        return f"{round(mean)} mm"
+    return f"{_num(mean, 1, lang)} °C"
 
 
 @lru_cache(maxsize=1)
@@ -120,18 +164,23 @@ def calendar_comparison(
     for m in cal["months"]:
         ind = m["indicator"]
         label, unit, polarity = INDICATORS[ind]
+        unit_es = unit
         if lang == "en":
             label, unit = INDICATORS_EN[ind]
         series = _per_year(df, m["month"], ind, plant_adjust, gwet_p15)
-        e = series[(series.index >= early[0]) & (series.index <= early[1])].mean()
-        r = series[(series.index >= recent[0]) & (series.index <= recent[1])].mean()
+        e_s = series[(series.index >= early[0]) & (series.index <= early[1])]
+        r_s = series[(series.index >= recent[0]) & (series.index <= recent[1])]
+        e, r = e_s.mean(), r_s.mean()
         change = r - e if not (math.isnan(e) or math.isnan(r)) else math.nan
+        trend = trend_of(float(e), float(r), polarity, unit_es)
         if math.isnan(change) or polarity == "neutral":
             status = "informativo"
+        elif unit_es == "% de años" and polarity == "higher_is_better" and r < RARELY_MET_SHARE:
+            status = "no_coincide"  # la condición del códice casi no se da en los datos (antes ni ahora)
+        elif trend == "worse":
+            status = "se_desfasa"
         else:
-            scale = max(abs(e), 1.0)
-            worse = change > 0 if polarity == "lower_is_better" else change < 0
-            status = "se_desfasa" if worse and abs(change) / scale >= 0.15 else "se_mantiene"
+            status = "se_mantiene"
         en = lang == "en"
         rows.append(
             {
@@ -146,7 +195,10 @@ def calendar_comparison(
                 "criterion": m["criterion_en"] if en else m["criterion"],
                 "action": m["action_en"] if en else m["action"],
                 "alternative": m["alternative_en"] if en else m["alternative"],
-                "data_sentence": data_sentence(float(e), float(r), lang),
+                "data_sentence": data_sentence(trend, lang),
+                "trend": trend,
+                "plain_before": plain_value(float(e), int(e_s.notna().sum()), unit_es, lang),
+                "plain_now": plain_value(float(r), int(r_s.notna().sum()), unit_es, lang),
                 "indicator_label": label,
                 "unit": unit,
                 "early": None if math.isnan(e) else round(float(e), 2),

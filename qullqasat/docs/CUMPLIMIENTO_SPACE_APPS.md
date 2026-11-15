@@ -68,7 +68,7 @@ Texto del reto: *"a decision-support tool that uses NASA Earth observations alon
 | D5 | Detailed Project Description | Qué hace, cómo funciona, beneficios, objetivos y herramientas (Python, FastAPI, pandas, React, Recharts, Leaflet). |
 | D6 | Use of SI | Ver la sección B. El texto es para recolección de datos; los jueces **no** lo ven, pero sí ven las marcas en el proyecto. |
 | D7 | NASA Data | NASA POWER Daily API (MERRA-2): T2M_MIN, T2M_MAX, PRECTOTCORR, GWETTOP, RH2M, ALLSKY_SFC_SW_DWN; 1984 → presente; resolución 0,5° × 0,625°. **Obligatorio al menos un recurso NASA para optar a premios globales.** |
-| D8 | Space Agency Partner Data and Other References | Guaman Poma (1615), OpenStreetMap, Leaflet, React, Recharts, FastAPI, pandas, NumPy, Google Fonts (Fraunces, IBM Plex Sans) y las fuentes agronómicas de `crops.json`. Se valora usar datos de agencias socias (p. ej. **ESA** Sentinel-2 para NDVI, **CONAE** de Argentina). |
+| D8 | Space Agency Partner Data and Other References | Guaman Poma (1615), OpenStreetMap, Leaflet, React, Recharts, FastAPI, pandas, NumPy, Google Fonts (Poppins) y las fuentes agronómicas de `crops.json`. Se valora usar datos de agencias socias (p. ej. **ESA** Sentinel-2 para NDVI, **CONAE** de Argentina). |
 
 ## E. Cómo se evalúa
 

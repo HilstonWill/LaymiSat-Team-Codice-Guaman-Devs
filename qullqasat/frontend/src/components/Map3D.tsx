@@ -55,6 +55,7 @@ const STYLE: StyleSpecification = {
       encoding: 'terrarium',
     },
     columns: { type: 'geojson', data: { type: 'FeatureCollection', features: [] } },
+    gps: { type: 'geojson', data: { type: 'FeatureCollection', features: [] } },
   },
   layers: [
     { id: 'sat', type: 'raster', source: 'sat' },
@@ -77,6 +78,9 @@ const STYLE: StyleSpecification = {
         'fill-extrusion-opacity': 0.88,
       },
     },
+    // Círculo de precisión del GPS (el radio es la precisión que informa el teléfono).
+    { id: 'gps-acc', type: 'fill', source: 'gps', paint: { 'fill-color': '#3d6fa8', 'fill-opacity': 0.18 } },
+    { id: 'gps-acc-line', type: 'line', source: 'gps', paint: { 'line-color': '#ffffff', 'line-width': 2, 'line-opacity': 0.9 } },
   ],
   sky: {
     'sky-color': '#16203a',
@@ -115,6 +119,8 @@ export interface Map3DLabels {
   reset: string
   layerNote: string
   zoneButton: (name: string, alt: number) => string
+  locate: string
+  locating: string
 }
 
 interface Props {
@@ -132,6 +138,13 @@ interface Props {
   hint?: string
   /** Mensaje cuando el clic cae fuera del área de estudio. */
   outsideMsg?: string
+  /** Pide la ubicación del dispositivo (GPS). */
+  onLocate?: () => void
+  locating?: boolean
+  /** Precisión del GPS en metros, si el punto vino del GPS. */
+  gpsAccuracy?: number | null
+  /** Aviso externo (p. ej. errores del GPS) que se muestra en el mapa. */
+  message?: string | null
 }
 
 export default function Map3D({
@@ -146,6 +159,10 @@ export default function Map3D({
   placeTag,
   hint,
   outsideMsg,
+  onLocate,
+  locating = false,
+  gpsAccuracy = null,
+  message = null,
 }: Props) {
   const box = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MLMap | null>(null)
@@ -280,6 +297,25 @@ export default function Map3D({
     src.setData({ type: 'FeatureCollection', features })
   }, [zones, place.lat, place.lon, level, ready])
 
+  // Círculo de precisión del GPS alrededor del punto.
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !ready) return
+    const src = map.getSource('gps') as GeoJSONSource | undefined
+    if (!src) return
+    const features: GeoJSON.Feature[] =
+      gpsAccuracy && gpsAccuracy > 0
+        ? [
+            {
+              type: 'Feature',
+              properties: {},
+              geometry: { type: 'Polygon', coordinates: [disc(place.lon, place.lat, Math.max(gpsAccuracy, 15) / 1000, 64)] },
+            },
+          ]
+        : []
+    src.setData({ type: 'FeatureCollection', features })
+  }, [gpsAccuracy, place.lat, place.lon, ready])
+
   // Vuelo cinematográfico hacia la parcela activa (el primero es la intro desde el globo).
   useEffect(() => {
     const map = mapRef.current
@@ -366,6 +402,16 @@ export default function Map3D({
             {labels.reset}
           </button>
         </div>
+        {onLocate && (
+          <button type="button" className="map3d-locate" onClick={onLocate} disabled={locating} aria-busy={locating}>
+            <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="4" fill="currentColor" />
+              <circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" strokeWidth="2" />
+              <path d="M12 1v4M12 19v4M1 12h4M19 12h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+            {locating ? labels.locating : labels.locate}
+          </button>
+        )}
         {layer !== 'sat' && <span className="map3d-note">{labels.layerNote}</span>}
         {hint && !placeTag && (
           <span className="map3d-hint">
@@ -374,7 +420,7 @@ export default function Map3D({
         )}
       </div>
       <div className="map3d-toast" role="status">
-        {outside && outsideMsg ? <span>{outsideMsg}</span> : null}
+        {message ? <span>{message}</span> : outside && outsideMsg ? <span>{outsideMsg}</span> : null}
       </div>
     </div>
   )

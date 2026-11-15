@@ -70,12 +70,12 @@ Regla: **el texto de estado usa `--*-text`**. `--verde` y `--ambar` son solo par
 ### Tipografía
 | Rol | Fuente | Tamaño |
 |---|---|---|
-| Marca, títulos de sección (h1, h2) | Fraunces 700 | h1 2,2rem · h2 1,55rem |
-| Pregunta de alerta, títulos de tarjeta (h3) | Fraunces 700 | 1,1–1,2rem |
-| Respuesta corta (veredicto) | Fraunces 700 | 1,35rem, en el color del nivel |
-| Texto | IBM Plex Sans 400 | 1rem (mínimo 0,85rem) |
-| Etiquetas pequeñas (kicker, `cal-label`, `action-label`) | IBM Plex Sans 600–700, MAYÚSCULAS, espaciado 0,08–0,12em | 0,68–0,72rem |
-| Metadatos (`meta`, `meter-label`) | IBM Plex Sans | 0,75–0,8rem, `--muted` |
+| Marca, títulos de sección (h1, h2) | Poppins 600 | h1 2,2rem · h2 1,55rem |
+| Pregunta de alerta, títulos de tarjeta (h3) | Poppins 600 | 1,1–1,2rem |
+| Respuesta corta (veredicto) | Poppins 700 | 1,35rem, en el color del nivel |
+| Texto | Poppins 400 | 1rem (mínimo 0,85rem) |
+| Etiquetas pequeñas (kicker, `cal-label`, `action-label`) | Poppins 600–700, MAYÚSCULAS, espaciado 0,08–0,12em | 0,68–0,72rem |
+| Metadatos (`meta`, `meter-label`) | Poppins 400 | 0,75–0,8rem, `--muted` |
 
 ### Espacio, forma y profundidad
 - **Espaciado:** múltiplos de 4 px (4, 8, 12, 16, 24, 34). Entre tarjetas, 16 px; dentro de una tarjeta, 18 px de padding.
@@ -120,6 +120,26 @@ El orden de las alertas es fijo (helada, agua, calendario). No se reordenan por 
 | **Formato de la respuesta de IA** | Siempre 3 secciones en este orden: **Qué hacer ahora** (2–3 viñetas que empiezan con verbo), **Por qué** (1–2 frases) y **Ten en cuenta** (1 viñeta sobre la incertidumbre). Lo pide el prompt y lo dibuja `AiText.tsx`: los títulos van en versalitas moradas con una línea, las viñetas con un punto de color maíz y las negritas son reales. Nunca se muestran `*` ni `#`, y nunca se usa `innerHTML`. |
 | **IA en cada alerta** | Botón-píldora "✦ Explicar esta alerta con IA" entre "Qué hacer" y "Detalle técnico". Explica solo esa alerta (como máximo 70 palabras), se abre y se cierra sin volver a consultar, y se reinicia al cambiar de parcela. Solo aparece si el servidor tiene un proveedor de IA activo. |
 | **Animación de escritura** | La respuesta aparece palabra por palabra con un cursor parpadeante (≈ 14 palabras/s, como máximo ~5 s en total) y un enlace "Mostrar todo ya". El texto animado es `aria-hidden`; los lectores de pantalla reciben el texto completo una sola vez. Con `prefers-reduced-motion` aparece completo y sin cursor. Solo se anima el texto generado: nunca las cifras ni las alertas, que deben verse al instante. |
+
+### Recorrido del MVP: primero la respuesta, después el detalle
+| Sección | Regla de UX |
+|---|---|
+| **¿A qué altura hiela?** | Justo después de las alertas, el único gráfico de tendencias que responde una pregunta nueva. Arriba va una frase: "Tu parcela (3.900 m) está en la franja de 3.800 m: hoy hay X días de helada… A 3.600 m o menos casi no hiela". |
+| **Evidencia de 40 años** | Los otros 3 gráficos (inicio de lluvias, lluvia sep–nov, noches) van plegados bajo "Ver la evidencia: 40 años de datos de la NASA". Las alertas ya muestran su tendencia. |
+| **Rotaciones · antes y después** | Arriba, "Tu rotación actual" (preset `acortada`) frente a la "Mejor opción", con la diferencia de puntaje (+42) y en etiquetas lo que mejora (verde, las 3 mayores) y lo que se cede ("A cambio", rojo). Si la actual ya es la mejor, se dice. Siempre con la nota "puntajes orientativos… no predicen la cosecha". |
+| **Línea de cultivos** | Cada secuencia es una franja de 6 bloques coloreados por familia: papa (morado), otros tubérculos (lila), granos (maíz), leguminosas (verde), descanso/purum (rayado). Se ve sin leer que la actual repite papa y que la alternativa mete leguminosas y descanso. Cada bloque tiene el nombre completo para lectores de pantalla. |
+| **Rotaciones** | Primero 3 tarjetas de resultado: secuencia en una línea, puntaje con color, "Fuerte en / Débil en" (tomado de los puntajes, ≥ 70 y < 45). Las prioridades, el suelo, los 18 selectores, las barras, la cobertura del suelo, los riesgos y los vacíos de información van en "Personalizar mi rotación" (plegado). |
+
+### Rueda del año andino (`CalendarGP.tsx`)
+| Pieza | Regla de UX |
+|---|---|
+| **Forma** | Los 12 meses del códice en una rueda (el tiempo andino es cíclico), de agosto (Chacra Yapuy, arriba) a julio. Abre en el mes actual, marcado con un punto por fuera del anillo y "Hoy" en el centro. |
+| **Color = veredicto** | Verde = se mantiene, rojo = empeoró, ámbar = no coincide (la condición del códice se da en menos de la mitad de los años, antes y ahora), beige = contexto (indicador neutral). Leyenda y resumen ("5 se mantienen · 1 empeoró…") debajo. |
+| **Detalle en 3 líneas** | *Guaman Poma escribió* (con enlace a la página del manuscrito) → *La NASA mide hoy* (etiqueta "Mejor/Peor/Casi igual que antes" + cifra simple: "4 de 15 años; antes 2 de 15") → *Qué hacer* (y "O sembrar en su lugar" si empeoró o no coincide). Lo técnico (unidades, periodos, variables) va plegado en "Detalle técnico". |
+| **Escenario andino** | La rueda va sobre un fondo de noche andina (azul `--night`) con la misma franja textil de la portada arriba y abajo. Por fuera, un anillo **tocapu** (48 rombos en maíz, terracota, morado papa y verde) y un anillo de **estaciones** (lluvias nov–mar, transición abr/oct, seca may–sep). En el centro, la **chakana** (cruz andina escalonada) en contorno maíz, y un **Inti** (sol) que gira despacio marca el mes de hoy. Todo es decorativo (`aria-hidden`): el significado está en la leyenda. |
+| **Movimiento** | Al cargar, los meses aparecen uno a uno (55 ms entre cada uno), como si la rueda girara; el mes elegido brilla con un borde blanco. Con `prefers-reduced-motion` no hay animaciones. Al imprimir, fondo blanco y sin franjas. |
+| **Sin ruido** | Un cambio cuenta solo si supera el 15 % relativo **y** un mínimo absoluto (0,5 días/mes, 10 puntos de % de años, 0,3 °C). Así 0,0 → 0,1 días no se presenta como cambio. |
+| **Accesibilidad** | Cada mes es un botón (`role=button`, `aria-pressed`, etiqueta "Noviembre, Aya Marcay Quilla: Empeoró"); flechas ←/→, Inicio y Fin cambian de mes; el detalle se anuncia con `aria-live`. Botones ‹ › de 40–44 px. En pantallas < 860 px la rueda va arriba y el detalle debajo. |
 
 ### Mapa 3D y panel de la parcela (`Map3D.tsx`)
 | Pieza | Regla de UX |

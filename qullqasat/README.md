@@ -11,6 +11,8 @@ decides every season: *when to sow, with what risk, and with which crop rotation
 > and the land rests for several years (purun). LaymiSat tests it against satellite data.
 
 ## What it does
+> **MVP view.** By default the app shows only what answers the problem: map + plot card, the 3 alerts, trends, the 1615 Guaman Poma calendar, the rotation comparator and sources/limits. The NDVI panel, the sowing-date simulator, the 7-day forecast and the AI explanations are hidden (not removed); open the app with `?full=1` to see them (`frontend/src/features.ts`).
+
 | Feature | Detail |
 |---|---|
 | 3 traffic-light alerts | **AHS** frost at potato sprouting · **AEH** water stress at sowing · **ADS** shift between the Coya Raymi sowing date and the real rainy-season onset |
@@ -60,4 +62,4 @@ See [AI_DISCLOSURE.md](AI_DISCLOSURE.md).
 
 ## Credits and license
 NASA POWER Project (NASA LaRC), MODIS (NASA LP DAAC / ORNL DAAC), NASA SRTM, OpenTopoData, NASA GIBS, Esri World Imagery, AWS Terrain Tiles (Mapzen), OpenStreetMap, MapLibre GL, Leaflet, React, Recharts,
-FastAPI, pandas, NumPy, Google Fonts (Fraunces, IBM Plex Sans). Guaman Poma de Ayala, *Nueva corónica y buen gobierno* (1615). MIT License.
+FastAPI, pandas, NumPy, Google Fonts (Poppins). Guaman Poma de Ayala, *Nueva corónica y buen gobierno* (1615). MIT License.
