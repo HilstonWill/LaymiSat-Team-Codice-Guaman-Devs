@@ -12,6 +12,7 @@ import {
   type Texture,
 } from '../api'
 import { fmtNum, type Dict, type Lang } from '../i18n'
+import { campaignLabels, FAMILIES, FAMILY } from './rotationUtils'
 import type { StoryDict } from './storyText'
 
 /**
@@ -20,19 +21,6 @@ import type { StoryDict } from './storyText'
  * Usa los mismos puntajes del backend que el comparador técnico (RotationComparator), que sigue en ?modo=tecnico.
  */
 
-type Family = 'papa' | 'tuberculo' | 'grano' | 'leguminosa' | 'descanso'
-const FAMILY: Record<string, Family> = {
-  papa: 'papa',
-  papa_amarga: 'papa',
-  oca: 'tuberculo',
-  cebada: 'grano',
-  avena: 'grano',
-  quinua: 'grano',
-  tarwi: 'leguminosa',
-  haba: 'leguminosa',
-  descanso: 'descanso',
-}
-const FAMILIES: Family[] = ['papa', 'tuberculo', 'grano', 'leguminosa', 'descanso']
 const DEFAULT_CURRENT = 'acortada'
 // Objetivo marcado = peso alto; sin marcar = peso bajo (no cero: sigue contando un poco).
 const ON = 2.5
@@ -56,25 +44,24 @@ interface Props {
   place: string
 }
 
-function YearChips({ seq, names, editable, cropIds, cropName, onCrop, yearLabel, label }: {
+function YearChips({ seq, names, editable, cropIds, cropName, onCrop, years, yearWord, label }: {
   seq: string[]
   names?: string[]
   editable?: boolean
   cropIds?: string[]
   cropName: (id: string) => string
   onCrop?: (year: number, crop: string) => void
-  yearLabel: string
+  years: string[]
+  yearWord: string
   label: string
 }) {
   return (
     <ol className="rp-years" aria-label={label}>
       {seq.map((c, i) => (
         <li key={i} className={`rp-year fam-${FAMILY[c] ?? 'grano'}`}>
-          <span className="rp-year-n">
-            {yearLabel} {i + 1}
-          </span>
+          <span className="rp-year-n">{years[i]}</span>
           {editable && cropIds && onCrop ? (
-            <select aria-label={`${label}, ${yearLabel} ${i + 1}`} value={c} onChange={(e) => onCrop(i, e.target.value)}>
+            <select aria-label={`${label}, ${yearWord} ${years[i]}`} value={c} onChange={(e) => onCrop(i, e.target.value)}>
               {cropIds.map((id) => (
                 <option key={id} value={id}>
                   {cropName(id)}
@@ -115,6 +102,7 @@ export default function RotationPlanner(p: Props) {
   const [copied, setCopied] = useState(false)
 
   const cropIds = Object.keys(catalog.crops)
+  const years = campaignLabels(Math.max(1, ...sequences.map((s) => s.sequence.length)))
   const cropName = (id: string) =>
     lang === 'en' ? catalog.crops[id]?.name_en ?? catalog.crops[id]?.name ?? id : catalog.crops[id]?.name ?? id
   const seqName = (s: Preset) => (lang === 'en' ? s.name_en ?? s.name : s.name)
@@ -167,7 +155,7 @@ export default function RotationPlanner(p: Props) {
           r.shareHead(p.place),
           `${r.shareNow}: ${seqName(current)} · ${cur.overall}/100`,
           `${r.shareTo}: ${seqName(targetSeq)} · ${target.overall}/100 (${diff >= 0 ? '+' : ''}${diff})`,
-          target.sequence_names.map((n, i) => `${i + 1}. ${n}`).join(' → '),
+          target.sequence_names.map((n, i) => `${years[i]}: ${n}`).join(' → '),
           gains.length ? `${r.shareGains}: ${gains.slice(0, 3).map((g) => `${r.goals[g.c]} +${g.d}`).join(', ')}` : '',
           r.shareFoot,
         ]
@@ -234,7 +222,8 @@ export default function RotationPlanner(p: Props) {
                   cropIds={cropIds}
                   cropName={cropName}
                   onCrop={setCrop}
-                  yearLabel={d.year}
+                  years={years}
+                  yearWord={r.campaign}
                   label={seqName(current)}
                 />
               </>
@@ -374,13 +363,20 @@ export default function RotationPlanner(p: Props) {
               <div className="rp-plan">
                 <span className="rp-label">{r.yearByYear}</span>
                 <span className="rp-plan-tag">{r.yours}</span>
-                <YearChips seq={current.sequence} cropName={cropName} yearLabel={d.year} label={seqName(current)} />
+                <YearChips
+                  seq={current.sequence}
+                  cropName={cropName}
+                  years={years}
+                  yearWord={r.campaign}
+                  label={seqName(current)}
+                />
                 <span className="rp-plan-tag is-new">{targetLabel}</span>
                 <YearChips
                   seq={target.sequence}
                   names={target.sequence_names}
                   cropName={cropName}
-                  yearLabel={d.year}
+                  years={years}
+                  yearWord={r.campaign}
                   label={seqName(targetSeq)}
                 />
                 <ul className="rp-fams" aria-hidden="true">

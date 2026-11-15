@@ -342,6 +342,8 @@ details.today-alert .ta-action { padding: 0 12px 12px 56px; }
 .rp-kicker { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; color: var(--potato); }
 /* El escenario oculto (Rotaciones/Calendario) queda debajo del panel: MapLibre fuerza visible su atribución. */
 .story.v-rotaciones .story-side, .story.v-calendario .story-side { position: relative; z-index: 1; }
+/* z-index 0 crea un contexto de apilamiento: los controles de MapLibre (z-index 2) quedan encerrados debajo del panel. */
+.story.v-rotaciones .story-stage, .story.v-calendario .story-stage { z-index: 0; }
 /* .story-side .rp-title: gana a la regla genérica .story-side h2 (versalitas pequeñas). */
 .story-side .rp-title { text-transform: none; font-family: 'Poppins', system-ui, sans-serif; font-size: clamp(1.5rem, 2.6vw, 2.1rem); letter-spacing: -0.015em; line-height: 1.15; margin: 4px 0 6px; color: var(--ink); }
 .rp-sub { margin: 0; max-width: 70ch; color: var(--ink-soft); font-size: 1rem; line-height: 1.5; }
@@ -487,7 +489,38 @@ details.today-alert .ta-action { padding: 0 12px 12px 56px; }
   .rp-skeleton { animation: none; }
   .rp-bars i { transition: none; }
 }
-.today-rot .best-rot { max-width: none; }
+/* Mejor rotación en Hoy: tarjeta oscura con el mismo lenguaje que las alertas (texto claro, buen contraste). */
+.trot {
+  display: grid; gap: 10px; padding: 14px; border-radius: 12px; color: var(--s-text);
+  background: rgba(255, 255, 255, 0.04); border: 1px solid var(--s-line); border-left: 4px solid var(--tone, #7fd497);
+}
+.trot.lv-verde { --tone: #7fd497; }
+.trot.lv-ambar { --tone: #f2c063; }
+.trot.lv-rojo { --tone: #ff8a6b; }
+.trot-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.trot-name { display: grid; gap: 2px; min-width: 0; }
+.trot-name strong { font-family: 'Poppins', system-ui, sans-serif; font-size: 1.05rem; line-height: 1.25; color: var(--s-text); }
+.trot-name span { font-size: 0.8rem; color: var(--s-muted); }
+.trot-score { display: flex; align-items: baseline; gap: 2px; flex: none; }
+.trot-score b { font-family: 'Poppins', system-ui, sans-serif; font-size: 1.6rem; line-height: 1; color: var(--tone); font-variant-numeric: tabular-nums; }
+.trot-score span { font-size: 0.8rem; color: var(--s-muted); }
+.trot > .ta-pill { justify-self: start; }
+.trot .fam-papa { --fam: #8a56a0; --fam-ink: #fff; }
+.trot .fam-tuberculo { --fam: #c9a3d4; --fam-ink: #2e1a36; }
+.trot .fam-grano { --fam: #e0a43a; --fam-ink: #2e2004; }
+.trot .fam-leguminosa { --fam: #2f7a3d; --fam-ink: #fff; }
+.trot .fam-descanso { --fam: #d9cdb3; --fam-ink: #3a3326; }
+.trot-years { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.trot-years li { display: grid; gap: 1px; background: var(--fam); color: var(--fam-ink); border-radius: 8px; padding: 6px 8px; min-width: 0; }
+.trot-years span { font-size: 0.66rem; font-weight: 700; letter-spacing: 0.04em; opacity: 0.85; }
+.trot-years b { font-size: 0.8rem; line-height: 1.2; overflow-wrap: anywhere; }
+.trot-risk { margin: 0; font-size: 0.84rem; line-height: 1.45; color: var(--s-muted); }
+.trot-risk b { color: #f2c063; }
+.trot-cta {
+  justify-self: stretch; font: inherit; font-weight: 700; color: var(--maize); background: transparent;
+  border: 1.5px solid var(--maize); border-radius: 999px; padding: 10px 16px; min-height: 44px; cursor: pointer;
+}
+.trot-cta:hover { background: rgba(224, 164, 58, 0.12); }
 @media (max-width: 900px) {
   .story-tabs { overflow-x: auto; scrollbar-width: none; }
   .story-tabs button { flex: 1 0 auto; }

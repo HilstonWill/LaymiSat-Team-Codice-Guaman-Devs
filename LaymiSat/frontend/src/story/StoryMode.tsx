@@ -10,12 +10,13 @@ import {
   type Preset,
   type Report,
   type RotationResponse,
+  type RotationResult,
   type Slope,
   type SoilInput,
   type StoryData,
   type Zone,
 } from '../api'
-import { BestRotation } from '../components/FarmerViews'
+import { campaignLabels, FAMILY } from './rotationUtils'
 import RotationPlanner from './RotationPlanner'
 import SeasonCalendar from './SeasonCalendar'
 import { ALERT_ICONS } from '../components/Icons'
@@ -452,7 +453,7 @@ export default function StoryMode({ initialView = 'zonas' }: { initialView?: Vie
               {bestRot && (
                 <section className="today-rot">
                   <h2>{d.farmer.sowTitle}</h2>
-                  <BestRotation best={bestRot} t={d} onMore={() => goView('rotaciones')} />
+                  <TodayRotation best={bestRot} t={t} d={d} onMore={() => goView('rotaciones')} />
                 </section>
               )}
               <div className="today-links">
@@ -652,6 +653,43 @@ function TodayAlerts({ alerts, d }: { alerts: Alert[]; d: Dict }) {
         )
       })}
     </ul>
+  )
+}
+
+/** Mejor rotación en Hoy, pensada para el panel oscuro: campañas reales, color por familia y un solo aviso. */
+function TodayRotation({ best, t, d, onMore }: { best: RotationResult; t: StoryDict; d: Dict; onMore: () => void }) {
+  const years = campaignLabels(best.sequence.length)
+  const risk = best.risks[0]
+  return (
+    <article className={`trot lv-${best.level}`}>
+      <header className="trot-head">
+        <div className="trot-name">
+          <strong>{best.name}</strong>
+          <span>{t.todayRotSub}</span>
+        </div>
+        <div className="trot-score">
+          <b>{best.overall}</b>
+          <span>/100</span>
+        </div>
+      </header>
+      <span className={`ta-pill ${best.level}`}>{d.farmer.sowFit[best.level]}</span>
+      <ol className="trot-years">
+        {best.sequence.map((c, i) => (
+          <li key={i} className={`fam-${FAMILY[c] ?? 'grano'}`}>
+            <span>{years[i]}</span>
+            <b>{best.sequence_names[i]}</b>
+          </li>
+        ))}
+      </ol>
+      {risk && (
+        <p className="trot-risk">
+          <b>{d.farmer.watch}</b> {risk}
+        </p>
+      )}
+      <button type="button" className="trot-cta" onClick={onMore}>
+        {t.todayRotCta} →
+      </button>
+    </article>
   )
 }
 
