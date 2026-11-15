@@ -1,82 +1,61 @@
 # LaymiSat
 
-**Alerta agroclimática y validación ancestral para la papa nativa de Cusco.**
-NASA Space Apps Challenge 2026 · Retos: *Be An Earth System Trend Detective!* + *Field Shift*.
+**Agro-climate decision support for native-potato farmers in the high Andes of Cusco, Peru.**
+NASA Space Apps Challenge 2026 · Challenge: **Field Shift: Adapting Farms with NASA Data**. *(Versión en español: [README.es.md](README.es.md))*
 
-LaymiSat cruza 40 años de datos diarios de **NASA POWER** (1984 → hoy) con el calendario agrícola de
-**Felipe Guaman Poma de Ayala (1615)** para responder a lo que decide una comunidad altoandina:
-*¿cuándo sembrar, con qué riesgo y con qué rotación?*
+LaymiSat reads 40 years of daily **NASA POWER** data (1984 → today), **MODIS NDVI** and **NASA SRTM** elevation
+alongside the 1615 Andean farming calendar of **Felipe Guaman Poma de Ayala**, to answer what a high-Andean community
+decides every season: *when to sow, with what risk, and with which crop rotation?*
 
-> **Laymi**: sistema andino de rotación comunal por sectores. Cada año se siembra papa en un sector, luego otros
-> cultivos, y la tierra descansa varios años (purum). LaymiSat lo pone a prueba con datos satelitales.
+> **Laymi** is the Andean communal rotation system: each year potatoes are planted in one sector, then other crops,
+> and the land rests for several years (purun). LaymiSat tests it against satellite data.
 
-## Qué hace
-
-| Pieza | Detalle |
+## What it does
+| Feature | Detail |
 |---|---|
-| 3 alertas con semáforo | **AHS** heladas en brotación · **AEH** estrés hídrico en la siembra · **ADS** desfase entre Coya Raymi y el inicio real de lluvias |
-| Detective de tendencias | Mann-Kendall + pendiente de Sen sobre heladas, lluvia sep–nov, inicio de lluvias y Tmin anual |
-| Riesgo por altitud | Helada por bandas 3.200–4.400 m, primeras vs últimas 15 campañas |
-| Calendario 1615 | Los 12 meses del códice, cada uno medido con su variable NASA |
-| Comparador de rotaciones | Laymi completa / acortada / con tarwi-haba, editables, con 5 criterios trazables |
-| Ficha | Imprimible / PDF, con fuentes, supuestos e incertidumbre |
+| 3 traffic-light alerts | **AHS** frost at potato sprouting · **AEH** water stress at sowing · **ADS** shift between the Coya Raymi sowing date and the real rainy-season onset |
+| Trend detective | Mann-Kendall + Sen slope on frost days, Sep–Nov rainfall, rain onset and annual Tmin |
+| Frost by altitude | Frost risk by 200 m bands (3,200–4,400 m), first vs last 15 seasons |
+| Land cover (MODIS NDVI) | Monthly greenness and bare-soil months of the pilot-zone pixel |
+| 1615 calendar | The 12 months of the codex, each measured with its NASA variable, with actions and alternative crops |
+| Rotation comparator (Field Shift) | ≥3 strategies incl. the current one; **farmer priorities** (soil, pests, water, frost, erosion, forage, income), **local soil** (texture, organic matter, slope), soil-cover timeline, **information gaps and risks** for local review |
+| Terrain | Click the map: altitude and slope from NASA SRTM 30 m |
+| Bilingual | English (default) and Spanish |
 
-### Hallazgos con datos reales (las dos celdas NASA POWER de las zonas piloto)
-- Las noches se calientan: Tmin media anual **+0,19 °C/década** (Pisac/Chinchero/Colquepata) y **+0,22 °C/década** (Ccatcca), Mann-Kendall p < 0,001.
-- La **línea de helada** en brotación está entre **3.600 y 3.800 m**: la probabilidad pasa del 7 % al 67 % de las campañas (y al 100 % a 4.000 m).
-- En Pisac la lluvia firme llega en promedio el **19 de octubre**, unas 4 semanas después de la siembra general de Coya Raymi, y en una ventana de **7 semanas (26 sep – 13 nov)**. No es una fecha fija.
-- Lo que **no** confirmamos: los datos no muestran un retraso significativo del inicio de lluvias (en 1984–1998 llegaban incluso más tarde). La app lo muestra tal cual.
+### Findings with real data
+- Nights are warming: annual mean Tmin **+0.19 °C/decade** (Pisac cell) and **+0.22 °C/decade** (Ccatcca cell), Mann-Kendall p < 0.001.
+- The **frost line** at sprouting sits between **3,600 and 3,800 m** (7 % → 67 % of seasons).
+- In Pisac the firm rains arrive on average on **Oct 19**, within a **7-week window** (Sep 26 – Nov 13): later than the codex's early sowing (September) and well before its rain-fed sowing (December).
+- Not confirmed: a significant delay of the rainy-season onset. The app shows this as it is.
 
-## Ejecutar en local
-
+## Run locally
 ```bash
-# Backend (Python 3.11+)
-cd backend
-python -m venv .venv
-.venv/Scripts/pip install -r requirements.txt -r requirements-dev.txt   # Linux/macOS: .venv/bin/pip
+cd backend && python -m venv .venv && .venv/Scripts/pip install -r requirements.txt -r requirements-dev.txt
 .venv/Scripts/python -m uvicorn app.main:app --port 8000
-
-# Frontend (Node 20+)
-cd frontend
-npm install
-npm run dev            # http://localhost:5173 (proxy /api → :8000)
+cd ../frontend && npm install && npm run dev   # http://localhost:5173
 ```
+Backend tests: `cd backend && .venv/Scripts/python -m pytest --cov=app` (70 tests, 97 % coverage).
 
-Tests del backend: `cd backend && .venv/Scripts/python -m pytest --cov=app` (43 tests, 98 % de cobertura).
+Station calibration (SENAMHI): `python -m app.calibration station.csv --lat -13.40 --lon -71.85 --altitude 3850`.
 
-La carpeta `backend/cache/` trae ya descargadas las 2 celdas NASA POWER que cubren las 4 zonas piloto, así que la demo funciona sin red.
-Cada punto se ajusta al centro de su celda POWER (0,5° × 0,625°), lo que limita la caché a unas 80 celdas en toda la región.
-La caché se refresca cada 3 días con un candado por celda y escritura atómica; si NASA POWER no responde, se usa la caché antigua.
-Guion de demo y pitch: [docs/DEMO.md](docs/DEMO.md).
-Guía del frontend para el equipo (cómo funciona cada sección, datos NASA y tareas pendientes): [docs/GUIA_FRONTEND.md](docs/GUIA_FRONTEND.md).
+## NASA data used
+- **NASA POWER Daily API** (MERRA-2): T2M_MIN, T2M_MAX, PRECTOTCORR, GWETTOP (+ RH2M, ALLSKY_SFC_SW_DWN as context), 1984 → present, 0.5° × 0.625°.
+- **MODIS MOD13Q1 NDVI** (250 m, 16-day) via the NASA ORNL DAAC web service.
+- **NASA SRTM** 1 arc-second (30 m) via OpenTopoData.
 
-## Despliegue
-- **Backend** (Render/Railway): `uvicorn app.main:app --host 0.0.0.0 --port $PORT`; variables `LAYMI_CORS_ORIGINS=https://<tu-frontend>` y `LAYMI_PUBLIC_DOCS=0` para ocultar `/docs`. Antes de publicar, añadir un límite de peticiones por IP en el proxy.
-- **Frontend** (Vercel): `npm run build`; variable `VITE_API_URL=https://<tu-backend>`.
+## Method and assumptions
+Season Aug 1 → Jul 31 · lapse rate −6.5 °C/km · plant-level frost = 2 m Tmin −2 °C (adjustable, calibrate with stations) ·
+rain onset = first ≥25 mm in 10 days not followed by a 10-day dry spell · traditional window = Coya Raymi, Sep 16–30 ·
+crop values are indicative (`backend/app/data/crops.json`) · rotations are a plan scored with the observed 2011–2025 climate, **not a forecast** ·
+Guaman Poma is a qualitative cultural baseline, checked against the manuscript (Royal Danish Library, ch. 37, pp. 1140–1178): September (Coya Raymi) is the early sowing of maize and potato (*mawai*), December (Capac Inti Raymi) the rain-fed sowing of potato, oca, quinoa and tarwi.
 
-## API
-| Método | Ruta | Uso |
-|---|---|---|
-| GET | `/api/zones` | Zonas piloto |
-| GET | `/api/report?lat&lon&altitude&plant_adjust` | Alertas, series, tendencias, calendario (solo región Cusco) |
-| POST | `/api/rotations` | Compara 1–5 secuencias de cultivos |
-| GET | `/api/calendar`, `/api/crops` | Datos de referencia |
+## AI disclosure
+See [AI_DISCLOSURE.md](AI_DISCLOSURE.md).
 
-## Método y supuestos (resumen)
-- **Campaña agrícola**: 1 de agosto (Chacra Yapuy) → 31 de julio.
-- **Corrección por altitud**: −6,5 °C/km entre la celda POWER (~0,5°) y la parcela. La lluvia no se corrige.
-- **Helada a nivel de planta**: Tmin a 2 m −2 °C (ajustable), porque la reanálisis suaviza las heladas radiativas. Debe calibrarse con estaciones SENAMHI.
-- **Inicio de lluvias**: primer día con ≥25 mm en 10 días sin un veranillo de ≥10 días en los 40 días siguientes.
-- **Ventana tradicional**: Coya Raymi Quilla, 2.ª quincena de septiembre (referencia: 23 sep).
-- **Rotaciones**: valores orientativos por cultivo en `backend/app/data/crops.json` (balance de N, agua, tolerancia a helada, cobertura). No predicen rendimiento.
-- **Datos casi en tiempo real** (últimos ~90 días): provisionales.
+## Documents
+- Submission kit (form texts, 7-slide outline, 30-s video script): [docs/SUBMISSION.md](docs/SUBMISSION.md)
+- Team guides (Spanish): [docs/GUIA_FRONTEND.md](docs/GUIA_FRONTEND.md), [docs/CUMPLIMIENTO_SPACE_APPS.md](docs/CUMPLIMIENTO_SPACE_APPS.md), [docs/DEMO.md](docs/DEMO.md)
 
-Guaman Poma se usa como línea base cultural cualitativa: se comparan fechas y criterios, no se fuerzan equivalencias numéricas.
-
-## Próximos pasos
-NDVI (MODIS/Sentinel-2 vía Earth Engine), pendiente SRTM por sector, IMERG para lluvia a mayor resolución,
-calibración con estaciones SENAMHI y validación con la Agencia Agraria Cusco y las comunidades.
-
-## Créditos y licencia
-Datos: NASA POWER Project (NASA Langley Research Center). Calendario: Guaman Poma de Ayala, *Nueva corónica y buen gobierno* (1615).
-Mapa © OpenStreetMap. Código bajo licencia MIT.
+## Credits and license
+NASA POWER Project (NASA LaRC), MODIS (NASA LP DAAC / ORNL DAAC), NASA SRTM, OpenTopoData, OpenStreetMap, Leaflet, React, Recharts,
+FastAPI, pandas, NumPy, Google Fonts (Fraunces, IBM Plex Sans). Guaman Poma de Ayala, *Nueva corónica y buen gobierno* (1615). MIT License.

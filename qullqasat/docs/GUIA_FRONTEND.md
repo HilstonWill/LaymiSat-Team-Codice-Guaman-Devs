@@ -2,7 +2,8 @@
 
 Este documento explica **qué hace cada parte de la pantalla, de dónde salen los datos de la NASA y cómo se calcula cada cosa**, para que el equipo pueda mejorar el frontend sin romper la lógica. Al final están las **tareas pendientes** listas para repartir.
 
-> Estado: MVP funcional (14 nov 2026). Backend: 43 tests en verde, 98 % de cobertura. Evaluación interna: 8,3/10.
+> Estado: v1.1 (15 nov 2026). Bilingüe (inglés por defecto), Field Shift completo, NDVI MODIS y SRTM. Backend: 70 tests, 97 % de cobertura.
+> Las tareas F1 (alertas como pregunta), F3 (calendario con acciones) y el glosario ya están hechas; ver la sección 7.
 
 ---
 
@@ -190,7 +191,7 @@ Muestra la tabla de variables y su resolución, el origen de los datos (API en v
 
 ## 6. Puntos a verificar antes de presentar
 
-1. **Nombres de los meses del códice.**
+1. ✅ **Nombres de los meses del códice: VERIFICADOS** con el manuscrito (poma.kb.dk, cap. 37, págs. 1140–1178). Correcciones aplicadas: septiembre = siembra de maíz y papa temprana (mawai); diciembre = siembra de temporal de papa, oca, quinua y tarwi; noviembre = escasez de agua y riego; marzo = Pacha Pucuy; mayo = Hatun Cusqui Aymoray; junio = Haucai Cusqui. Cada tarjeta enlaza su página. (Texto original de este punto, conservado como historial:)
    - Se copiaron de la tabla de la sección 5 del documento del proyecto (.docx). **No se han verificado contra el manuscrito original.**
    - Posibles diferencias que hay que confirmar:
      - Junio: ¿"Haucai Cusqui" en lugar de "Inti Raymi"?
@@ -206,7 +207,7 @@ Muestra la tabla de variables y su resolución, el origen de los datos (API en v
 
 ## 7. Tareas para mejorar el frontend (para repartir)
 
-### F1. Alertas en lenguaje de comunidad (prioridad alta)
+### F1. ✅ Hecho · Alertas en lenguaje de comunidad
 - **Archivo:** `AlertCards.tsx`.
 - **Cambio:** cada tarjeta empieza con la pregunta ("¿Va a helar cuando brote la papa?"), sigue con la respuesta en una frase y la acción. El detonador, la tendencia y el p-valor van dentro de un `<details>` "Ver detalle técnico".
 - **Datos:** no hace falta tocar la API; todo está en `alert.headline`, `alert.action`, `alert.trend` y `alert.metrics`.
@@ -219,7 +220,7 @@ Muestra la tabla de variables y su resolución, el origen de los datos (API en v
   - **¿Hasta qué altura hiela?** Un cerro en franjas de color según `frost_by_altitude[].event_probability_recent`, con un punto en `location.altitude`.
   - **¿Está cambiando el clima?** Tres frases con flecha, a partir de `tmin_trend`, `alerts[AHS].trend` y `alerts[AEH].trend`.
 
-### F3. Calendario con "qué dicen los datos" y acciones (prioridad media)
+### F3. ✅ Hecho · Calendario con "qué dicen los datos" y acciones
 - **Archivos:** `CalendarGP.tsx` y, en el backend, `guaman_poma_calendar.json`.
 - **Cambio:** cada tarjeta muestra tres bloques:
   - "Qué hacía la comunidad" (`milestone`).
