@@ -12,7 +12,7 @@ import {
   type Texture,
 } from '../api'
 import { fmtNum, type Dict, type Lang } from '../i18n'
-import { campaignLabels, FAMILIES, FAMILY } from './rotationUtils'
+import { campaignLabels, FAMILY } from './rotationUtils'
 import type { StoryDict } from './storyText'
 
 /**
@@ -100,6 +100,7 @@ export default function RotationPlanner(p: Props) {
   const [currentId, setCurrentId] = useState(DEFAULT_CURRENT)
   const [pickedId, setPickedId] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+  const [step, setStep] = useState(0)
 
   const cropIds = Object.keys(catalog.crops)
   const years = campaignLabels(Math.max(1, ...sequences.map((s) => s.sequence.length)))
@@ -121,8 +122,6 @@ export default function RotationPlanner(p: Props) {
   const keepCurrent = currentIsBest && !pickedId
   // Solo se dice "te recomendamos" cuando la opción mostrada es la mejor; si el usuario eligió otra, es una comparación.
   const isRecommended = !keepCurrent && !!target && target.id === ranked[0]?.id
-  const heroKicker = keepCurrent ? r.alreadyBest : isRecommended ? r.recommend : r.comparing
-  const targetLabel = keepCurrent ? r.next : isRecommended ? r.option : r.compared
   const diff = cur && target ? target.overall - cur.overall : 0
 
   const setCrop = (year: number, crop: string) =>
@@ -174,23 +173,53 @@ export default function RotationPlanner(p: Props) {
       })
   }
 
+  // ---------- Asistente: un paso por pantalla ----------
+  const STEPS = [r.wStep1, r.wStep2, r.wStep3, r.wStep4]
+  const last = STEPS.length - 1
+  const goTo = (i: number) => {
+    setStep(Math.max(0, Math.min(last, i)))
+    // Al cambiar de paso, volver al inicio del asistente (sirve con el scroll del panel y con el de la página en el celular).
+    document.querySelector('.rpw')?.scrollIntoView({ block: 'start', behavior: 'smooth' })
+  }
+
+  // La meta: primera campaña en la que hay que sembrar algo distinto (el "primer paso" concreto).
+  const firstChange =
+    current && target && !keepCurrent ? target.sequence.findIndex((c, i) => c !== current.sequence[i]) : -1
+  const goalSeq = keepCurrent ? current : targetSeq
+  const goalRes = keepCurrent ? cur : target
+
   return (
-    <div className="rp" aria-busy={p.loading}>
-      <header className="rp-head">
+    <div className="rp rpw" aria-busy={p.loading}>
+      <header className="rpw-head">
         <span className="rp-kicker">{r.kicker(p.place)}</span>
         <h2 id="rot-title" className="rp-title">
           {r.title}
         </h2>
-        <p className="rp-sub">{r.sub}</p>
+        <ol className="rpw-steps" aria-label={r.progress(step + 1, STEPS.length)}>
+          {STEPS.map((label, i) => (
+            <li key={label} className={i < step ? 'is-done' : i === step ? 'is-now' : ''}>
+              <button
+                type="button"
+                onClick={() => goTo(i)}
+                aria-current={i === step ? 'step' : undefined}
+                disabled={i > step + 1 && i !== last}
+              >
+                <span className="rpw-dot">{i < step ? '✓' : i + 1}</span>
+                <span className="rpw-label">{label}</span>
+              </button>
+            </li>
+          ))}
+        </ol>
+        <div className="rpw-bar" aria-hidden="true">
+          <i style={{ width: `${(step / last) * 100}%` }} />
+        </div>
       </header>
 
-      <div className="rp-grid">
-        <div className="rp-inputs">
-          {/* Paso 1: la rotación de hoy */}
-          <section className="rp-step">
-            <h3 className="rp-step-title">
-              <span className="rp-num">1</span> {r.step1}
-            </h3>
+      <section className="rpw-card" key={step} aria-live="polite">
+        {step === 0 && (
+          <>
+            <h3 className="rpw-q">{r.step1}</h3>
+            <p className="rpw-help">{r.step1Help}</p>
             <div className="rp-options" role="radiogroup" aria-label={r.step1}>
               {sequences.map((s) => (
                 <button
@@ -204,6 +233,7 @@ export default function RotationPlanner(p: Props) {
                     setPickedId(null)
                   }}
                 >
+                  <span className="rpw-radio" aria-hidden="true" />
                   <b>{seqName(s)}</b>
                   <span className="rp-mini" aria-hidden="true">
                     {s.sequence.map((c, i) => (
@@ -214,8 +244,8 @@ export default function RotationPlanner(p: Props) {
               ))}
             </div>
             {current && (
-              <>
-                <p className="rp-hint">{r.editHint}</p>
+              <div className="rpw-edit">
+                <span className="rp-label">{r.editHint}</span>
                 <YearChips
                   seq={current.sequence}
                   editable
@@ -226,15 +256,15 @@ export default function RotationPlanner(p: Props) {
                   yearWord={r.campaign}
                   label={seqName(current)}
                 />
-              </>
+              </div>
             )}
-          </section>
+          </>
+        )}
 
-          {/* Paso 2: la chacra y lo que importa */}
-          <section className="rp-step">
-            <h3 className="rp-step-title">
-              <span className="rp-num">2</span> {r.step2}
-            </h3>
+        {step === 1 && (
+          <>
+            <h3 className="rpw-q">{r.step2}</h3>
+            <p className="rpw-help">{r.step2Help}</p>
             <div className="rp-field">
               <span className="rp-label">{d.slope}</span>
               <Seg
@@ -254,36 +284,30 @@ export default function RotationPlanner(p: Props) {
               />
             </div>
             <div className="rp-field">
-              <span className="rp-label">{r.goalsLabel}</span>
-              <div className="rp-goals">
-                {CRITERIA.map((c) => (
-                  <button
-                    key={c}
-                    type="button"
-                    className="rp-goal"
-                    aria-pressed={goals.includes(c)}
-                    onClick={() => toggleGoal(c)}
-                  >
-                    {r.goals[c]}
-                  </button>
-                ))}
-              </div>
+              <span className="rp-label">{d.organic}</span>
+              <Seg
+                label={d.organic}
+                value={p.soil.organic_matter}
+                onChange={(v) => p.onSoil({ ...p.soil, organic_matter: v, declared: true })}
+                options={(['baja', 'media', 'alta'] as OrganicMatter[]).map((v) => ({ v, label: d.oms[v] }))}
+              />
+            </div>
+          </>
+        )}
+
+        {step === 2 && (
+          <>
+            <h3 className="rpw-q">{r.goalsLabel}</h3>
+            <p className="rpw-help">{r.step3Help}</p>
+            <div className="rp-goals">
+              {CRITERIA.map((c) => (
+                <button key={c} type="button" className="rp-goal" aria-pressed={goals.includes(c)} onClick={() => toggleGoal(c)}>
+                  {r.goals[c]}
+                </button>
+              ))}
             </div>
             <details className="rp-advanced">
               <summary>{r.advanced}</summary>
-              <label className="rp-adv-row">
-                <span>{d.organic}</span>
-                <select
-                  value={p.soil.organic_matter}
-                  onChange={(e) => p.onSoil({ ...p.soil, organic_matter: e.target.value as OrganicMatter, declared: true })}
-                >
-                  {(['baja', 'media', 'alta'] as OrganicMatter[]).map((x) => (
-                    <option key={x} value={x}>
-                      {d.oms[x]}
-                    </option>
-                  ))}
-                </select>
-              </label>
               <p className="rp-hint">{d.prioritiesHelp}</p>
               {CRITERIA.map((c) => (
                 <label key={c} className="rp-adv-row">
@@ -301,94 +325,87 @@ export default function RotationPlanner(p: Props) {
                 </label>
               ))}
             </details>
-          </section>
-        </div>
+          </>
+        )}
 
-        {/* Paso 3: la recomendación */}
-        <section className="rp-step rp-result" aria-live="polite">
-          <h3 className="rp-step-title">
-            <span className="rp-num">3</span> {r.step3}
-            {p.loading && <span className="rp-busy">{r.computing}</span>}
-          </h3>
-
-          {!cur || !target || !current || !targetSeq ? (
+        {step === 3 &&
+          (!cur || !target || !current || !targetSeq || !goalSeq || !goalRes ? (
             <div className="rp-skeleton" aria-hidden="true" />
           ) : (
-            <>
-              <div className={`rp-hero ${diff > 0 && !keepCurrent ? 'up' : 'same'}`}>
-                <div className="rp-hero-text">
-                  <span className="rp-hero-kicker">{heroKicker}</span>
-                  <strong>{keepCurrent ? seqName(current) : seqName(targetSeq)}</strong>
-                  {diff > 0 && !keepCurrent && <span className="rp-hero-gain">{r.gain(diff)}</span>}
-                </div>
-                <div className="rp-scores">
-                  <div className="rp-score is-cur">
-                    <span>{r.yours}</span>
+            <div className="rpw-goal">
+              {/* La meta */}
+              <div className={`rpw-target lv-${goalRes.level}`}>
+                <span className="rpw-target-kicker">{r.goalKicker(years[0], years[years.length - 1])}</span>
+                <strong className="rpw-target-title">
+                  {keepCurrent ? r.goalKeep(goalRes.overall) : r.goalReach(goalRes.overall)}
+                </strong>
+                <span className="rpw-target-sub">
+                  {keepCurrent
+                    ? r.goalKeepSub(seqName(goalSeq))
+                    : isRecommended
+                      ? r.goalSub(seqName(goalSeq), cur.overall, diff)
+                      : r.goalSubCompare(seqName(goalSeq), cur.overall, diff)}
+                </span>
+                <div className="rpw-meter" role="img" aria-label={`${cur.overall} → ${goalRes.overall} / 100`}>
+                  <i className="rpw-meter-fill" style={{ width: `${goalRes.overall}%` }} />
+                  <span className="rpw-mark is-now" style={{ left: `${cur.overall}%` }}>
                     <b>{cur.overall}</b>
-                  </div>
-                  <span className="rp-arrow" aria-hidden="true">
-                    →
+                    <small>{r.today}</small>
                   </span>
-                  <div className={`rp-score is-new lv-${target.level}`}>
-                    <span>{targetLabel}</span>
-                    <b>{target.overall}</b>
-                  </div>
+                  <span className="rpw-mark is-goal" style={{ left: `${goalRes.overall}%` }}>
+                    <b>{goalRes.overall}</b>
+                    <small>{r.goalWord}</small>
+                  </span>
                 </div>
               </div>
 
-              <div className="rp-compare">
-                <div className="rp-legend">
-                  <span className="is-cur">{seqName(current)}</span>
-                  <span className="is-new">{seqName(targetSeq)}</span>
+              {/* Primer paso concreto */}
+              <div className="rpw-first">
+                <span className="rp-label">{r.firstStep}</span>
+                <p>
+                  {keepCurrent || firstChange < 0
+                    ? r.firstKeep
+                    : r.firstChange(
+                        years[firstChange],
+                        target.sequence_names[firstChange],
+                        cropName(current.sequence[firstChange]),
+                      )}
+                </p>
+              </div>
+
+              {/* Hitos campaña por campaña */}
+              <div className="rpw-milestones">
+                <span className="rp-label">{r.milestones}</span>
+                <ol>
+                  {goalSeq.sequence.map((c, i) => {
+                    const changes = !keepCurrent && c !== current.sequence[i]
+                    return (
+                      <li key={i} className={`fam-${FAMILY[c] ?? 'grano'}${changes ? ' is-change' : ''}`}>
+                        <span className="rpw-ms-year">{years[i]}</span>
+                        <span className="rpw-ms-chip">{goalRes.sequence_names[i] ?? cropName(c)}</span>
+                        {changes && <span className="rpw-ms-tag">{r.changeFrom(cropName(current.sequence[i]))}</span>}
+                        {i === 0 && <span className="rpw-ms-now">{r.thisSeason}</span>}
+                      </li>
+                    )
+                  })}
+                </ol>
+              </div>
+
+              {/* Lo que ganas */}
+              {!keepCurrent && gains.length > 0 && (
+                <div className="rpw-gains">
+                  <span className="rp-label">{r.youGain}</span>
+                  <ul>
+                    {gains.slice(0, 4).map(({ c, d: dd }) => (
+                      <li key={c}>
+                        <b>+{dd}</b> {r.goals[c]}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-                {active.map((c) => {
-                  const a = cur.scores[c]
-                  const b = target.scores[c]
-                  return (
-                    <div key={c} className="rp-row">
-                      <span className="rp-row-label">{r.goals[c]}</span>
-                      <div className="rp-bars" role="img" aria-label={`${r.goals[c]}: ${a} → ${b}`}>
-                        <i className="is-cur" style={{ width: `${a}%` }} />
-                        <i className={`is-new lv-${target.levels[c]}`} style={{ width: `${b}%` }} />
-                      </div>
-                      <b className={b > a ? 'up' : b < a ? 'down' : ''}>
-                        {b > a ? '+' : ''}
-                        {b - a}
-                      </b>
-                    </div>
-                  )
-                })}
-              </div>
+              )}
 
-              <div className="rp-plan">
-                <span className="rp-label">{r.yearByYear}</span>
-                <span className="rp-plan-tag">{r.yours}</span>
-                <YearChips
-                  seq={current.sequence}
-                  cropName={cropName}
-                  years={years}
-                  yearWord={r.campaign}
-                  label={seqName(current)}
-                />
-                <span className="rp-plan-tag is-new">{targetLabel}</span>
-                <YearChips
-                  seq={target.sequence}
-                  names={target.sequence_names}
-                  cropName={cropName}
-                  years={years}
-                  yearWord={r.campaign}
-                  label={seqName(targetSeq)}
-                />
-                <ul className="rp-fams" aria-hidden="true">
-                  {FAMILIES.map((f) => (
-                    <li key={f} className={`fam-${f}`}>
-                      {d.families[f]}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {(why.length > 0 || losses.length > 0 || target.risks.length > 0) && (
+              {(why.length > 0 || losses.length > 0 || target.risks.length > 0) && !keepCurrent && (
                 <div className="rp-notes">
                   {why.length > 0 && (
                     <div className="rp-note good">
@@ -426,21 +443,47 @@ export default function RotationPlanner(p: Props) {
                 </div>
               )}
 
-              <div className="rp-ranking">
-                <span className="rp-label">{r.allOptions}</span>
-                <ol>
+              <details className="rpw-more">
+                <summary>{r.detailCompare}</summary>
+                <div className="rp-compare">
+                  <div className="rp-legend">
+                    <span className="is-cur">{seqName(current)}</span>
+                    <span className="is-new">{seqName(targetSeq)}</span>
+                  </div>
+                  {active.map((c) => {
+                    const a = cur.scores[c]
+                    const b = target.scores[c]
+                    return (
+                      <div key={c} className="rp-row">
+                        <span className="rp-row-label">{r.goals[c]}</span>
+                        <div className="rp-bars" role="img" aria-label={`${r.goals[c]}: ${a} → ${b}`}>
+                          <i className="is-cur" style={{ width: `${a}%` }} />
+                          <i className={`is-new lv-${target.levels[c]}`} style={{ width: `${b}%` }} />
+                        </div>
+                        <b className={b > a ? 'up' : b < a ? 'down' : ''}>
+                          {b > a ? '+' : ''}
+                          {b - a}
+                        </b>
+                      </div>
+                    )
+                  })}
+                </div>
+              </details>
+
+              <details className="rpw-more">
+                <summary>{r.allOptions}</summary>
+                <ol className="rpw-rank">
                   {ranked.map((x) => {
                     const s = sequences.find((q) => q.id === x.id)
                     if (!s) return null
                     const isCur = x.id === current.id
-                    const isTarget = x.id === target.id
                     return (
                       <li key={x.id}>
                         <button
                           type="button"
-                          className={`rp-rank${isTarget ? ' is-target' : ''}`}
+                          className={`rp-rank${x.id === target.id ? ' is-target' : ''}`}
                           disabled={isCur}
-                          aria-pressed={isTarget}
+                          aria-pressed={x.id === target.id}
                           onClick={() => setPickedId(x.id)}
                         >
                           <span className="rp-rank-name">
@@ -457,7 +500,7 @@ export default function RotationPlanner(p: Props) {
                     )
                   })}
                 </ol>
-              </div>
+              </details>
 
               <div className="rp-actions">
                 <a
@@ -473,10 +516,29 @@ export default function RotationPlanner(p: Props) {
                 </button>
               </div>
               <p className="rp-disclaimer">{d.rotDisclaimer}</p>
-            </>
-          )}
-        </section>
-      </div>
+            </div>
+          ))}
+      </section>
+
+      <nav className="rpw-nav" aria-label={r.progress(step + 1, STEPS.length)}>
+        {step > 0 ? (
+          <button type="button" className="rp-btn rp-ghost" onClick={() => goTo(step - 1)}>
+            ← {r.back}
+          </button>
+        ) : (
+          <span />
+        )}
+        <span className="rpw-count">{r.progress(step + 1, STEPS.length)}</span>
+        {step < last ? (
+          <button type="button" className="rp-btn rpw-next" onClick={() => goTo(step + 1)}>
+            {step === last - 1 ? r.seeGoal : r.next2} →
+          </button>
+        ) : (
+          <button type="button" className="rp-btn rp-ghost" onClick={() => goTo(0)}>
+            {r.restart}
+          </button>
+        )}
+      </nav>
     </div>
   )
 }

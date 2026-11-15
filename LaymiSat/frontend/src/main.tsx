@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import 'leaflet/dist/leaflet.css'
 import './index.css'
 import StoryMode, { type View } from './story/StoryMode'
+import WakeNotice from './components/WakeNotice'
 
 // Pantalla principal: el terreno 3D con Hoy / Calendario / 40 años (story/StoryMode.tsx).
 // La vista técnica completa (todas las cifras, rotaciones, fuentes) se carga solo con ?modo=tecnico o ?full=1.
@@ -19,6 +20,7 @@ const initialView: View =
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
+    <WakeNotice />
     {isTech ? (
       <Suspense fallback={null}>
         <App />

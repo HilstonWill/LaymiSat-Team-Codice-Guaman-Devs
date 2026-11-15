@@ -226,23 +226,48 @@ const BASE = (import.meta.env.VITE_API_URL as string | undefined) ?? ''
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
+/**
+ * Estado del servidor para el aviso "despertando" (WakeNotice).
+ * La API vive en el plan gratuito de Render: tras ~15 min sin tráfico se duerme y la primera
+ * petición tarda ~30–60 s. Si una petición pasa de WAKE_AFTER_MS se avisa; al responder, se quita.
+ */
+export const serverStatus = new EventTarget()
+let waking = false
+const setWaking = (v: boolean) => {
+  if (waking === v) return
+  waking = v
+  serverStatus.dispatchEvent(new CustomEvent('change', { detail: v }))
+}
+export const isServerWaking = () => waking
+const WAKE_AFTER_MS = 6000 // un informe normal tarda ~3 s; más de 6 s es casi seguro el servidor despertando
+// Esperas entre reintentos: ~60 s en total, lo que tarda en despertar el servidor gratuito.
+const BACKOFF_MS = [1500, 3000, 5000, 8000, 10000, 12000, 15000]
+
 /** GET/POST con reintentos ante errores de red o 5xx (p. ej. el servidor gratuito despertando). */
-async function request<T>(path: string, init?: RequestInit, retries = 3): Promise<T> {
+async function request<T>(path: string, init?: RequestInit, attempt = 0): Promise<T> {
+  const slow = window.setTimeout(() => setWaking(true), WAKE_AFTER_MS)
   let res: Response
   try {
     res = await fetch(`${BASE}${path}`, init)
   } catch (e) {
+    window.clearTimeout(slow)
     if (init?.signal?.aborted) throw e
-    if (retries > 0) {
-      await sleep(1500)
-      return request<T>(path, init, retries - 1)
+    if (attempt < BACKOFF_MS.length) {
+      setWaking(true)
+      await sleep(BACKOFF_MS[attempt])
+      return request<T>(path, init, attempt + 1)
     }
+    setWaking(false)
     throw e
   }
-  if (res.status >= 500 && res.status !== 503 && retries > 0) {
-    await sleep(1500)
-    return request<T>(path, init, retries - 1)
+  window.clearTimeout(slow)
+  // 502/504: el proxy de Render responde así mientras arranca el servidor. 503 es un error propio de la API.
+  if (res.status >= 500 && res.status !== 503 && attempt < BACKOFF_MS.length) {
+    setWaking(true)
+    await sleep(BACKOFF_MS[attempt])
+    return request<T>(path, init, attempt + 1)
   }
+  setWaking(false)
   if (!res.ok) {
     let detail = `Error ${res.status}`
     try {

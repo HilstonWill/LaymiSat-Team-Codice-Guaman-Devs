@@ -12,6 +12,25 @@ LaymiSat cruza 40 años de datos diarios de **NASA POWER** (1984 → hoy) con el
 > **Laymi**: sistema andino de rotación comunal por sectores. Cada año se siembra papa en un sector, luego otros
 > cultivos, y la tierra descansa varios años (purum). LaymiSat lo pone a prueba con datos satelitales.
 
+## Para revisores: leer antes de probar
+
+**Demo en vivo:** https://qullqasat-frontend.vercel.app
+
+> ⏳ **La primera carga puede tardar hasta ~1 minuto.** La API está en el **plan gratuito de Render**, que duerme el
+> servidor tras ~15 minutos sin tráfico. La primera petición lo despierta (unos 30–60 s); mientras tanto la app
+> muestra el aviso **"Despertando el servidor…"** y reintenta sola. Después, todo responde en pocos segundos.
+> Si alguna vez aparece un error, espera un minuto y recarga: es el servidor despertando, no una falla.
+
+**Recorrido sugerido de 3 minutos** (todo en una pantalla sobre el terreno 3D):
+1. **Zonas** — las 4 comunidades piloto con su semáforo en el mapa; toca una.
+2. **Hoy** — qué hacer esta campaña: ventana de siembra, las 3 alertas (tócalas para abrirlas) y la mejor rotación.
+3. **Rotaciones** — el planificador Field Shift: elige tu rotación de hoy, tu chacra y tus objetivos; recibe una recomendación comparada objetivo por objetivo y compártela.
+4. **Calendario** — el calendario de Guaman Poma (1615) mes a mes: antes → hoy (datos NASA) → qué hacer.
+5. **40 años** — la historia de 40 campañas sobre el terreno (se reproduce sola).
+
+Atajos: `?demo=1` abre la historia de 40 años · `?vista=rotaciones` abre el planificador · `?modo=tecnico` abre la
+vista técnica completa (todas las cifras, tendencias, helada por altitud, comparador completo y fuentes/límites).
+
 ## Qué hace
 
 | Pieza | Detalle |

@@ -1060,3 +1060,18 @@ input[type='range'] { accent-color: var(--accent); }
 /* Enlace al Modo Historia (solo en modo técnico) */
 .btn-story { background: transparent; color: #f4e7cf; border: 1.5px solid rgba(244, 231, 207, 0.55); }
 .btn-story:hover { border-color: var(--maize); color: var(--maize); }
+
+/* Aviso "despertando el servidor" (plan gratuito de Render). Ver components/WakeNotice.tsx. */
+.wake-notice {
+  position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 2000;
+  width: min(520px, calc(100% - 32px)); display: flex; gap: 12px; align-items: flex-start;
+  background: #16203a; color: #f4e7cf; border: 1px solid rgba(224, 164, 58, 0.55); border-radius: 14px;
+  padding: 14px 16px; box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45); animation: wake-in 0.3s ease;
+}
+.wake-notice b { font-family: 'Poppins', system-ui, sans-serif; }
+.wake-notice p { margin: 2px 0 0; font-size: 0.88rem; line-height: 1.45; color: #cfd5e3; }
+.wake-spin { flex: none; width: 20px; height: 20px; margin-top: 2px; border-radius: 50%; border: 3px solid rgba(224, 164, 58, 0.3); border-top-color: #e0a43a; animation: wake-spin 0.9s linear infinite; }
+@keyframes wake-spin { to { transform: rotate(360deg); } }
+@keyframes wake-in { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
+@media (prefers-reduced-motion: reduce) { .wake-notice, .wake-spin { animation: none; } }
+@media print { .wake-notice { display: none; } }

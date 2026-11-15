@@ -10,8 +10,30 @@ decides every season: *when to sow, with what risk, and with which crop rotation
 > **Laymi** is the Andean communal rotation system: each year potatoes are planted in one sector, then other crops,
 > and the land rests for several years (purun). LaymiSat tests it against satellite data.
 
+## For reviewers: please read before testing
+
+**Live demo:** https://qullqasat-frontend.vercel.app
+
+> ⏳ **The first load can take up to ~1 minute.** The API runs on **Render's free plan**, which puts the server to
+> sleep after ~15 minutes without traffic. The first request wakes it up (about 30–60 s); the app shows a
+> **"Waking up the server…"** notice meanwhile and retries on its own. After that, everything responds in a few
+> seconds. If you ever see an error, wait a minute and reload: it is the server waking up, not a bug.
+
+**Suggested 3-minute tour** (all on one screen over the 3D terrain):
+1. **Zones** — the 4 pilot communities with their traffic light on the map; tap one.
+2. **Today** — what to do this season: sowing window, the 3 alerts (tap to expand) and the best crop rotation.
+3. **Rotations** — the Field Shift planner: pick today's rotation, your plot and goals, get a recommendation with a goal-by-goal comparison, and share the plan.
+4. **Calendar** — the 1615 Guaman Poma calendar month by month: then → today (NASA data) → what to do.
+5. **40 years** — the story of 40 seasons on the terrain (plays on its own).
+
+Shortcuts: `?demo=1` opens the 40-year story · `?vista=rotaciones` opens the planner · `?modo=tecnico` opens the full
+technical view (all figures, trends, frost by altitude, the full rotation comparator and sources/limits).
+
 ## What it does
-> **MVP view.** By default the app shows only what answers the problem: map + plot card, the 3 alerts, trends, the 1615 Guaman Poma calendar, the rotation comparator and sources/limits. The NDVI panel, the sowing-date simulator, the 7-day forecast and the AI explanations are hidden (not removed); open the app with `?full=1` to see them (`frontend/src/features.ts`).
+> **MVP view.** The main screen shows only what answers the problem (Zones, Today, Rotations, Calendar, 40 years).
+> The technical view (`?modo=tecnico`) keeps every figure. The NDVI panel, the sowing-date simulator, the 7-day
+> forecast and the AI explanations are hidden (not removed); open the technical view with `?full=1` to see them
+> (`frontend/src/features.ts`).
 
 | Feature | Detail |
 |---|---|
