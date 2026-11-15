@@ -972,3 +972,49 @@ details.today-alert .ta-action { padding: 0 12px 12px 56px; }
   .story.v-zonas .zcard-head { gap: 3px; }
   .story.v-zonas .zdot { padding: 3px 6px; }
 }
+
+/* ---------- Hoy: más compacto, para que la decisión y las alertas se lean de un vistazo ---------- */
+.story.v-hoy .story-side { gap: 10px; padding: 12px 14px; }
+.story.v-hoy .story-side h2 { margin: 0 0 6px; }
+.story.v-hoy .back-zones { padding: 0; font-size: 0.82rem; }
+.story.v-hoy .hoy-decision { padding: 12px 14px; gap: 6px; }
+.story.v-hoy .hd-kicker { font-size: 0.68rem; }
+.story.v-hoy .hd-title { font-size: 1.05rem; line-height: 1.2; }
+.story.v-hoy .hd-window { grid-template-columns: auto 1fr; align-items: center; column-gap: 10px; padding: 7px 12px; }
+.story.v-hoy .hd-window b { font-size: 1.3rem; text-align: right; }
+.story.v-hoy .hd-window.none { display: block; }
+.story.v-hoy .hd-action { font-size: 0.88rem; line-height: 1.4; }
+.story.v-hoy .today-alerts { gap: 6px; }
+.story.v-hoy .today-alert summary { padding: 6px 10px; min-height: 44px; gap: 8px; }
+.story.v-hoy .ta-icon { width: 28px; height: 28px; }
+.story.v-hoy details.today-alert .ta-action { padding: 0 12px 10px 12px; }
+.story.v-hoy .trot { gap: 6px; padding: 10px 12px; }
+.story.v-hoy .trot-name strong { font-size: 0.98rem; }
+.story.v-hoy .trot-score b { font-size: 1.35rem; }
+.story.v-hoy .trot-years li { padding: 4px 7px; }
+.story.v-hoy .trot-risk { font-size: 0.8rem; line-height: 1.4; }
+.story.v-hoy .trot-cta { min-height: 40px; padding: 8px 14px; }
+.story.v-hoy .today-links { gap: 8px; }
+.story.v-hoy .story-note { margin: 0; font-size: 0.72rem; line-height: 1.35; }
+
+/* Escritorio: dos columnas (decisión + alertas | rotación), así no hace falta desplazarse. */
+@media (min-width: 1000px) {
+  .story.v-hoy .story-main { grid-template-columns: minmax(0, 1fr) minmax(540px, 700px); }
+  .story.v-hoy .story-side {
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-content: start; gap: 10px 16px;
+    grid-template-areas: "back back" "dec rot" "alr rot" "lnk note";
+  }
+  .story.v-hoy .back-zones { grid-area: back; }
+  .story.v-hoy .hoy-decision { grid-area: dec; align-self: start; }
+  .story.v-hoy .today-alerts-sec { grid-area: alr; }
+  .story.v-hoy .today-rot { grid-area: rot; align-self: start; }
+  .story.v-hoy .today-links { grid-area: lnk; flex-direction: row; }
+  .story.v-hoy .today-links .btn-cta { flex: 1 1 auto; }
+  .story.v-hoy .story-note { grid-area: note; align-self: center; }
+}
+/* Celular: mapa más bajo para que la decisión quede a la vista sin tanto desplazamiento. */
+@media (max-width: 900px) {
+  .story.v-hoy:not(.v-rotaciones):not(.v-calendario) .story-stage .story-map { height: clamp(130px, 19dvh, 220px); }
+}
+/* Hoy: las secciones heredaban el "section { padding: 34px 0 6px }" global de la vista técnica; aquí no hace falta. */
+.story.v-hoy .story-side > section { padding: 0; }

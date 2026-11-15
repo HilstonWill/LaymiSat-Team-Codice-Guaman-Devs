@@ -455,7 +455,7 @@ export default function StoryMode({ initialView = 'zonas' }: { initialView?: Vie
                 )}
                 <p className="hd-action">{insight.worstAlert.action}</p>
               </div>
-              <section>
+              <section className="today-alerts-sec">
                 <h2>{t.alertsTitle}</h2>
                 <TodayAlerts alerts={report.alerts} d={d} />
               </section>
@@ -850,6 +850,7 @@ function SceneCard({ row, t, lang, refLabel, altitude }: {
         </p>
       )}
       {row.son !== null && <p className="scene-meta">{t.dryMm(fmtNum(Math.round(row.son), lang))}</p>}
+      <p className="scene-meta scene-estimate">{t.estimateNote}</p>
     </div>
   )
 }
