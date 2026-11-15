@@ -4,7 +4,7 @@ Agro-climate decision support for native-potato farmers in the high Andes of Cus
 MODIS NDVI and NASA SRTM data plus the 1615 Andean farming calendar of Guaman Poma de Ayala.
 Challenge: **Field Shift: Adapting Farms with NASA Data**.
 
-➡️ **Project description, NASA data, method and findings: [qullqasat/README.md](qullqasat/README.md)**
+➡️ **Project description, NASA data, method and findings: [LaymiSat/README.md](LaymiSat/README.md)**
 
 ---
 
@@ -20,7 +20,7 @@ Challenge: **Field Shift: Adapting Farms with NASA Data**.
 ### 2. Clone
 ```bash
 git clone https://github.com/HilstonWill/LaymiSat-Team-Codice-Guaman-Devs.git
-cd LaymiSat-Team-Codice-Guaman-Devs/qullqasat
+cd LaymiSat-Team-Codice-Guaman-Devs/LaymiSat
 ```
 
 ### 3. Backend (API) — terminal 1
@@ -52,9 +52,9 @@ Open **http://localhost:5173**. During development Vite forwards every `/api` ca
 
 ### 5. Before pushing: tests and checks
 ```bash
-# backend (from qullqasat/backend)
+# backend (from LaymiSat/backend)
 .venv/Scripts/python -m pytest --cov=app        # macOS/Linux: .venv/bin/python -m pytest --cov=app
-# frontend (from qullqasat/frontend)
+# frontend (from LaymiSat/frontend)
 npm run build
 npm run lint
 ```
@@ -104,7 +104,7 @@ Check which provider is active at http://127.0.0.1:8000/api/health (`"ai_provide
 
 ### Project structure
 ```
-qullqasat/
+LaymiSat/
 ├── backend/            FastAPI API (Python)
 │   ├── app/            alerts, analysis, climate (NASA POWER), ndvi (MODIS), terrain (SRTM), rotations, i18n, calibration
 │   ├── app/data/       Guaman Poma calendar (verified against the manuscript) and crop parameters
@@ -117,14 +117,14 @@ qullqasat/
 ```
 
 ### How we work
-**Team roles, file ownership and rules: [qullqasat/docs/EQUIPO.md](qullqasat/docs/EQUIPO.md)** · **Style & UX guide: [qullqasat/docs/ESTILO.md](qullqasat/docs/ESTILO.md)** (portada y alertas: Cristian · calendario: Yaqui · rotaciones: Will · tendencias: Raúl y Jennifer).
+**Team roles, file ownership and rules: [LaymiSat/docs/EQUIPO.md](LaymiSat/docs/EQUIPO.md)** · **Style & UX guide: [LaymiSat/docs/ESTILO.md](LaymiSat/docs/ESTILO.md)** (portada y alertas: Cristian · calendario: Yaqui · rotaciones: Will · tendencias: Raúl y Jennifer).
 
 1. Create a branch: `git checkout -b feat/<short-name>`.
 2. Make your change; keep the UI texts in **both** languages (`frontend/src/i18n.ts`).
 3. Run the checks of step 5.
 4. Commit with [Conventional Commits](https://www.conventionalcommits.org/) (`feat(web): …`, `fix(api): …`, `docs: …`), push and open a Pull Request.
 
-Pending tasks for the frontend are listed in [qullqasat/docs/GUIA_FRONTEND.md](qullqasat/docs/GUIA_FRONTEND.md) (section 7).
+Pending tasks for the frontend are listed in [LaymiSat/docs/GUIA_FRONTEND.md](LaymiSat/docs/GUIA_FRONTEND.md) (section 7).
 
 ---
 
@@ -132,7 +132,7 @@ Pending tasks for the frontend are listed in [qullqasat/docs/GUIA_FRONTEND.md](q
 <summary><b>🇵🇪 Guía rápida en español para el equipo</b></summary>
 
 1. **Instala** Git, Python 3.11+ (en Windows marca "Add python.exe to PATH") y Node.js 20+.
-2. **Clona** el repositorio y entra en la carpeta `qullqasat`.
+2. **Clona** el repositorio y entra en la carpeta `LaymiSat`.
 3. **Terminal 1, la API:**
    ```bash
    cd backend
@@ -152,7 +152,7 @@ Pending tasks for the frontend are listed in [qullqasat/docs/GUIA_FRONTEND.md](q
 6. **Problemas frecuentes:**
    - **Error 10048 / puerto ocupado:** ya hay otra API corriendo; ciérrala.
    - **La página queda en blanco:** la API es una versión vieja; reiníciala con Ctrl+C y el mismo comando.
-7. **Reparto y reglas del equipo:** lee `qullqasat/docs/EQUIPO.md` (quién toca qué archivo).
-8. **Trabajo en equipo:** crea una rama por tarea, mantén los textos en inglés y español (`frontend/src/i18n.ts`) y abre un Pull Request. Las tareas pendientes están en `qullqasat/docs/GUIA_FRONTEND.md`.
+7. **Reparto y reglas del equipo:** lee `LaymiSat/docs/EQUIPO.md` (quién toca qué archivo).
+8. **Trabajo en equipo:** crea una rama por tarea, mantén los textos en inglés y español (`frontend/src/i18n.ts`) y abre un Pull Request. Las tareas pendientes están en `LaymiSat/docs/GUIA_FRONTEND.md`.
 
 </details>

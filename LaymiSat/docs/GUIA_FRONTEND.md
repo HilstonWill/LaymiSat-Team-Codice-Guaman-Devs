@@ -28,7 +28,7 @@ Necesitas **2 terminales**.
 
 ```bash
 # Terminal 1: API (Python 3.11+)
-cd qullqasat/backend
+cd LaymiSat/backend
 python -m venv .venv
 .venv/Scripts/pip install -r requirements.txt -r requirements-dev.txt   # Linux/macOS: .venv/bin/pip
 .venv/Scripts/python -m uvicorn app.main:app --port 8000
@@ -36,15 +36,15 @@ python -m venv .venv
 
 ```bash
 # Terminal 2: frontend (Node 20+)
-cd qullqasat/frontend
+cd LaymiSat/frontend
 npm install
 npm run dev        # abre http://localhost:5173
 ```
 
 - Vite redirige `/api` a `http://127.0.0.1:8000`; la configuración está en `vite.config.ts`.
 - Si sale el error `10048` o "address already in use", ese puerto ya está ocupado porque el servidor ya está corriendo.
-- Tests del backend: `cd qullqasat/backend && .venv/Scripts/python -m pytest --cov=app`
-- Compilación del frontend: `cd qullqasat/frontend && npm run build`
+- Tests del backend: `cd LaymiSat/backend && .venv/Scripts/python -m pytest --cov=app`
+- Compilación del frontend: `cd LaymiSat/frontend && npm run build`
 
 ---
 

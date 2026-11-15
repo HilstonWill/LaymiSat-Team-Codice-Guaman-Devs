@@ -19,7 +19,7 @@ Lee antes la [guía del frontend](GUIA_FRONTEND.md) (qué hace cada parte), la *
 ### Archivos de cada responsable
 Cada persona puede editar libremente los archivos de **su** fila. Si necesita tocar un archivo de otra fila, lo avisa en el grupo y lo pide a su responsable.
 
-| Responsable | Frontend (`qullqasat/frontend/src/`) | Backend (`qullqasat/backend/app/`) |
+| Responsable | Frontend (`LaymiSat/frontend/src/`) | Backend (`LaymiSat/backend/app/`) |
 |---|---|---|
 | Cristian | `App.tsx` (cabecera, controles, sección superior, orden de secciones), `components/MapPicker.tsx`, `components/AlertCards.tsx` | `alerts.py`, `i18n.py` (textos de alertas), `zones.py`, `terrain.py` |
 | Yaqui | `components/CalendarGP.tsx` | `calendar_gp.py`, `data/guaman_poma_calendar.json` |
@@ -81,13 +81,13 @@ git push -u origin feat/<tu-rama>
 Luego abre un **Pull Request** en GitHub hacia `main`. Otra persona del equipo lo revisa y lo aprueba antes de fusionarlo.
 
 **Antes de abrir el PR (definición de "terminado"):**
-- [ ] `npm run build` y `npm run lint` sin errores (en `qullqasat/frontend`).
-- [ ] `pytest` en verde si tocaste el backend (en `qullqasat/backend`).
+- [ ] `npm run build` y `npm run lint` sin errores (en `LaymiSat/frontend`).
+- [ ] `pytest` en verde si tocaste el backend (en `LaymiSat/backend`).
 - [ ] Textos nuevos en **inglés y español**.
 - [ ] Probado en la app, también con ancho de celular (sin scroll horizontal).
 - [ ] Sigue la [guía de estilo](ESTILO.md): tokens, orden pregunta → respuesta → evidencia → acción, checklist de accesibilidad.
 - [ ] Nada de datos personales, fotos de menores de 18 años ni logos de la NASA.
-- [ ] Si usaste IA para generar código, imágenes o textos, añádelo a `qullqasat/AI_DISCLOSURE.md`.
+- [ ] Si usaste IA para generar código, imágenes o textos, añádelo a `LaymiSat/AI_DISCLOSURE.md`.
 
 **Commits:** formato `tipo(área): descripción`. Tipos: `feat`, `fix`, `docs`, `style`, `refactor`, `test`. Áreas: `web`, `api`, `data`.
 
