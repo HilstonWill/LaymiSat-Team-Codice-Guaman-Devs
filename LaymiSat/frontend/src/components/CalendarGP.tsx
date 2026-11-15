@@ -1,4 +1,4 @@
-import { useRef, useState, type KeyboardEvent } from 'react'
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import type { CalendarRow } from '../api'
 import { fmtNum, type Dict, type Lang } from '../i18n'
 
@@ -173,11 +173,60 @@ export default function CalendarGP({ rows, t, lang }: { rows: CalendarRow[]; t: 
   const todayIdx = Math.max(0, rows.findIndex((r) => r.month === todayMonth))
   const [sel, setSel] = useState(todayIdx)
   const segRefs = useRef<(SVGGElement | null)[]>([])
+  const cardRef = useRef<HTMLElement | null>(null)
+  const dirRef = useRef<1 | -1>(1)
+  const firstRender = useRef(true)
+
+  // Cambio de hoja: la tarjeta del mes gira sobre su lomo (izquierdo si avanza, derecho si retrocede).
+  // Se anima el mismo nodo (sin remontarlo) para no perder el foco del teclado en las flechas.
+  useEffect(() => {
+    if (firstRender.current) {
+      firstRender.current = false
+      return
+    }
+    const el = cardRef.current
+    if (!el || typeof el.animate !== 'function') return
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+      el.animate([{ opacity: 0.4 }, { opacity: 1 }], { duration: 200, easing: 'ease-out' })
+      return
+    }
+    const fwd = dirRef.current === 1
+    const turn = fwd ? -78 : 78
+    el.animate(
+      [
+        {
+          transformOrigin: fwd ? 'left center' : 'right center',
+          transform: `perspective(1600px) rotateY(${turn}deg)`,
+          opacity: 0.15,
+          filter: 'brightness(0.72)',
+          offset: 0,
+        },
+        {
+          transformOrigin: fwd ? 'left center' : 'right center',
+          transform: `perspective(1600px) rotateY(${turn * 0.22}deg)`,
+          opacity: 1,
+          filter: 'brightness(0.94)',
+          offset: 0.6,
+        },
+        {
+          transformOrigin: fwd ? 'left center' : 'right center',
+          transform: 'perspective(1600px) rotateY(0deg)',
+          opacity: 1,
+          filter: 'brightness(1)',
+          offset: 1,
+        },
+      ],
+      { duration: 620, easing: 'cubic-bezier(0.22, 0.8, 0.28, 1)' },
+    )
+  }, [sel])
+
   const row = rows[sel] ?? rows[0]
   if (!row) return null
 
   const go = (i: number, focus = false) => {
     const next = (i + n) % n
+    // Dirección por el camino más corto en la rueda (de Julio a Agosto sigue siendo "avanzar").
+    dirRef.current = (next - sel + n) % n <= n / 2 ? 1 : -1
     setSel(next)
     if (focus) segRefs.current[next]?.focus()
   }
@@ -329,7 +378,7 @@ export default function CalendarGP({ rows, t, lang }: { rows: CalendarRow[]; t: 
         </p>
       </div>
 
-      <article className={`gp-detail st-${row.status}`} aria-live="polite">
+      <article ref={cardRef} className={`gp-detail st-${row.status}`} aria-live="polite">
         <header className="gp-head">
           <button type="button" className="gp-nav" onClick={() => go(sel - 1)} aria-label={w.prev}>
             ‹

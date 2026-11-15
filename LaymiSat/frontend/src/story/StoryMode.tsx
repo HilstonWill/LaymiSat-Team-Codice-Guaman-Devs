@@ -18,7 +18,7 @@ import {
 } from '../api'
 import { campaignLabels, FAMILY } from './rotationUtils'
 import RotationPlanner from './RotationPlanner'
-import SeasonCalendar from './SeasonCalendar'
+import CalendarGP from '../components/CalendarGP'
 import { ALERT_ICONS } from '../components/Icons'
 import SectionBoundary from '../components/SectionBoundary'
 import { DICTS, fmtNum, type Dict, type Lang } from '../i18n'
@@ -507,7 +507,12 @@ export default function StoryMode({ initialView = 'zonas' }: { initialView?: Vie
           )}
 
           {view === 'calendario' && report && (
-            <SeasonCalendar rows={report.calendar} t={t} d={d} lang={lang} />
+            <section className="cal-sheet">
+              <div className="kicker">{d.calendarKicker}</div>
+              <h2 className="cal-title">{d.calendarTitle}</h2>
+              <p className="cal-tip">{t.calendarTip}</p>
+              <CalendarGP rows={report.calendar} t={d} lang={lang} />
+            </section>
           )}
 
           {view === 'historia' && (
