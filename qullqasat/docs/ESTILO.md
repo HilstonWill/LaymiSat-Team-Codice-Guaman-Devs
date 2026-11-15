@@ -143,6 +143,15 @@ Un interruptor **Agricultor | Técnico** en la portada (junto a EN/ES). Por defe
 
 Reglas: en modo agricultor, **una sola acción por tarjeta**, nada de unidades técnicas y como máximo 3 colores con significado (verde, ámbar, rojo). Toda sección nueva entra primero en modo técnico; pasa a modo agricultor solo si responde "¿qué hago?" en una frase. "Ver la comparación completa" cambia a Técnico y baja hasta el comparador.
 
+### Modo Historia (`src/story/`, `?historia=1`)
+Pantalla aparte para la demo, que se carga en diferido desde `main.tsx` y no comparte componentes con la app (su CSS solo se carga ahí). Se entra con `?historia=1` (o `?demo=1`) o con "Ver la historia de 40 años" en el modo técnico.
+- **Escena:** terreno 3D (satélite + SRTM) con una capa `color-relief` que pinta de hielo todo lo que queda por encima de la **línea de helada de esa campaña** (`/api/story`: la altitud más baja con un evento de helada en oct–dic, misma regla que AHS). Mientras se reproduce, la cámara orbita despacio, salvo con `prefers-reduced-motion`.
+- **Tarjeta de la campaña** (arriba a la izquierda): año, el día en que llegó la lluvia firme frente a Coya Raymi (rojo > 21 días, ámbar > 7), desde qué altitud heló y si heló en la chacra.
+- **Línea de tiempo** (abajo): reproducir/pausa, 1×/2×/4×, deslizador y 3 minigráficos sincronizados (retraso de la lluvia, Tmin anual, línea de helada con la altitud de la chacra punteada). Al hacer clic en un gráfico se salta a esa campaña.
+- **Panel lateral:** momentos clave calculados de los datos (lluvia más tardía y más temprana, primavera más seca, helada más baja, hoy), la leyenda y la nota de estimación.
+- **Final:** un resumen con 4 cifras y una conclusión ("un calendario fijo ya no alcanza"), que lleva a la app.
+- **Regla:** la historia solo cuenta lo que muestran los datos. En Pisac la línea de helada **no sube** (3.793 → 3.790 m); lo que cambia es que las noches son más cálidas y que la fecha de la lluvia varía muchísimo. No se debe narrar "la helada sube".
+
 ### Rueda del año andino (`CalendarGP.tsx`)
 | Pieza | Regla de UX |
 |---|---|

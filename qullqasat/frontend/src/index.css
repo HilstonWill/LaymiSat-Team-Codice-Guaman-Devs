@@ -1056,3 +1056,7 @@ input[type='range'] { accent-color: var(--accent); }
   .hero-top { align-items: flex-start; }
   .decision-title { font-size: 1.1rem; }
 }
+
+/* Enlace al Modo Historia (solo en modo técnico) */
+.btn-story { background: transparent; color: #f4e7cf; border: 1.5px solid rgba(244, 231, 207, 0.55); }
+.btn-story:hover { border-color: var(--maize); color: var(--maize); }

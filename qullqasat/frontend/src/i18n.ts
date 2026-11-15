@@ -258,6 +258,7 @@ const en = {
   heroBadges: ['NASA POWER · MODIS · SRTM', '40 years of daily data', 'Guaman Poma · 1615'],
   heroAdvanced: 'Advanced',
   heroSummary: 'This season at a glance',
+  storyCta: 'Watch the 40-year story',
   mode: {
     label: 'View',
     farmer: 'Farmer',
@@ -577,6 +578,7 @@ const es: Dict = {
   heroBadges: ['NASA POWER · MODIS · SRTM', '40 años de datos diarios', 'Guaman Poma · 1615'],
   heroAdvanced: 'Avanzado',
   heroSummary: 'Esta campaña de un vistazo',
+  storyCta: 'Ver la historia de 40 años',
   mode: {
     label: 'Vista',
     farmer: 'Agricultor',
