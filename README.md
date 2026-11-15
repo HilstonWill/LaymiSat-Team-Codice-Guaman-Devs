@@ -90,6 +90,8 @@ qullqasat/
 ```
 
 ### How we work
+**Team roles, file ownership and rules: [qullqasat/docs/EQUIPO.md](qullqasat/docs/EQUIPO.md)** (portada y alertas: Cristian · calendario: Yaqui · rotaciones: Will · tendencias: Raúl y Jennifer).
+
 1. Create a branch: `git checkout -b feat/<short-name>`.
 2. Make your change; keep the UI texts in **both** languages (`frontend/src/i18n.ts`).
 3. Run the checks of step 5.
@@ -123,6 +125,7 @@ Pending tasks for the frontend are listed in [qullqasat/docs/GUIA_FRONTEND.md](q
 6. **Problemas frecuentes:**
    - **Error 10048 / puerto ocupado:** ya hay otra API corriendo; ciérrala.
    - **La página queda en blanco:** la API es una versión vieja; reiníciala con Ctrl+C y el mismo comando.
-7. **Trabajo en equipo:** crea una rama por tarea, mantén los textos en inglés y español (`frontend/src/i18n.ts`) y abre un Pull Request. Las tareas pendientes están en `qullqasat/docs/GUIA_FRONTEND.md`.
+7. **Reparto y reglas del equipo:** lee `qullqasat/docs/EQUIPO.md` (quién toca qué archivo).
+8. **Trabajo en equipo:** crea una rama por tarea, mantén los textos en inglés y español (`frontend/src/i18n.ts`) y abre un Pull Request. Las tareas pendientes están en `qullqasat/docs/GUIA_FRONTEND.md`.
 
 </details>
