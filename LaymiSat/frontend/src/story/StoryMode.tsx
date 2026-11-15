@@ -53,7 +53,7 @@ function sdayLabel(sday: number, lang: Lang) {
 
 function initialLang(): Lang {
   try {
-    const s = localStorage.getItem('laymisat-lang')
+    const s = localStorage.getItem('laymisat-lang-v2')
     if (s === 'en' || s === 'es') return s
   } catch {
     /* almacenamiento no disponible */
@@ -156,7 +156,7 @@ export default function StoryMode({ initialView = 'zonas' }: { initialView?: Vie
               : t.todayKicker
     document.title = `LaymiSat · ${section}`
     try {
-      localStorage.setItem('laymisat-lang', lang)
+      localStorage.setItem('laymisat-lang-v2', lang)
     } catch {
       /* almacenamiento no disponible */
     }

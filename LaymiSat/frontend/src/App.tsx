@@ -65,7 +65,7 @@ function useDebounced<T>(value: T, ms: number): T {
 
 function initialLang(): Lang {
   try {
-    const saved = localStorage.getItem('laymisat-lang')
+    const saved = localStorage.getItem('laymisat-lang-v2')
     if (saved === 'en' || saved === 'es') return saved
   } catch {
     /* almacenamiento no disponible */
@@ -137,7 +137,7 @@ export default function App() {
   useEffect(() => {
     document.documentElement.lang = lang
     try {
-      localStorage.setItem('laymisat-lang', lang)
+      localStorage.setItem('laymisat-lang-v2', lang)
     } catch {
       /* almacenamiento no disponible */
     }

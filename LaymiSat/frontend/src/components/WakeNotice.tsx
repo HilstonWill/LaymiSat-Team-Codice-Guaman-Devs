@@ -22,7 +22,7 @@ const TEXT = {
 
 function currentLang(): 'es' | 'en' {
   try {
-    if (localStorage.getItem('laymisat-lang') === 'es') return 'es'
+    if (localStorage.getItem('laymisat-lang-v2') === 'es') return 'es'
   } catch {
     /* almacenamiento no disponible */
   }
