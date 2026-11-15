@@ -4,7 +4,8 @@ AHS  Heladas severas:   >=2 días seguidos con Tmin <= 0 °C en oct–dic (brota
 AEH  Estrés hídrico:    lluvia sep–nov por debajo del percentil 20 de 1991–2020, veranillos
                         >=10 días en dic–feb y humedad superficial (GWETTOP) bajo el P15.
 ADS  Desfase ancestral: inicio de lluvias observado > 21 días después de la siembra general
-                        de Coya Raymi Quilla (2.ª quincena de septiembre, Guaman Poma 1615).
+                        temprana (mawai papa y maíz) de Coya Raymi Quilla (septiembre, Guaman Poma 1615,
+                        pág. 1165). La siembra de temporal del códice es en Capac Inti Raymi (diciembre, pág. 1174).
 """
 
 from __future__ import annotations
@@ -26,7 +27,8 @@ ONSET_WINDOW_DAYS = 10
 ONSET_MIN_MM = 25.0
 ONSET_CHECK_DAYS = 40
 ONSET_SEARCH_LAST_SDAY = 183  # 31 de enero
-TRADITIONAL_SOWING_SDAY = 53  # 23 de septiembre: centro de la 2.ª quincena de Coya Raymi
+TRADITIONAL_SOWING_SDAY = 53  # 23 de septiembre: siembra temprana (mawai) de Coya Raymi
+RAINFED_SOWING_SDAY = 136  # 15 de diciembre: siembra de temporal de Capac Inti Raymi (papa, oca, quinua, tarwi)
 TRADITIONAL_WINDOW = (46, 60)  # 16–30 de septiembre
 SHIFT_ALERT_DAYS = 21
 NORMAL_PERIOD = (1991, 2020)
@@ -137,7 +139,9 @@ def onset_by_campaign(df: pd.DataFrame) -> pd.DataFrame:
         arr = np.full(ONSET_SEARCH_LAST_SDAY + ONSET_CHECK_DAYS + 1, np.nan)
         sub = g[g["sday"] < len(arr)]
         arr[sub["sday"].to_numpy()] = sub["prec"].to_numpy()
-        onset, provisional = find_onset(arr)
+        first_sday = int(sub["sday"].min()) if len(sub) else 999
+        # Campaña que empieza a mitad de temporada (p. ej. 1983, datos desde ene-1984): no se puede fechar el inicio
+        onset, provisional = find_onset(arr) if first_sday <= SEP1 else (math.nan, False)
         last_sday = int(sub["sday"].max()) if len(sub) else -1
         rows.append(
             {
@@ -192,6 +196,8 @@ def frost_alert(frost: pd.DataFrame, current: int, plant_adjust: float = 0.0) ->
         ),
         "current": {"campaign": current, "frost_days": cur_days, "frost_events": cur_events},
         "metrics": {
+            "recent_n": len(recent),
+            "plant_adjust_c": plant_adjust,
             "event_probability_recent": round(prob, 2),
             "mean_frost_days_recent": round(float(recent["frost_days"].mean()), 1) if len(recent) else None,
             "mean_frost_days_early": round(float(early["frost_days"].mean()), 1) if len(early) else None,
@@ -275,6 +281,7 @@ def water_alert(water: pd.DataFrame, df: pd.DataFrame, current: int) -> dict:
         "current": {
             "campaign": ref_campaign,
             "period": period_label,
+            "period_end_sday": cut,
             "precip_mm": None if math.isnan(value) else round(value, 1),
             "percentile": None if math.isnan(pct) else pct,
             "p20_mm": None if math.isnan(p20) else round(p20, 1),
@@ -335,7 +342,7 @@ def shift_alert(onset: pd.DataFrame, current: int) -> dict:
     if status == "aun_no_inicia":
         headline = (
             f"Al {sday_label(cur_last)} las lluvias de siembra aún no se establecen: "
-            f"al menos {cur_shift:.0f} días de retraso frente a Coya Raymi (23 sep)."
+            f"al menos {cur_shift:.0f} días de retraso frente a la siembra temprana de Coya Raymi (23 sep)."
         )
     elif status == "sin_inicio":
         headline = "En esta campaña no se detectó un inicio firme de lluvias entre agosto y enero."
@@ -343,14 +350,14 @@ def shift_alert(onset: pd.DataFrame, current: int) -> dict:
         word = "provisional" if cur_prov else "observado"
         headline = (
             f"Inicio de lluvias {word} el {sday_label(cur_onset)}: "
-            f"{cur_shift:+.0f} días frente a la siembra de Coya Raymi (23 sep)."
+            f"{cur_shift:+.0f} días frente a la siembra temprana de Coya Raymi (23 sep)."
         )
     else:
         headline = "La campaña actual todavía no llega a la ventana de siembra tradicional."
 
     action = (
-        f"Ajustar la siembra general (jatun tarpuy) a la ventana observada {window['from']} – {window['to']} "
-        "y no sembrar con la primera lluvia aislada."
+        f"Sembrar con lluvias firmes, en la ventana observada {window['from']} – {window['to']}, "
+        "y no con la primera lluvia aislada."
         if window
         else "Esperar lluvias firmes (≥25 mm en 10 días) antes de sembrar."
     )
@@ -365,12 +372,16 @@ def shift_alert(onset: pd.DataFrame, current: int) -> dict:
             "campaign": current,
             "status": status,
             "onset": None if math.isnan(cur_onset) else sday_label(cur_onset),
+            "onset_sday": None if math.isnan(cur_onset) else cur_onset,
+            "as_of_sday": cur_last,
             "shift_days": None if math.isnan(cur_shift) else round(cur_shift),
         },
         "metrics": {
             "traditional_window": f"{sday_label(TRADITIONAL_WINDOW[0])} – {sday_label(TRADITIONAL_WINDOW[1])}",
             "mean_onset_early": None if math.isnan(early_mean) else sday_label(early_mean),
             "mean_onset_recent": None if math.isnan(recent_mean) else sday_label(recent_mean),
+            "mean_onset_early_sday": None if math.isnan(early_mean) else round(early_mean, 1),
+            "mean_onset_recent_sday": None if math.isnan(recent_mean) else round(recent_mean, 1),
             "early_period": _period(early),
             "recent_period": _period(recent),
             "onset_change_days": None
@@ -383,6 +394,7 @@ def shift_alert(onset: pd.DataFrame, current: int) -> dict:
             "variability_period_recent": _period(recent15),
             "late_share_early": None if math.isnan(late_early) else round(late_early, 2),
             "late_share_recent": None if math.isnan(late_recent) else round(late_recent, 2),
+            "rainfed_sowing_lead_days": None if math.isnan(recent_mean) else round(RAINFED_SOWING_SDAY - recent_mean),
         },
         "trend": {**tr, "variable": "fecha de inicio de lluvias", "unit": "días/década"},
         "action": action,

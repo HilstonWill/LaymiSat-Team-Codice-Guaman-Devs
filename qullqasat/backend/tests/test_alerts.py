@@ -116,3 +116,10 @@ def test_shift_alert_reports_no_onset_late_in_season(climate):
     alert = A.shift_alert(A.onset_by_campaign(df), current)
     assert alert["current"]["status"] == "sin_inicio"
     assert "no se detectó" in alert["headline"]
+
+
+def test_partial_first_campaign_has_no_onset(climate):
+    df = at_altitude(climate, 3900)  # datos desde ene-1984: la campaña 1983 empieza a mitad de temporada
+    onset = A.onset_by_campaign(df)
+    first = onset[onset["campaign"] == 1983]
+    assert first["onset_sday"].isna().all()

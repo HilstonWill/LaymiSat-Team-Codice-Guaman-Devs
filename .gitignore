@@ -8,3 +8,6 @@ __pycache__/
 *.log
 .env
 .claude/
+.env.*
+qullqasat/backend/cache/-13.000_*
+*.tmp

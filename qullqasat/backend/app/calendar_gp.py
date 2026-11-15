@@ -27,6 +27,34 @@ INDICATORS = {
     "tmax_mean": ("Tmax media", "°C", "neutral"),
     "tmean_mean": ("Temperatura media", "°C", "neutral"),
 }
+INDICATORS_EN = {
+    "days_tmin_below_m2": ("Days with Tmin < −2 °C", "days/month"),
+    "share_rain_2nd_half_gt25": ("Years with > 25 mm in the second half", "% of years"),
+    "share_gwet_below_p15": ("Years with surface soil wetness < P15", "% of years"),
+    "days_frost": ("Frost days (plant-level Tmin ≤ 0 °C)", "days/month"),
+    "days_chuno": ("Frost nights for chuño (Tmin < 0 °C)", "days/month"),
+    "share_dry_spell_ge10": ("Years with a dry spell ≥ 10 days", "% of years"),
+    "days_rain_gt45": ("Days with rain > 45 mm", "days/month"),
+    "monthly_precip": ("Monthly rainfall", "mm"),
+    "thermal_amplitude": ("Daily temperature range (Tmax − Tmin)", "°C"),
+    "tmax_mean": ("Mean Tmax", "°C"),
+    "tmean_mean": ("Mean temperature", "°C"),
+}
+# Frase simple de "qué dicen los datos": (sube, baja, igual)
+SENTENCES = {
+    "es": ("Ahora hay más que antes", "Ahora hay menos que antes", "Casi igual que antes"),
+    "en": ("Higher now than before", "Lower now than before", "About the same as before"),
+}
+
+
+def data_sentence(early: float, recent: float, lang: str) -> str:
+    if math.isnan(early) or math.isnan(recent):
+        return ""
+    up, down, same = SENTENCES["en" if lang == "en" else "es"]
+    diff = recent - early
+    if abs(diff) / max(abs(early), 1.0) < 0.10:
+        return same
+    return up if diff > 0 else down
 
 
 @lru_cache(maxsize=1)
@@ -81,6 +109,7 @@ def calendar_comparison(
     plant_adjust: float = 0.0,
     early: tuple[int, int] = (1984, 1998),
     recent: tuple[int, int] = (2011, 2025),
+    lang: str = "es",
 ) -> list[dict]:
     cal = load_calendar()
     oct_gwet = df[df.index.month == 10]["gwet"].groupby(df[df.index.month == 10].index.year).mean()
@@ -91,6 +120,8 @@ def calendar_comparison(
     for m in cal["months"]:
         ind = m["indicator"]
         label, unit, polarity = INDICATORS[ind]
+        if lang == "en":
+            label, unit = INDICATORS_EN[ind]
         series = _per_year(df, m["month"], ind, plant_adjust, gwet_p15)
         e = series[(series.index >= early[0]) & (series.index <= early[1])].mean()
         r = series[(series.index >= recent[0]) & (series.index <= recent[1])].mean()
@@ -101,9 +132,21 @@ def calendar_comparison(
             scale = max(abs(e), 1.0)
             worse = change > 0 if polarity == "lower_is_better" else change < 0
             status = "se_desfasa" if worse and abs(change) / scale >= 0.15 else "se_mantiene"
+        en = lang == "en"
         rows.append(
             {
-                **m,
+                "month": m["month"],
+                "quechua": m["quechua"],
+                "page": m.get("page"),
+                "source_url": m.get("source_url"),
+                "indicator": ind,
+                "nasa_variables": m["nasa_variables"],
+                "name": m["name_en"] if en else m["name"],
+                "milestone": m["milestone_en"] if en else m["milestone"],
+                "criterion": m["criterion_en"] if en else m["criterion"],
+                "action": m["action_en"] if en else m["action"],
+                "alternative": m["alternative_en"] if en else m["alternative"],
+                "data_sentence": data_sentence(float(e), float(r), lang),
                 "indicator_label": label,
                 "unit": unit,
                 "early": None if math.isnan(e) else round(float(e), 2),

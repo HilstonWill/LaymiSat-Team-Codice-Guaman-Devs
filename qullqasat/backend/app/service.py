@@ -11,7 +11,8 @@ import pandas as pd
 from . import alerts as A
 from .calendar_gp import calendar_comparison
 from .climate import LAPSE_RATE_C_PER_KM, ClimateData, add_campaign_columns, at_altitude, temperature_offset
-from .rotations import ClimateContext
+from .i18n import localize_alerts, localize_trend
+from .rotations import ClimateContext, SoilInfo
 
 DEFAULT_PLANT_ADJUST = -2.0
 ALTITUDE_BANDS = list(range(3200, 4401, 200))
@@ -62,7 +63,9 @@ def annual_temperature(df: pd.DataFrame) -> list[dict]:
     ]
 
 
-def build_report(data: ClimateData, altitude: float, plant_adjust: float = DEFAULT_PLANT_ADJUST) -> dict:
+def build_report(
+    data: ClimateData, altitude: float, plant_adjust: float = DEFAULT_PLANT_ADJUST, lang: str = "es"
+) -> dict:
     df = at_altitude(data, altitude)
     current = int(df["campaign"].max())
     frost = A.frost_by_campaign(df, plant_adjust)
@@ -74,6 +77,7 @@ def build_report(data: ClimateData, altitude: float, plant_adjust: float = DEFAU
         A.water_alert(water, df, current),
         A.shift_alert(onset, current),
     ]
+    alerts = localize_alerts(alerts, lang)
 
     series = (
         frost[["campaign", "frost_days", "frost_events", "complete"]]
@@ -113,19 +117,22 @@ def build_report(data: ClimateData, altitude: float, plant_adjust: float = DEFAU
             "alerts": alerts,
             "series": series_rows,
             "annual_temperature": yearly,
-            "tmin_trend": {**temp_trend, "variable": "Tmin media anual", "unit": "°C/década"},
+            "tmin_trend": localize_trend({**temp_trend, "variable": "Tmin media anual", "unit": "°C/década"}, lang),
             "frost_by_altitude": frost_altitude_profile(data, plant_adjust, current),
-            "calendar": calendar_comparison(df, plant_adjust),
+            "calendar": calendar_comparison(df, plant_adjust, lang=lang),
             "traditional_sowing": {
                 "window": A.TRADITIONAL_WINDOW,
                 "reference_sday": A.TRADITIONAL_SOWING_SDAY,
-                "label": "Coya Raymi Quilla · 16–30 sep",
+                "label": "Coya Raymi Quilla · Sep 16–30" if lang == "en" else "Coya Raymi Quilla · 16–30 sep",
+                "rainfed_sday": A.RAINFED_SOWING_SDAY,
             },
         }
     )
 
 
-def rotation_context(data: ClimateData, altitude: float, plant_adjust: float, slope: str) -> ClimateContext:
+def rotation_context(
+    data: ClimateData, altitude: float, plant_adjust: float, slope: str, soil: SoilInfo | None = None
+) -> ClimateContext:
     df = at_altitude(data, altitude)
     current = int(df["campaign"].max())
     frost = A.frost_by_campaign(df, plant_adjust)
@@ -140,6 +147,7 @@ def rotation_context(data: ClimateData, altitude: float, plant_adjust: float, sl
         dry_spell_probability=float((recent_djf["djf_max_dry"] >= A.DRY_SPELL_DAYS).mean()) if len(recent_djf) else 0.0,
         heavy_days_mean=float(recent_w["heavy_days"].mean()) if len(recent_w) else 0.0,
         slope=slope,
+        soil=soil or SoilInfo(),
     )
 
 

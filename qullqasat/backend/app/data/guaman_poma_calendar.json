@@ -1,17 +1,254 @@
 {
-  "source": "Felipe Guaman Poma de Ayala, Nueva corónica y buen gobierno (1615), calendario agrícola de los doce meses. Línea base cualitativa: no se asume equivalencia numérica con los datos satelitales.",
+  "source": "Felipe Guaman Poma de Ayala, Nueva corónica y buen gobierno (1615), cap. 37 'Los meses del año' (págs. 1140–1178), manuscrito GKS 2232 4º, Det Kongelige Bibliotek (poma.kb.dk). Línea base cultural cualitativa: no se asume equivalencia numérica con los datos satelitales.",
   "months": [
-    {"month": 8, "name": "Agosto", "quechua": "Chacra Yapuy Quilla", "milestone": "Apertura de tierras, roturación del suelo e inicio de la siembra temprana (mikhay).", "nasa_variables": ["T2M_MIN", "PRECTOTCORR"], "criterion": "Ausencia de descensos térmicos bajo −2 °C; algo de humedad en el suelo.", "indicator": "days_tmin_below_m2"},
-    {"month": 9, "name": "Septiembre", "quechua": "Coya Raymi Quilla", "milestone": "Siembra general de papas nativas (jatun tarpuy) con las primeras lluvias.", "nasa_variables": ["PRECTOTCORR", "RH2M"], "criterion": "Lluvia acumulada > 25 mm en la segunda quincena.", "indicator": "share_rain_2nd_half_gt25"},
-    {"month": 10, "name": "Octubre", "quechua": "Uma Raymi Quilla", "milestone": "Sequía crítica ritual y riego de emergencia; brotación de plántulas.", "nasa_variables": ["PRECTOTCORR", "GWETTOP"], "criterion": "Estrés hídrico si la humedad superficial cae bajo el percentil 15.", "indicator": "share_gwet_below_p15"},
-    {"month": 11, "name": "Noviembre", "quechua": "Ayamarcai Quilla", "milestone": "Deshierbe, protección de brotes y aporque inicial.", "nasa_variables": ["T2M_MIN"], "criterion": "Helada si Tmin ≤ 0 °C durante la brotación.", "indicator": "days_frost"},
-    {"month": 12, "name": "Diciembre", "quechua": "Capac Inti Raymi", "milestone": "Lluvias intensas; primer aporque mayor (hallmay).", "nasa_variables": ["PRECTOTCORR", "ALLSKY_SFC_SW_DWN"], "criterion": "Lluvia continua, sin veranillos > 10 días.", "indicator": "share_dry_spell_ge10"},
-    {"month": 1, "name": "Enero", "quechua": "Camay Quilla", "milestone": "Cuidado de plagas y vigilancia de heladas de verano (qasa).", "nasa_variables": ["T2M_MIN"], "criterion": "Eventos térmicos mínimos nocturnos (NDVI fuera del MVP).", "indicator": "days_frost"},
-    {"month": 2, "name": "Febrero", "quechua": "Paucar Varay Quilla", "milestone": "Floración y consolidación del tubérculo; lluvias torrenciales.", "nasa_variables": ["PRECTOTCORR"], "criterion": "Riesgo de erosión o encharcamiento si llueve > 45 mm/día.", "indicator": "days_rain_gt45"},
-    {"month": 3, "name": "Marzo", "quechua": "Pachacuy Quilla", "milestone": "Maduración de la papa; la lluvia disminuye.", "nasa_variables": ["PRECTOTCORR"], "criterion": "Disminución progresiva de la lluvia (NDVI fuera del MVP).", "indicator": "monthly_precip"},
-    {"month": 4, "name": "Abril", "quechua": "Inca Raymi Quilla", "milestone": "Secado foliar; preparación de la cosecha preliminar.", "nasa_variables": ["T2M_MAX", "RH2M"], "criterion": "Baja la humedad relativa y crece la amplitud térmica.", "indicator": "thermal_amplitude"},
-    {"month": 5, "name": "Mayo", "quechua": "Aymoray Quilla", "milestone": "Cosecha principal (jatun pitay) y elaboración de chuño.", "nasa_variables": ["T2M_MIN", "RH2M"], "criterion": "Condición óptima de chuño: heladas secas continuas (Tmin < 0 °C).", "indicator": "days_chuno"},
-    {"month": 6, "name": "Junio", "quechua": "Inti Raymi Quilla", "milestone": "Almacenamiento en qullqas y selección de semilla.", "nasa_variables": ["T2M_MAX", "ALLSKY_SFC_SW_DWN"], "criterion": "Estabilidad térmica en el almacén.", "indicator": "tmax_mean"},
-    {"month": 7, "name": "Julio", "quechua": "Chacra Conacuy Quilla", "milestone": "Descanso de la tierra (purum) y redistribución de parcelas comunales.", "nasa_variables": ["T2M_MIN", "T2M_MAX"], "criterion": "Anomalía térmica interanual acumulada para planificar.", "indicator": "tmean_mean"}
-  ]
+    {
+      "month": 8,
+      "name": "Agosto",
+      "quechua": "Chacra Yapuy Quilla",
+      "milestone": "Mes de abrir las tierras (roturar las chacras) para la siembra.",
+      "nasa_variables": [
+        "T2M_MIN",
+        "PRECTOTCORR"
+      ],
+      "criterion": "Sin descensos térmicos bajo −2 °C al roturar.",
+      "indicator": "days_tmin_below_m2",
+      "name_en": "August",
+      "milestone_en": "Month of opening the land (breaking the fields) for sowing.",
+      "criterion_en": "No drops below −2 °C while ploughing.",
+      "action_en": "Wait for moisture before ploughing; avoid early sowing on frost-prone slopes.",
+      "alternative_en": "",
+      "action": "Esperar humedad para roturar; evitar la siembra temprana en laderas heladizas.",
+      "alternative": "",
+      "page": 1162,
+      "source_url": "https://poma.kb.dk/permalink/2006/poma/1162/es/text/"
+    },
+    {
+      "month": 9,
+      "name": "Septiembre",
+      "quechua": "Coya Raymi Quilla",
+      "milestone": "Se siembra el maíz (sara tarpuy) y la papa temprana (mawai papa tarpuy).",
+      "nasa_variables": [
+        "PRECTOTCORR",
+        "RH2M"
+      ],
+      "criterion": "Lluvia > 25 mm en la segunda quincena para la siembra temprana.",
+      "indicator": "share_rain_2nd_half_gt25",
+      "name_en": "September",
+      "milestone_en": "Maize is sown (sara tarpuy) and so is the early potato (mawai papa tarpuy).",
+      "criterion_en": "More than 25 mm of rain in the second half for the early sowing.",
+      "action_en": "Sow early potatoes only with irrigation or moisture; do not sow by date without firm rain.",
+      "alternative_en": "Sow first on plots with irrigation or water ponds (qochas).",
+      "action": "Sembrar la papa temprana solo con riego o humedad; no sembrar por fecha sin lluvia firme.",
+      "alternative": "Sembrar primero las parcelas con riego o qochas.",
+      "page": 1165,
+      "source_url": "https://poma.kb.dk/permalink/2006/poma/1165/es/text/"
+    },
+    {
+      "month": 10,
+      "name": "Octubre",
+      "quechua": "Uma Raymi Quilla",
+      "milestone": "Se cuidan las sementeras de pájaros, perdices y zorrillos (oxear con la honda).",
+      "nasa_variables": [
+        "PRECTOTCORR",
+        "GWETTOP"
+      ],
+      "criterion": "Humedad superficial del suelo bajo el percentil 15 = estrés para lo sembrado.",
+      "indicator": "share_gwet_below_p15",
+      "name_en": "October",
+      "milestone_en": "The sown fields are guarded from birds, partridges and skunks (scaring with the sling).",
+      "criterion_en": "Surface soil wetness below the 15th percentile = stress for what was sown.",
+      "action_en": "Mulch and early hilling to keep soil moisture.",
+      "alternative_en": "Tarwi (Andean lupin) or quinoa: lower water demand.",
+      "action": "Cobertura (mulch) y aporque temprano para guardar humedad.",
+      "alternative": "Tarwi o quinua: menor demanda de agua.",
+      "page": 1168,
+      "source_url": "https://poma.kb.dk/permalink/2006/poma/1168/es/text/"
+    },
+    {
+      "month": 11,
+      "name": "Noviembre",
+      "quechua": "Aya Marcay Quilla",
+      "milestone": "Gran falta de agua del cielo: mes de regar las sementeras (chacra carpay, yaku wanay quilla).",
+      "nasa_variables": [
+        "T2M_MIN"
+      ],
+      "criterion": "Años con 10 o más días seguidos casi sin lluvia en el mes.",
+      "indicator": "share_dry_spell_ge10",
+      "name_en": "November",
+      "milestone_en": "Great lack of rain: month of irrigating the fields (chacra carpay, yaku wanay quilla).",
+      "criterion_en": "Years with 10 or more consecutive days with almost no rain in the month.",
+      "action_en": "Prioritise irrigating what was sown and look after the water ponds (qochas).",
+      "alternative_en": "Lower water-demand crops (tarwi, quinoa).",
+      "action": "Priorizar el riego de lo sembrado y cuidar las qochas.",
+      "alternative": "Cultivos de menor demanda de agua (tarwi, quinua).",
+      "page": 1171,
+      "source_url": "https://poma.kb.dk/permalink/2006/poma/1171/es/text/"
+    },
+    {
+      "month": 12,
+      "name": "Diciembre",
+      "quechua": "Capac Inti Raymi Quilla",
+      "milestone": "Se siembran papas, ocas, quinua y tarwi de temporal, con las lluvias (papa oqa tarpuy pacha).",
+      "nasa_variables": [
+        "PRECTOTCORR",
+        "ALLSKY_SFC_SW_DWN"
+      ],
+      "criterion": "Lluvia > 25 mm en la segunda quincena para la siembra de temporal.",
+      "indicator": "share_rain_2nd_half_gt25",
+      "name_en": "December",
+      "milestone_en": "Rain-fed potatoes, oca, quinoa and tarwi are sown with the rains (papa oqa tarpuy pacha).",
+      "criterion_en": "More than 25 mm of rain in the second half for the rain-fed sowing.",
+      "action_en": "If firm rains arrive earlier, rain-fed sowing can move earlier, watching the frost risk.",
+      "alternative_en": "Stagger sowing over two or three dates.",
+      "action": "Si las lluvias firmes llegan antes, la siembra de temporal puede adelantarse con cuidado de la helada.",
+      "alternative": "Escalonar la siembra en dos o tres fechas.",
+      "page": 1174,
+      "source_url": "https://poma.kb.dk/permalink/2006/poma/1174/es/text/"
+    },
+    {
+      "month": 1,
+      "name": "Enero",
+      "quechua": "Camay Quilla",
+      "milestone": "Capac Raymi: gran aguacero, tiempo de lluvias y de aporcar; se comen papa y maíz tiernos.",
+      "nasa_variables": [
+        "T2M_MIN"
+      ],
+      "criterion": "Lluvia del mes (época de aporque).",
+      "indicator": "monthly_precip",
+      "name_en": "January",
+      "milestone_en": "Capac Raymi: heavy rains, time of rains and hilling; fresh potato and maize are eaten.",
+      "criterion_en": "Monthly rainfall (hilling season).",
+      "action_en": "Hill up with moist soil and open drains during heavy rains.",
+      "alternative_en": "",
+      "action": "Aporcar con el suelo húmedo y abrir drenajes en lluvias fuertes.",
+      "alternative": "",
+      "page": 1141,
+      "source_url": "https://poma.kb.dk/permalink/2006/poma/1141/es/text/"
+    },
+    {
+      "month": 2,
+      "name": "Febrero",
+      "quechua": "Hatun Pucuy Quilla",
+      "milestone": "Paucar Varay: se vigila el maíz de noche y se rompe tierra virgen (chacmacuy).",
+      "nasa_variables": [
+        "PRECTOTCORR"
+      ],
+      "criterion": "Riesgo de erosión o encharcamiento si llueve > 45 mm/día.",
+      "indicator": "days_rain_gt45",
+      "name_en": "February",
+      "milestone_en": "Paucar Varay: maize is guarded at night and virgin land is broken (chacmacuy).",
+      "criterion_en": "Erosion or waterlogging risk if daily rain > 45 mm.",
+      "action_en": "Infiltration ditches; never leave bare soil on slopes.",
+      "alternative_en": "Oats or faba beans: they cover the soil.",
+      "action": "Zanjas de infiltración; no dejar suelo desnudo en ladera.",
+      "alternative": "Avena o haba: cubren el suelo.",
+      "page": 1144,
+      "source_url": "https://poma.kb.dk/permalink/2006/poma/1144/es/text/"
+    },
+    {
+      "month": 3,
+      "name": "Marzo",
+      "quechua": "Pacha Pucuy Quilla",
+      "milestone": "Mes de la maduración de la tierra; se espantan los papagayos del maíz.",
+      "nasa_variables": [
+        "PRECTOTCORR"
+      ],
+      "criterion": "Disminución progresiva de la lluvia.",
+      "indicator": "monthly_precip",
+      "name_en": "March",
+      "milestone_en": "Month of the ripening of the land; parrots are scared away from the maize.",
+      "criterion_en": "Progressive decrease of rainfall.",
+      "action_en": "Plan harvest labour and seed selection.",
+      "alternative_en": "",
+      "action": "Planificar mano de obra de cosecha y selección de semilla.",
+      "alternative": "",
+      "page": 1147,
+      "source_url": "https://poma.kb.dk/permalink/2006/poma/1147/es/text/"
+    },
+    {
+      "month": 4,
+      "name": "Abril",
+      "quechua": "Inca Raymi Quilla",
+      "milestone": "Madura el maíz y las papas; se cuidan de ladrones y animales.",
+      "nasa_variables": [
+        "T2M_MAX",
+        "RH2M"
+      ],
+      "criterion": "Baja la humedad y crece la amplitud térmica.",
+      "indicator": "thermal_amplitude",
+      "name_en": "April",
+      "milestone_en": "Maize and potatoes ripen; they are guarded from thieves and animals.",
+      "criterion_en": "Humidity drops and the daily temperature range widens.",
+      "action_en": "Harvest the early plots.",
+      "alternative_en": "",
+      "action": "Cosechar las parcelas tempranas.",
+      "alternative": "",
+      "page": 1150,
+      "source_url": "https://poma.kb.dk/permalink/2006/poma/1150/es/text/"
+    },
+    {
+      "month": 5,
+      "name": "Mayo",
+      "quechua": "Hatun Cusqui Aymoray Quilla",
+      "milestone": "Mes de la cosecha: segar y amontonar el maíz; heladas para el chuño.",
+      "nasa_variables": [
+        "T2M_MIN",
+        "RH2M"
+      ],
+      "criterion": "Heladas secas (Tmin < 0 °C) favorables para el chuño.",
+      "indicator": "days_chuno",
+      "name_en": "May",
+      "milestone_en": "Harvest month: reaping and stacking maize; frosts for chuño.",
+      "criterion_en": "Dry frosts (Tmin < 0 °C) suitable for chuño.",
+      "action_en": "Good year for chuño when frost nights increase.",
+      "alternative_en": "",
+      "action": "Buen año para el chuño cuando aumentan las noches de helada.",
+      "alternative": "",
+      "page": 1153,
+      "source_url": "https://poma.kb.dk/permalink/2006/poma/1153/es/text/"
+    },
+    {
+      "month": 6,
+      "name": "Junio",
+      "quechua": "Haucai Cusqui Quilla",
+      "milestone": "Mes del descanso de la cosecha: turno de la cava (cosecha) de la papa.",
+      "nasa_variables": [
+        "T2M_MAX",
+        "ALLSKY_SFC_SW_DWN"
+      ],
+      "criterion": "Estabilidad térmica para almacenar.",
+      "indicator": "tmax_mean",
+      "name_en": "June",
+      "milestone_en": "Month of rest after the harvest: turn for digging up the potatoes.",
+      "criterion_en": "Stable temperature for storage.",
+      "action_en": "Store the selected seed away from direct sun.",
+      "alternative_en": "",
+      "action": "Guardar la semilla seleccionada lejos del sol directo.",
+      "alternative": "",
+      "page": 1156,
+      "source_url": "https://poma.kb.dk/permalink/2006/poma/1156/es/text/"
+    },
+    {
+      "month": 7,
+      "name": "Julio",
+      "quechua": "Chacra Conacuy Quilla",
+      "milestone": "Mes de la repartición de tierras; se lleva el maíz y la papa de la cosecha.",
+      "nasa_variables": [
+        "T2M_MIN",
+        "T2M_MAX"
+      ],
+      "criterion": "Anomalía térmica acumulada para planificar.",
+      "indicator": "tmean_mean",
+      "name_en": "July",
+      "milestone_en": "Month of land redistribution; the maize and potato harvest is carried home.",
+      "criterion_en": "Accumulated temperature anomaly for planning.",
+      "action_en": "Plan next season's rotation in the communal assembly.",
+      "alternative_en": "",
+      "action": "Planificar la rotación de la próxima campaña en la asamblea comunal.",
+      "alternative": "",
+      "page": 1159,
+      "source_url": "https://poma.kb.dk/permalink/2006/poma/1159/es/text/"
+    }
+  ],
+  "source_en": "Felipe Guaman Poma de Ayala, Nueva corónica y buen gobierno (1615), ch. 37 'The months of the year' (pp. 1140–1178), manuscript GKS 2232 4º, Royal Danish Library (poma.kb.dk). Qualitative cultural baseline: no numerical equivalence with satellite data is assumed."
 }
