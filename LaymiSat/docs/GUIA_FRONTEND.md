@@ -234,7 +234,7 @@ Muestra la tabla de variables y su resolución, el origen de los datos (API en v
 |---|---|---|---|
 | Septiembre | Pocos años con más de 25 mm en la 2.ª quincena | No sembrar por fecha; esperar la lluvia firme | Primero las parcelas con riego o qochas |
 | Octubre | Suelo seco | Cobertura y aporque temprano | Tarwi o quinua (menos agua) |
-| Noviembre y enero | Más heladas | Humo y siembra escalonada | Papa amarga (ruk'i) o mashua |
+| Noviembre y enero | Más heladas | Riego antihelada, cobertura (paja o mantas) y siembra escalonada | Papa amarga (ruk'i) o mashua |
 | Diciembre | Veranillos de 10 días o más | Aporque y cobertura | Cultivos de ciclo corto |
 | Febrero | Lluvias de más de 45 mm/día | Zanjas de infiltración; no dejar suelo desnudo | Avena o haba (cubren el suelo) |
 | Mayo | Más noches de helada | Buen año para hacer chuño | — |

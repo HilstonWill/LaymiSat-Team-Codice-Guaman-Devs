@@ -175,7 +175,8 @@ def frost_alert(frost: pd.DataFrame, current: int, plant_adjust: float = 0.0) ->
     if level == "rojo":
         action = (
             "Sembrar variedades nativas tolerantes (papas amargas, ruk'i) en las partes altas, "
-            "retrasar la siembra hasta pasada la ventana de helada y preparar humo/riego antihelada."
+            "retrasar la siembra hasta pasada la ventana de helada y, en noches despejadas, proteger con riego "
+            "antihelada y cobertura (paja o mantas)."
         )
     elif level == "ambar":
         action = "Vigilar noches despejadas de oct–dic y escalonar la siembra en dos o tres fechas."

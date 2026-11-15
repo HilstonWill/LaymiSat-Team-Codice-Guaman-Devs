@@ -584,6 +584,106 @@ details.today-alert .ta-action { padding: 0 12px 12px 56px; }
   .rpw-card, .rpw-bar i, .rpw-meter-fill, .rpw-dot { animation: none; transition: none; }
 }
 
+/* ---------- Selector de cultivo por campaña (CropPicker) ---------- */
+.rpw .rp-years-edit { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
+.rp-years-edit > li { min-width: 0; }
+.cp-trigger {
+  width: 100%; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: auto auto;
+  align-items: center; column-gap: 6px; row-gap: 2px; text-align: left; font: inherit; cursor: pointer;
+  background: var(--fam); color: var(--fam-ink); border: 0; border-radius: 12px; padding: 9px 10px 10px 12px; min-height: 56px;
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.14), 0 1px 2px rgba(31, 42, 68, 0.12);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+.cp-trigger:hover { transform: translateY(-1px); box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.14), 0 6px 14px rgba(31, 42, 68, 0.18); filter: saturate(1.08); }
+.cp-trigger:focus-visible { outline: 3px solid var(--maize); outline-offset: 2px; }
+.cp-trigger.is-open { box-shadow: 0 0 0 3px #fff, 0 0 0 6px var(--night); }
+.cp-campaign { grid-column: 1; font-size: 0.66rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.85; }
+.cp-value { grid-column: 1; font-weight: 700; font-size: 0.95rem; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cp-chev {
+  grid-column: 2; grid-row: 1 / 3; width: 22px; height: 22px; padding: 4px; border-radius: 50%;
+  background: rgba(255, 255, 255, 0.28); transition: transform 0.2s ease;
+}
+.cp-trigger.is-open .cp-chev { transform: rotate(180deg); }
+
+.cp-menu {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px; align-content: start;
+  position: fixed; z-index: 3000; list-style: none; margin: 0; padding: 6px; overflow-y: auto; outline: none;
+  background: #fff; color: var(--ink); border: 1px solid var(--line); border-radius: 14px;
+  box-shadow: 0 18px 44px rgba(16, 24, 44, 0.28), 0 2px 6px rgba(16, 24, 44, 0.12); animation: cp-pop 0.14s ease;
+}
+@keyframes cp-pop { from { opacity: 0; transform: translateY(-4px) scale(0.98); } to { opacity: 1; transform: none; } }
+.cp-head { grid-column: 1 / -1; padding: 6px 10px 8px; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-soft); }
+.cp-opt { display: grid; grid-template-columns: 16px minmax(0, 1fr) 14px; align-items: center; gap: 8px; padding: 7px 8px; border-radius: 10px; cursor: pointer; }
+/* En cuadrícula la familia se lee por el color y el nombre pequeño; sin separadores. */
+.cp-opt.is-active { background: var(--paper); }
+.cp-opt[aria-selected='true'] { background: #f3efe4; }
+.cp-swatch { width: 16px; height: 16px; border-radius: 6px; background: var(--fam); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08); }
+.cp-opt-text { display: grid; min-width: 0; }
+.cp-opt-text b { font-size: 0.9rem; font-weight: 600; line-height: 1.2; }
+.cp-opt-text small { line-height: 1.2; }
+.cp-opt-text small { font-size: 0.72rem; color: var(--ink-soft); }
+.cp-check { color: var(--verde-text); }
+@media (max-width: 900px) {
+  .rpw .rp-years-edit { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cp-trigger, .cp-chev { transition: none; }
+  .cp-menu { animation: none; }
+}
+
+/* ---------- Asistente en una sola pantalla (escritorio): sin scroll ---------- */
+.rpw-head { grid-template-columns: minmax(0, auto) minmax(0, 1fr); align-items: end; column-gap: 24px; }
+.rpw-titles { display: grid; gap: 2px; }
+.rpw-head .rpw-bar { grid-column: 1 / -1; }
+.rpw-head .rpw-steps { margin: 0; }
+.rpw .rp-title { font-size: clamp(1.25rem, 2vw, 1.6rem); margin: 0; }
+.rpw-goal { grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); align-items: stretch; gap: 16px; }
+.rpw-goal-main { display: grid; gap: 12px; align-content: start; }
+.rpw-goal-side { display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+.rpw-tabs { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; background: var(--paper); border-radius: 12px; padding: 4px; }
+.rpw-tabs button { font: inherit; font-size: 0.88rem; font-weight: 600; color: var(--ink-soft); background: transparent; border: 0; border-radius: 9px; padding: 8px 6px; cursor: pointer; min-height: 38px; }
+.rpw-tabs button[aria-selected='true'] { background: #fff; color: var(--ink); box-shadow: 0 1px 3px rgba(31, 42, 68, 0.15); }
+.rpw-tabpanel { flex: 1; min-height: 0; overflow: auto; display: grid; gap: 10px; align-content: start; padding-right: 2px; }
+.rpw-why { display: grid; gap: 10px; }
+.rpw-why .rp-note { font-size: 0.85rem; }
+.rpw-ms-tag.is-same { opacity: 0.7; }
+/* Hitos en una sola línea: año · cultivo · cambio · "esta campaña". */
+.rpw .rpw-milestones li { display: flex; flex-wrap: wrap; align-items: center; column-gap: 10px; row-gap: 2px; }
+.rpw .rpw-milestones .rpw-ms-year { width: 64px; flex: none; }
+.rpw .rpw-milestones .rpw-ms-now { grid-column: auto; }
+.rpw-goal-side .rp-actions { margin-top: auto; }
+.rpw-goal-side .rp-disclaimer { font-size: 0.75rem; }
+.rpw .rp-options { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.rpw .rp-option { flex-wrap: wrap; align-content: center; row-gap: 8px; min-height: 76px; }
+.rpw .rp-option .rp-mini { flex-basis: 100%; padding-left: 30px; }
+
+@media (min-width: 901px) {
+  .story.v-rotaciones .story-side { overflow: hidden; }
+  .story.v-rotaciones .rot-sheet { height: 100%; padding: 14px clamp(16px, 3vw, 40px) 10px; box-sizing: border-box; }
+  .story.v-rotaciones .rot-sheet-inner { height: 100%; display: flex; flex-direction: column; gap: 6px; max-width: 1180px; }
+  .rpw { flex: 1; min-height: 0; max-width: 1180px; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 10px; }
+  .rpw-card { min-height: 0; overflow: auto; align-content: start; padding: 18px 22px; gap: 14px; }
+  .rpw-card:has(.rpw-goal) { overflow: hidden; display: flex; flex-direction: column; }
+  .rpw-goal { flex: 1; min-height: 0; }
+  .rpw-goal-main, .rpw-goal-side { min-height: 0; }
+  .rpw-nav { position: static; padding: 0; background: none; }
+  .rpw-target { padding: 14px 18px 16px; gap: 4px; }
+  .rpw-target-title { font-size: clamp(1.5rem, 2.6vw, 2rem); }
+  .rpw-meter { margin: 24px 0 18px; }
+  .rpw-first { padding: 10px 14px; }
+  .rpw-first p { font-size: 0.98rem; }
+  .rpw-milestones li { padding: 4px 0 4px 18px; }
+  .rot-tech-link { font-size: 0.78rem; }
+}
+@media (max-width: 900px) {
+  .rpw-head { grid-template-columns: 1fr; }
+  .rpw-goal { grid-template-columns: 1fr; }
+  .rpw .rp-options { grid-template-columns: 1fr; }
+  .rpw .rp-option { min-height: 56px; }
+  .rpw .rp-option .rp-mini { flex-basis: auto; padding-left: 0; margin-left: auto; }
+  .rpw-tabpanel { overflow: visible; }
+}
+
 @media (max-width: 1050px) {
   .rp-grid { grid-template-columns: 1fr; }
   .rp-result { position: static; }

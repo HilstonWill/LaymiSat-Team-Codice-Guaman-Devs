@@ -60,7 +60,8 @@ def _alert_en(a: dict) -> dict:
         )
         a["action"] = {
             "rojo": "Plant frost-tolerant native varieties (bitter potatoes, ruk'i) on the upper fields, delay "
-            "sowing past the frost window and prepare smoke/irrigation frost protection.",
+            "sowing past the frost window and, on clear nights, protect plants with frost-protection irrigation "
+            "and ground cover (straw or row covers).",
             "ambar": "Watch clear nights in Oct–Dec and stagger sowing over two or three dates.",
             "verde": "Low risk at this altitude: keep the usual sowing date and keep monitoring.",
         }[lvl]

@@ -49,6 +49,10 @@ const es = {
     thisSeason: 'esta campaña',
     youGain: 'Lo que ganas',
     detailCompare: 'Ver la comparación objetivo por objetivo',
+    detailsLabel: 'Detalle de la meta',
+    metaTabs: { plan: 'Plan', why: 'Por qué', compare: 'Comparar', options: 'Opciones' },
+    noChange: 'igual que hoy',
+    optionsHint: 'Toca otra opción para ver su meta.',
     goalsLabel: 'Lo que más te importa',
     goals: {
       suelo: 'Suelo fértil',
@@ -226,6 +230,10 @@ const en: StoryDict = {
     thisSeason: 'this season',
     youGain: 'What you gain',
     detailCompare: 'See the goal-by-goal comparison',
+    detailsLabel: 'Target details',
+    metaTabs: { plan: 'Plan', why: 'Why', compare: 'Compare', options: 'Options' },
+    noChange: 'same as today',
+    optionsHint: 'Tap another option to see its target.',
     goalsLabel: 'What matters most to you',
     goals: {
       suelo: 'Fertile soil',
