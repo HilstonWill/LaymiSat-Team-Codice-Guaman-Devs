@@ -91,7 +91,8 @@ def _load(loader, lat: float, lon: float) -> ClimateData:
 
 @app.get("/api/health")
 def health() -> dict:
-    return {"status": "ok", "ai": bool(os.environ.get("GEMINI_API_KEY"))}
+    provider = AI.configured_provider()
+    return {"status": "ok", "ai": provider is not None, "ai_provider": provider}
 
 
 @app.get("/api/zones")

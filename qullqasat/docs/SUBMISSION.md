@@ -82,7 +82,7 @@ if any are added they will carry a visible watermark. Details in `AI_DISCLOSURE.
 - Felipe Guaman Poma de Ayala, *Nueva corónica y buen gobierno* (1615), ch. 37, pp. 1140–1178, GKS 2232 4º, Royal Danish Library, https://poma.kb.dk
 - OpenStreetMap contributors (map tiles), OpenTopoData (SRTM access)
 - Open-Meteo weather forecast API (ECMWF/GFS/ICON models), https://open-meteo.com: 7-day frost and rain outlook (not NASA data)
-- Google Gemini API: optional plain-language explanation of computed results (SI, declared)
+- Google Gemini / Groq / xAI APIs (one configurable provider): optional plain-language explanation of computed results (SI, declared)
 - Open-source software: FastAPI, pandas, NumPy, httpx, pytest, React, Vite, Recharts, Leaflet, react-leaflet
 - Fonts: Fraunces and IBM Plex Sans (Google Fonts, SIL Open Font License)
 - Indicative crop parameters compiled from general Andean agronomy literature (FAO, CIP, INIA); to be validated locally

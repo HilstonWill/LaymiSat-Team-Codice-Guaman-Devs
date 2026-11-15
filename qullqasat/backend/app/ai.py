@@ -18,6 +18,27 @@ from typing import Callable
 
 GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 DEFAULT_MODEL = "gemini-flash-latest"
+
+# Proveedores admitidos. Se elige con AI_PROVIDER; si no está, se usa el primero que tenga clave (en este orden).
+PROVIDERS: dict[str, dict] = {
+    "gemini": {"key_env": "GEMINI_API_KEY", "model_env": "GEMINI_MODEL", "default_model": DEFAULT_MODEL,
+               "url": GEMINI_URL, "label": "Google Gemini (SI)"},
+    "groq": {"key_env": "GROQ_API_KEY", "model_env": "GROQ_MODEL", "default_model": "openai/gpt-oss-20b",
+             "url": "https://api.groq.com/openai/v1/chat/completions", "label": "Groq (SI)"},
+    "xai": {"key_env": "XAI_API_KEY", "model_env": "XAI_MODEL", "default_model": "grok-4.7",
+            "url": "https://api.x.ai/v1/chat/completions", "label": "xAI Grok (SI)"},
+}
+
+
+def configured_provider() -> str | None:
+    """Proveedor activo: AI_PROVIDER si tiene clave; si no, el primero con clave; None si no hay ninguna."""
+    wanted = os.environ.get("AI_PROVIDER", "").strip().lower()
+    if wanted in PROVIDERS and os.environ.get(PROVIDERS[wanted]["key_env"]):
+        return wanted
+    for name, cfg in PROVIDERS.items():
+        if os.environ.get(cfg["key_env"]):
+            return name
+    return None
 MAX_QUESTION = 300
 RATE_PER_MIN = 6
 
@@ -93,11 +114,17 @@ def explain(
     http_post: Callable | None = None,
     api_key: str | None = None,
     model: str | None = None,
+    provider: str | None = None,
 ) -> dict:
-    key = api_key if api_key is not None else os.environ.get("GEMINI_API_KEY", "")
+    """Explica con el proveedor configurado: gemini (por defecto), groq o xai."""
+    provider = provider or configured_provider() or "gemini"
+    if provider not in PROVIDERS:
+        raise AIUnavailable(f"Unknown AI provider '{provider}'")
+    cfg = PROVIDERS[provider]
+    key = api_key if api_key is not None else os.environ.get(cfg["key_env"], "")
     if not key:
-        raise AIUnavailable("AI explanations are disabled (no GEMINI_API_KEY on the server)")
-    model = model or os.environ.get("GEMINI_MODEL", DEFAULT_MODEL)
+        raise AIUnavailable(f"AI explanations are disabled (no {cfg['key_env']} on the server)")
+    model = model or os.environ.get(cfg["model_env"], cfg["default_model"])
     if http_post is None:
         import httpx
 
@@ -106,8 +133,11 @@ def explain(
     user = "FACTS (JSON):\n" + json.dumps(facts, ensure_ascii=False) + (
         f"\n\nFARMER QUESTION: {q}" if q else "\n\nTask: explain these alerts and what to do now."
     )
+    system = SYSTEM.format(lang=LANG_NAME.get(lang, "English"))
+    if provider != "gemini":
+        return _openai_compatible(cfg, provider, key, model, system, user, http_post)
     body = {
-        "systemInstruction": {"parts": [{"text": SYSTEM.format(lang=LANG_NAME.get(lang, "English"))}]},
+        "systemInstruction": {"parts": [{"text": system}]},
         "contents": [{"role": "user", "parts": [{"text": user}]}],
         "generationConfig": {"temperature": 0.2, "maxOutputTokens": 400},
     }
@@ -129,4 +159,34 @@ def explain(
         raise AIUnavailable("Unexpected AI response") from exc
     if not text:
         raise AIUnavailable("Empty AI response")
-    return {"text": text, "model": model, "generated_by": "Google Gemini (SI)", "grounded_on": "LaymiSat computed results"}
+    return {"text": text, "model": model, "generated_by": cfg["label"], "grounded_on": "LaymiSat computed results"}
+
+
+def _openai_compatible(cfg: dict, provider: str, key: str, model: str, system: str, user: str, http_post) -> dict:
+    """Groq y xAI usan el formato de chat de OpenAI (/v1/chat/completions)."""
+    body: dict = {
+        "model": model,
+        "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
+        "temperature": 0.2,
+        "max_tokens": 600,
+    }
+    if provider == "groq" and model.startswith("openai/gpt-oss"):
+        body["reasoning_effort"] = "low"  # respuesta rápida; el razonamiento no se muestra
+    try:
+        resp = http_post(
+            cfg["url"],
+            headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
+            json=body,
+            timeout=30,
+        )
+    except Exception as exc:  # red caída / timeout
+        raise AIUnavailable("AI service unreachable") from exc
+    if resp.status_code != 200:
+        raise AIUnavailable(f"AI service error {resp.status_code}")
+    try:
+        text = (resp.json()["choices"][0]["message"]["content"] or "").strip()
+    except (KeyError, IndexError, TypeError, ValueError) as exc:
+        raise AIUnavailable("Unexpected AI response") from exc
+    if not text:
+        raise AIUnavailable("Empty AI response")
+    return {"text": text, "model": model, "generated_by": cfg["label"], "grounded_on": "LaymiSat computed results"}

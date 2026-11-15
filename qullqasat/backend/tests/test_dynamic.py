@@ -146,6 +146,52 @@ def test_api_explain_rate_limited(api):
 
 def test_health_reports_ai_flag(api, monkeypatch):
     monkeypatch.delenv("GEMINI_API_KEY", raising=False)
-    assert api.get("/api/health").json() == {"status": "ok", "ai": False}
+    for v in ("GEMINI_API_KEY", "GROQ_API_KEY", "XAI_API_KEY", "AI_PROVIDER"):
+        monkeypatch.delenv(v, raising=False)
+    assert api.get("/api/health").json() == {"status": "ok", "ai": False, "ai_provider": None}
     monkeypatch.setenv("GEMINI_API_KEY", "x")
     assert api.get("/api/health").json()["ai"] is True
+
+
+def test_provider_selection(monkeypatch):
+    for v in ("GEMINI_API_KEY", "GROQ_API_KEY", "XAI_API_KEY", "AI_PROVIDER"):
+        monkeypatch.delenv(v, raising=False)
+    assert AI.configured_provider() is None
+    monkeypatch.setenv("GROQ_API_KEY", "g")
+    assert AI.configured_provider() == "groq"
+    monkeypatch.setenv("GEMINI_API_KEY", "x")
+    assert AI.configured_provider() == "gemini"  # orden por defecto
+    monkeypatch.setenv("AI_PROVIDER", "groq")
+    assert AI.configured_provider() == "groq"  # elección explícita
+    monkeypatch.setenv("AI_PROVIDER", "xai")
+    assert AI.configured_provider() == "gemini"  # xai sin clave: se ignora
+
+
+def test_groq_openai_compatible_request(monkeypatch):
+    seen = {}
+
+    def post(url, headers, json, timeout):
+        seen.update(url=url, headers=headers, body=json)
+        return FakeResp({"choices": [{"message": {"content": "Siembra con lluvia firme."}}]})
+
+    out = AI.explain({"place": "Pisac"}, "es", "¿Y ahora?", http_post=post, api_key="gk", provider="groq")
+    assert out["text"] == "Siembra con lluvia firme." and out["generated_by"] == "Groq (SI)"
+    assert seen["url"].startswith("https://api.groq.com/openai/v1/chat/completions")
+    assert seen["headers"]["Authorization"] == "Bearer gk"
+    assert seen["body"]["model"] == "openai/gpt-oss-20b" and seen["body"]["reasoning_effort"] == "low"
+    assert seen["body"]["messages"][0]["role"] == "system" and "Pisac" in seen["body"]["messages"][1]["content"]
+    with pytest.raises(AI.AIUnavailable):
+        AI.explain({}, "en", http_post=lambda **k: FakeResp({"choices": []}), api_key="gk", provider="groq")
+    with pytest.raises(AI.AIUnavailable):
+        AI.explain({}, "en", api_key="k", provider="otro")
+
+
+def test_xai_uses_its_endpoint():
+    seen = {}
+
+    def post(url, headers, json, timeout):
+        seen.update(url=url, body=json)
+        return FakeResp({"choices": [{"message": {"content": "ok"}}]})
+
+    AI.explain({}, "en", http_post=post, api_key="xk", provider="xai")
+    assert seen["url"] == "https://api.x.ai/v1/chat/completions" and "reasoning_effort" not in seen["body"]
