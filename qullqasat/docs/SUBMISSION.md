@@ -65,7 +65,8 @@ calibration with SENAMHI stations, and a Quechua interface.
 ## 6. Use of Super Intelligence (SI)
 Yes. The source code, tests and documentation were written with the help of an AI coding assistant (Anthropic Claude,
 via Claude Code), directed and reviewed by the team. The idea, problem analysis and design (alerts, use of Guaman Poma's
-calendar, pilot communities) come from the team's own project document. No generative AI produces any alert, score or
+calendar, pilot communities) come from the team's own project document. An optional runtime button uses Google Gemini only to rewrite the already computed results in plain language (labelled
+as AI-generated, grounded on our data, key kept on the server). No generative AI produces any alert, score or
 recommendation: all results come from NASA data and explicit rules. No SI-generated images, video or audio are used;
 if any are added they will carry a visible watermark. Details in `AI_DISCLOSURE.md` in the repository.
 
@@ -80,6 +81,8 @@ if any are added they will carry a visible watermark. Details in `AI_DISCLOSURE.
 ## 8. Space Agency Partner Data and Other References
 - Felipe Guaman Poma de Ayala, *Nueva corónica y buen gobierno* (1615), ch. 37, pp. 1140–1178, GKS 2232 4º, Royal Danish Library, https://poma.kb.dk
 - OpenStreetMap contributors (map tiles), OpenTopoData (SRTM access)
+- Open-Meteo weather forecast API (ECMWF/GFS/ICON models), https://open-meteo.com: 7-day frost and rain outlook (not NASA data)
+- Google Gemini API: optional plain-language explanation of computed results (SI, declared)
 - Open-source software: FastAPI, pandas, NumPy, httpx, pytest, React, Vite, Recharts, Leaflet, react-leaflet
 - Fonts: Fraunces and IBM Plex Sans (Google Fonts, SIL Open Font License)
 - Indicative crop parameters compiled from general Andean agronomy literature (FAO, CIP, INIA); to be validated locally

@@ -20,11 +20,15 @@ decides every season: *when to sow, with what risk, and with which crop rotation
 | 1615 calendar | The 12 months of the codex, each measured with its NASA variable, with actions and alternative crops |
 | Rotation comparator (Field Shift) | ≥3 strategies incl. the current one; **farmer priorities** (soil, pests, water, frost, erosion, forage, income), **local soil** (texture, organic matter, slope), soil-cover timeline, **information gaps and risks** for local review |
 | Terrain | Click the map: altitude and slope from NASA SRTM 30 m |
+| Sowing-date simulator | Move a date: share of the last 15 seasons with firm rains already started and with frost while the potato sprouts; recommended window at the plot's altitude |
+| 7-day forecast | Frost nights and rain for the coming week (Open-Meteo), corrected to plot altitude and plant level |
+| AI explanation (optional) | Google Gemini rewrites the computed results in plain language; grounded, labelled and rate-limited (see AI_DISCLOSURE.md) |
 | Bilingual | English (default) and Spanish |
 
 ### Findings with real data
 - Nights are warming: annual mean Tmin **+0.19 °C/decade** (Pisac cell) and **+0.22 °C/decade** (Ccatcca cell), Mann-Kendall p < 0.001.
 - The **frost line** at sprouting sits between **3,600 and 3,800 m** (7 % → 67 % of seasons).
+- At 3,600 m the sowing simulator's best date is **early December**, matching Guaman Poma's rain-fed sowing month (Capac Inti Raymi); at 3,900 m no date is frost-safe.
 - In Pisac the firm rains arrive on average on **Oct 19**, within a **7-week window** (Sep 26 – Nov 13): later than the codex's early sowing (September) and well before its rain-fed sowing (December).
 - MODIS NDVI (2001–2005 vs 2021–2025): Pisac and Colquepata are greener today, while **Chinchero now has bare-soil months from July to November** (NDVI < 0.30), i.e. more erosion risk when the rains start.
 - Not confirmed: a significant delay of the rainy-season onset. The app shows this as it is.

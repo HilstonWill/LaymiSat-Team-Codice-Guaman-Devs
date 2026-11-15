@@ -7,7 +7,7 @@ import time
 from functools import lru_cache
 from typing import Annotated, Callable, Literal
 
-from fastapi import Depends, FastAPI, HTTPException, Query
+from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, StringConstraints, field_validator
 
@@ -16,6 +16,10 @@ from .climate import ClimateData, ClimateDataError, load_climate, snap_to_grid, 
 from .ndvi import load_ndvi, ndvi_summary
 from .rotations import SoilInfo, compare, load_crops
 from .service import DEFAULT_PLANT_ADJUST, build_report, rotation_context
+from . import ai as AI
+from .climate import at_altitude
+from .forecast import fetch_forecast, summarize_forecast
+from .sowing import sowing_curve
 from .terrain import terrain_cached
 from .zones import ZONES
 
@@ -87,7 +91,7 @@ def _load(loader, lat: float, lon: float) -> ClimateData:
 
 @app.get("/api/health")
 def health() -> dict:
-    return {"status": "ok"}
+    return {"status": "ok", "ai": bool(os.environ.get("GEMINI_API_KEY"))}
 
 
 @app.get("/api/zones")
@@ -239,3 +243,101 @@ def terrain(lat: float = Lat, lon: float = Lon) -> dict:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     except Exception as exc:  # SRTM sin datos, red caída o timeout
         raise HTTPException(status_code=503, detail="SRTM elevation unavailable right now") from exc
+
+
+# ---------------------------------------------------------------------------
+# Alertas dinámicas: simulador de siembra, pronóstico 7 días y explicación con IA
+# ---------------------------------------------------------------------------
+
+@lru_cache(maxsize=128)
+def _sowing_cached(loader, lat: float, lon: float, altitude: int, adjust: float, _bucket: int) -> dict:
+    return sowing_curve(at_altitude(_load(loader, lat, lon), altitude), adjust)
+
+
+@app.get("/api/sowing")
+def sowing(
+    lat: float = Lat, lon: float = Lon, altitude: float = Alt, plant_adjust: float = Adj, loader=Depends(get_loader)
+) -> dict:
+    """Riesgo de helada y lluvia firme para cada fecha de siembra (1 ago → 31 dic), últimas 15 campañas."""
+    glat, glon = _snap(lat, lon)
+    return _sowing_cached(loader, glat, glon, _q_alt(altitude), _q_adj(plant_adjust), _ttl_bucket())
+
+
+def get_forecast_fetcher() -> Callable[[float, float], dict]:
+    return _forecast_memo_now
+
+
+def _forecast_memo_now(lat: float, lon: float) -> dict:
+    return _forecast_memo(lat, lon, int(time.time() // (3 * 3600)))
+
+
+@lru_cache(maxsize=64)
+def _forecast_memo(lat: float, lon: float, _bucket: int) -> dict:
+    return fetch_forecast(lat, lon)
+
+
+def _forecast_summary(fetcher, lat: float, lon: float, altitude: float, adjust: float) -> dict:
+    try:
+        validate_location(lat, lon)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    try:
+        payload = fetcher(round(lat, 2), round(lon, 2))
+        return summarize_forecast(payload, _q_alt(altitude), _q_adj(adjust))
+    except Exception as exc:  # red caída, timeout o formato inesperado
+        raise HTTPException(status_code=503, detail="Forecast unavailable right now") from exc
+
+
+@app.get("/api/forecast")
+def forecast(
+    lat: float = Lat,
+    lon: float = Lon,
+    altitude: float = Alt,
+    plant_adjust: float = Adj,
+    fetcher=Depends(get_forecast_fetcher),
+) -> dict:
+    """Próximos 7 días (Open-Meteo), con la Tmin corregida a la altitud de la parcela y a nivel de planta."""
+    return _forecast_summary(fetcher, lat, lon, altitude, plant_adjust)
+
+
+class ExplainRequest(BaseModel):
+    lat: float = Field(..., ge=-15.5, le=-11.0)
+    lon: float = Field(..., ge=-73.9, le=-70.3)
+    altitude: float = Field(..., ge=2500, le=5000)
+    plant_adjust: float = Field(DEFAULT_PLANT_ADJUST, ge=-5.0, le=2.0)
+    lang: Literal["en", "es"] = "en"
+    place_name: str = Field("plot", max_length=80)
+    question: str | None = Field(default=None, max_length=AI.MAX_QUESTION)
+
+
+def get_ai_explainer() -> Callable[..., dict]:
+    return AI.explain
+
+
+@app.post("/api/explain")
+def explain(
+    req: ExplainRequest,
+    request: Request,
+    loader=Depends(get_loader),
+    fetcher=Depends(get_forecast_fetcher),
+    explainer=Depends(get_ai_explainer),
+) -> dict:
+    """Explicación en lenguaje sencillo (Gemini) basada SOLO en los resultados calculados por LaymiSat."""
+    client = request.client.host if request.client else "unknown"
+    try:
+        AI.check_rate(client)
+    except AI.RateLimited as exc:
+        raise HTTPException(status_code=429, detail=str(exc)) from exc
+    glat, glon = _snap(req.lat, req.lon)
+    alt, adj = _q_alt(req.altitude), _q_adj(req.plant_adjust)
+    rep = _report_cached(loader, glat, glon, alt, adj, req.lang, _ttl_bucket())
+    sow = _sowing_cached(loader, glat, glon, alt, adj, _ttl_bucket())
+    try:
+        fc = _forecast_summary(fetcher, req.lat, req.lon, alt, adj)
+    except HTTPException:
+        fc = None  # sin pronóstico la explicación sigue siendo útil
+    facts = AI.build_facts(rep, sow, fc, req.place_name)
+    try:
+        return explainer(facts, req.lang, req.question)
+    except AI.AIUnavailable as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc

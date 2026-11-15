@@ -60,11 +60,22 @@ npm run lint
 ```
 All must pass (currently 70 backend tests, 97 % coverage).
 
+### Optional settings (environment variables of the API)
+| Variable | Purpose |
+|---|---|
+| `GEMINI_API_KEY` | Enables the *Explain with AI* button (Google Gemini). Without it the app works and the button explains that AI is off. **Never commit it**: put it in your shell or in the hosting dashboard. |
+| `GEMINI_MODEL` | Gemini model name (default `gemini-flash-latest`). |
+| `LAYMI_CORS_ORIGINS` | Allowed frontend origins in production. |
+| `LAYMI_PUBLIC_DOCS` | `0` hides `/docs` in production. |
+
+Windows PowerShell example: `$env:GEMINI_API_KEY="<your key>"; .venv/Scripts/python -m uvicorn app.main:app --port 8000`
+
 ### Data and internet
 - `backend/cache/` already contains NASA POWER data for the 4 pilot zones and MODIS NDVI, so the app works **offline**.
 - Clicking a new point on the map downloads 40 years of NASA POWER data for that cell (a few seconds) and asks NASA SRTM
   for the altitude (needs internet).
 - NDVI is only available for the 4 pilot zones in this MVP.
+- The *Next 7 days* forecast comes from Open-Meteo (free, no key) and needs internet; offline it shows a notice.
 
 ### Troubleshooting
 | Problem | Fix |

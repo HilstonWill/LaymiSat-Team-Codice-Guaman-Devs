@@ -111,7 +111,7 @@ def client(climate):
 
 
 def test_static_endpoints(client):
-    assert client.get("/api/health").json() == {"status": "ok"}
+    assert client.get("/api/health").json()["status"] == "ok"
     assert len(client.get("/api/zones").json()) == 4
     assert len(client.get("/api/calendar").json()["months"]) == 12
     assert "papa" in client.get("/api/crops").json()["crops"]

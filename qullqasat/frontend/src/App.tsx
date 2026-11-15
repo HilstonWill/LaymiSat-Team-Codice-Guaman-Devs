@@ -16,6 +16,7 @@ import {
 import AlertCards from './components/AlertCards'
 import { ALERT_ICONS, ArrowDownIcon, PinIcon, PrintIcon } from './components/Icons'
 import CalendarGP from './components/CalendarGP'
+import DynamicAlerts from './components/DynamicAlerts'
 import MapPicker from './components/MapPicker'
 import NdviPanel from './components/NdviPanel'
 import RotationComparator from './components/RotationComparator'
@@ -367,6 +368,9 @@ export default function App() {
               </div>
               <SectionBoundary message={t.sectionError} resetKey={report}>
                 <AlertCards alerts={report.alerts} t={t} lang={lang} />
+              </SectionBoundary>
+              <SectionBoundary message={t.sectionError} resetKey={dPlace}>
+                <DynamicAlerts place={dPlace} plantAdjust={dAdjust} placeName={placeName} t={t} lang={lang} />
               </SectionBoundary>
             </section>
 
