@@ -333,6 +333,11 @@ export default function App() {
             <a className="btn btn-cta" href="#alertas">
               {t.heroCta} <ArrowDownIcon size={18} />
             </a>
+            {isTech && (
+              <a className="btn btn-story" href="?historia=1">
+                {t.storyCta}
+              </a>
+            )}
             {isTech && <span className="challenge">{t.challenge}</span>}
           </div>
           {isTech && (

@@ -20,6 +20,7 @@ from . import ai as AI
 from .climate import at_altitude
 from .forecast import fetch_forecast, summarize_forecast
 from .sowing import sowing_curve
+from .story import build_story
 from .terrain import terrain_cached
 from .zones import ZONES
 
@@ -249,6 +250,18 @@ def terrain(lat: float = Lat, lon: float = Lon) -> dict:
 # ---------------------------------------------------------------------------
 # Alertas dinámicas: simulador de siembra, pronóstico 7 días y explicación con IA
 # ---------------------------------------------------------------------------
+
+@lru_cache(maxsize=32)
+def _story_cached(loader, lat: float, lon: float, adjust: float, _bucket: int) -> dict:
+    return build_story(_load(loader, lat, lon), adjust)
+
+
+@app.get("/api/story")
+def story(lat: float = Lat, lon: float = Lon, plant_adjust: float = Adj, loader=Depends(get_loader)) -> dict:
+    """Modo Historia: línea de helada (oct–dic) de cada campaña desde 1984, para animar en el mapa 3D."""
+    glat, glon = _snap(lat, lon)
+    return _story_cached(loader, glat, glon, _q_adj(plant_adjust), _ttl_bucket())
+
 
 @lru_cache(maxsize=128)
 def _sowing_cached(loader, lat: float, lon: float, altitude: int, adjust: float, _bucket: int) -> dict:

@@ -11,3 +11,10 @@ __pycache__/
 .env.*
 qullqasat/backend/cache/-13.000_*
 *.tmp
+# Documentos del equipo (no van al repositorio)
+*.pdf
+*.docx
+# Caché de celdas fuera de las zonas piloto (se regenera sola)
+qullqasat/backend/cache/-13.500_-72.500.*
+qullqasat/backend/cache/-14.000_-71.250.*
+qullqasat/backend/cache/-14.000_-71.875.*

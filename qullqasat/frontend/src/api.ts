@@ -199,6 +199,22 @@ export interface Terrain {
   source: string
 }
 
+/** Modo Historia: línea de helada (oct–dic) por campaña, en metros. */
+export interface StoryCampaign {
+  campaign: number
+  frost_line: number
+  above_top: boolean
+  smooth: number | null
+}
+export interface StoryData {
+  range: { min: number; max: number; step: number }
+  plant_adjust: number
+  smooth_years: number
+  campaigns: StoryCampaign[]
+  early: { from: number | null; to: number | null; frost_line: number | null }
+  recent: { from: number | null; to: number | null; frost_line: number | null }
+}
+
 export interface Place {
   lat: number
   lon: number
@@ -254,6 +270,11 @@ export const api = {
     })
     return request<Report>(`/api/report?${q}`, { signal })
   },
+  story: (p: Place, plantAdjust: number, signal?: AbortSignal) =>
+    request<StoryData>(
+      `/api/story?${new URLSearchParams({ ...coords(p), plant_adjust: plantAdjust.toFixed(1) })}`,
+      { signal },
+    ),
   ndvi: (p: Place, signal?: AbortSignal) =>
     request<NdviSummary>(`/api/ndvi?${new URLSearchParams(coords(p))}`, { signal }, 0),
   terrain: (lat: number, lon: number) =>
