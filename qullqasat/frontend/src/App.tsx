@@ -1,13 +1,28 @@
 import { useEffect, useMemo, useState } from 'react'
-import { api, fmt, LEVEL_TEXT, type CropsCatalog, type Place, type Report, type RotationResponse, type Zone } from './api'
+import {
+  api,
+  DEFAULT_PRIORITIES,
+  type Criterion,
+  type CropsCatalog,
+  type NdviSummary,
+  type Place,
+  type Preset,
+  type Report,
+  type RotationResponse,
+  type Slope,
+  type SoilInput,
+  type Zone,
+} from './api'
 import AlertCards from './components/AlertCards'
 import CalendarGP from './components/CalendarGP'
 import MapPicker from './components/MapPicker'
-import RotationComparator, { type EditableSeq } from './components/RotationComparator'
+import NdviPanel from './components/NdviPanel'
+import RotationComparator from './components/RotationComparator'
 import SourcesPanel from './components/SourcesPanel'
 import TrendCharts from './components/TrendCharts'
+import { DICTS, fmtNum, type Lang } from './i18n'
 
-const DEFAULT_PLACE: Place = { lat: -13.4, lon: -71.85, altitude: 3900, name: 'Parque de la Papa (Pisac)' }
+const DEFAULT_PLACE: Place = { lat: -13.4, lon: -71.85, altitude: 3900, name: 'Potato Park (Pisac)' }
 
 function useDebounced<T>(value: T, ms: number): T {
   const [v, setV] = useState(value)
@@ -18,7 +33,19 @@ function useDebounced<T>(value: T, ms: number): T {
   return v
 }
 
+function initialLang(): Lang {
+  try {
+    const saved = localStorage.getItem('laymisat-lang')
+    if (saved === 'en' || saved === 'es') return saved
+  } catch {
+    /* almacenamiento no disponible */
+  }
+  return 'en'
+}
+
 export default function App() {
+  const [lang, setLang] = useState<Lang>(initialLang)
+  const t = DICTS[lang]
   const [zones, setZones] = useState<Zone[]>([])
   const [catalog, setCatalog] = useState<CropsCatalog | null>(null)
   const [place, setPlace] = useState<Place>(DEFAULT_PLACE)
@@ -27,15 +54,30 @@ export default function App() {
   const [report, setReport] = useState<Report | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [sequences, setSequences] = useState<EditableSeq[]>([])
-  const [slope, setSlope] = useState('moderada')
+  const [sequences, setSequences] = useState<Preset[]>([])
+  const [slope, setSlope] = useState<Slope>('moderada')
+  const [soil, setSoil] = useState<SoilInput>({ texture: 'franco', organic_matter: 'media', declared: false })
+  const [priorities, setPriorities] = useState<Record<Criterion, number>>(DEFAULT_PRIORITIES)
   const [rot, setRot] = useState<RotationResponse | null>(null)
   const [rotLoading, setRotLoading] = useState(false)
   const [rotError, setRotError] = useState<string | null>(null)
+  const [ndvi, setNdvi] = useState<NdviSummary | null>(null)
+  const [ndviStatus, setNdviStatus] = useState<'loading' | 'ok' | 'not_pilot' | 'error'>('loading')
+  const [srtmNote, setSrtmNote] = useState<string | null>(null)
 
   const dPlace = useDebounced(place, 350)
   const dAdjust = useDebounced(plantAdjust, 350)
   const dSeqs = useDebounced(sequences, 300)
+  const dPrio = useDebounced(priorities, 300)
+
+  useEffect(() => {
+    document.documentElement.lang = lang
+    try {
+      localStorage.setItem('laymisat-lang', lang)
+    } catch {
+      /* almacenamiento no disponible */
+    }
+  }, [lang])
 
   useEffect(() => {
     api.zones().then(setZones).catch((e: Error) => setError(e.message))
@@ -53,7 +95,7 @@ export default function App() {
     setLoading(true)
     setError(null)
     api
-      .report(dPlace, dAdjust, ctrl.signal)
+      .report(dPlace, dAdjust, lang, ctrl.signal)
       .then((r) => setReport(r))
       .catch((e: Error) => {
         if (ctrl.signal.aborted) return
@@ -62,7 +104,25 @@ export default function App() {
       })
       .finally(() => !ctrl.signal.aborted && setLoading(false))
     return () => ctrl.abort()
-  }, [dPlace, dAdjust])
+  }, [dPlace, dAdjust, lang])
+
+  const ndviKey = `${dPlace.lat.toFixed(2)},${dPlace.lon.toFixed(2)}`
+  useEffect(() => {
+    const ctrl = new AbortController()
+    setNdvi(null)
+    setNdviStatus('loading')
+    api
+      .ndvi(dPlace, ctrl.signal)
+      .then((n) => {
+        setNdvi(n)
+        setNdviStatus('ok')
+      })
+      .catch((e: Error) => {
+        if (ctrl.signal.aborted) return
+        setNdviStatus(/pilot/i.test(e.message) ? 'not_pilot' : 'error')
+      })
+    return () => ctrl.abort()
+  }, [ndviKey]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!dSeqs.length) return
@@ -70,7 +130,10 @@ export default function App() {
     setRotLoading(true)
     setRotError(null)
     api
-      .rotations(dPlace, dAdjust, slope, dSeqs, ctrl.signal)
+      .rotations(
+        { place: dPlace, plantAdjust: dAdjust, slope, soil, priorities: dPrio, lang, sequences: dSeqs },
+        ctrl.signal,
+      )
       .then((r) => setRot(r))
       .catch((e: Error) => {
         if (ctrl.signal.aborted) return
@@ -79,14 +142,33 @@ export default function App() {
       })
       .finally(() => !ctrl.signal.aborted && setRotLoading(false))
     return () => ctrl.abort()
-  }, [dPlace, dAdjust, slope, dSeqs])
+  }, [dPlace, dAdjust, slope, soil, dPrio, lang, dSeqs])
+
+  const zoneLabel = (z: Zone) => (lang === 'en' ? z.name_en ?? z.name : z.name)
+  const zone = zones.find((z) => z.id === zoneId)
+  const placeName = zone ? zoneLabel(zone) : place.name
 
   const selectZone = (z: Zone) => {
     setZoneId(z.id)
+    setSrtmNote(null)
     setPlace({ lat: z.lat, lon: z.lon, altitude: z.altitude, name: z.name })
   }
 
-  const zone = zones.find((z) => z.id === zoneId)
+  const pickPoint = (lat: number, lon: number) => {
+    setZoneId('custom')
+    setPlace((p) => ({ lat, lon, altitude: p.altitude, name: `${lat.toFixed(2)}, ${lon.toFixed(2)}` }))
+    setSrtmNote(null)
+    api
+      .terrain(lat, lon)
+      .then((tr) => {
+        const alt = Math.min(4400, Math.max(3200, Math.round(tr.elevation_m / 50) * 50))
+        setPlace((p) => (p.lat === lat && p.lon === lon ? { ...p, altitude: alt } : p))
+        setSlope(tr.slope_class)
+        setSrtmNote(`${fmtNum(tr.elevation_m, lang)} m · ${fmtNum(tr.slope_deg, lang, 1)}°`)
+      })
+      .catch(() => setSrtmNote(null))
+  }
+
   const best = rot?.results.find((r) => r.id === rot.best_id)
 
   const insight = useMemo(() => {
@@ -101,28 +183,38 @@ export default function App() {
     <>
       <header className="hero">
         <div className="wrap">
-          <div className="brand">
-            <svg width="46" height="46" viewBox="0 0 64 64" aria-hidden="true">
-              <path d="M14 46h36L32 16z" fill="#e0a43a" />
-              <path d="M24 46v-9a8 8 0 0 1 16 0v9" fill="#16203a" />
-              <circle cx="48" cy="14" r="5" fill="#f4e7cf" />
-            </svg>
-            <h1>
-              Laymi<span>Sat</span>
-            </h1>
+          <div className="hero-top">
+            <div className="brand">
+              <svg width="46" height="46" viewBox="0 0 64 64" aria-hidden="true">
+                <path d="M14 46h36L32 16z" fill="#e0a43a" />
+                <path d="M24 46v-9a8 8 0 0 1 16 0v9" fill="#16203a" />
+                <circle cx="48" cy="14" r="5" fill="#f4e7cf" />
+              </svg>
+              <h1>
+                Laymi<span>Sat</span>
+              </h1>
+            </div>
+            <div className="lang-toggle no-print" role="group" aria-label="Language / Idioma">
+              <button className={lang === 'en' ? 'on' : ''} aria-pressed={lang === 'en'} onClick={() => setLang('en')}>
+                EN
+              </button>
+              <button className={lang === 'es' ? 'on' : ''} aria-pressed={lang === 'es'} onClick={() => setLang('es')}>
+                ES
+              </button>
+            </div>
           </div>
-          <p className="tagline">
-            Alerta agroclimática para la papa nativa de Cusco: 40 años de datos de la NASA leídos junto al calendario
-            agrícola de Felipe Guaman Poma de Ayala (1615).
-          </p>
+          <p className="tagline">{t.tagline}</p>
+          <p className="challenge">{t.challenge}</p>
           <div className="badges">
-            <span className="badge">NASA POWER · diario 1984–hoy</span>
-            <span className="badge">Mann-Kendall + pendiente de Sen</span>
-            <span className="badge">3.200–4.200 m s. n. m.</span>
-            <span className="badge">Código abierto</span>
+            {t.badges.map((b) => (
+              <span key={b} className="badge">
+                {b}
+              </span>
+            ))}
           </div>
           <p className="print-only" style={{ marginTop: 8 }}>
-            Ficha comunitaria · {place.name} · {fmt(place.altitude)} m · generada el {new Date().toLocaleDateString('es-PE')}
+            {t.printHeader} · {placeName} · {fmtNum(place.altitude, lang)} m · {t.generated}{' '}
+            {new Date().toLocaleDateString(lang === 'en' ? 'en-US' : 'es-PE')}
           </p>
         </div>
       </header>
@@ -130,7 +222,7 @@ export default function App() {
       <div className="controls">
         <div className="wrap">
           <label className="field">
-            Zona piloto
+            {t.zone}
             <select
               value={zone ? zoneId : 'custom'}
               onChange={(e) => {
@@ -140,15 +232,15 @@ export default function App() {
             >
               {zones.map((z) => (
                 <option key={z.id} value={z.id}>
-                  {z.name} ({z.province})
+                  {zoneLabel(z)} ({z.province})
                 </option>
               ))}
-              {!zone && <option value="custom">Punto elegido en el mapa</option>}
+              {!zone && <option value="custom">{t.pickedPoint}</option>}
             </select>
           </label>
           <label className="field">
             <span>
-              Altitud de la parcela: <strong>{fmt(place.altitude)} m</strong>
+              {t.altitude}: <strong>{fmtNum(place.altitude, lang)} m</strong>
             </span>
             <input
               type="range"
@@ -159,71 +251,75 @@ export default function App() {
               onChange={(e) => setPlace({ ...place, altitude: Number(e.target.value) })}
             />
           </label>
-          <label className="field" title="Diferencia entre la temperatura del aire a 2 m y la de la planta en noches despejadas">
+          <label className="field" title={t.plantAdjustHelp}>
             <span>
-              Ajuste de helada a nivel de planta: <strong>{fmt(plantAdjust, 1)} °C</strong>
+              {t.plantAdjust}: <strong>{fmtNum(plantAdjust, lang, 1)} °C</strong>
             </span>
-            <input type="range" min={-4} max={0} step={0.5} value={plantAdjust} onChange={(e) => setPlantAdjust(Number(e.target.value))} />
+            <input
+              type="range"
+              min={-4}
+              max={0}
+              step={0.5}
+              value={plantAdjust}
+              onChange={(e) => setPlantAdjust(Number(e.target.value))}
+            />
           </label>
           <span className="spacer" />
           <button className="btn" onClick={() => window.print()}>
-            Imprimir ficha
+            {t.print}
           </button>
         </div>
         {loading && <div className="loading-bar" />}
       </div>
 
       <main className="wrap">
-        {error && <div className="error">No se pudo cargar: {error}</div>}
+        {error && (
+          <div className="error">
+            {t.loadError}: {error}
+          </div>
+        )}
 
         <section className="top">
-          <MapPicker
-            zones={zones}
-            place={place}
-            onZone={selectZone}
-            onPick={(lat, lon) => {
-              setZoneId('custom')
-              setPlace({ lat, lon, altitude: place.altitude, name: `Punto ${lat.toFixed(2)}, ${lon.toFixed(2)}` })
-            }}
-          />
+          <MapPicker zones={zones} place={place} onZone={selectZone} onPick={pickPoint} labelOf={zoneLabel} />
           <div className="card place-card">
-            <div className="kicker">{zone ? `Provincia de ${zone.province}` : 'Punto personalizado'}</div>
-            <h3>{place.name}</h3>
-            <p className="meta">{zone?.note ?? 'Haz clic en el mapa (dentro de Cusco) para analizar otro punto.'}</p>
+            <div className="kicker">{zone ? `${t.province} ${zone.province}` : t.customPoint}</div>
+            <h3>{placeName}</h3>
+            <p className="meta">{zone ? (lang === 'en' ? zone.note_en ?? zone.note : zone.note) : t.clickMap}</p>
+            {srtmNote && (
+              <p className="meta srtm">
+                {t.srtmTaken}: {srtmNote}
+              </p>
+            )}
             {report && insight && (
               <>
                 <div className="facts">
                   <div className="fact">
-                    <span>Noches (Tmin media anual)</span>
+                    <span>{t.factNights}</span>
                     <b>
                       {report.tmin_trend.slope_per_decade > 0 ? '+' : ''}
-                      {fmt(report.tmin_trend.slope_per_decade, 2)} °C/década
+                      {fmtNum(report.tmin_trend.slope_per_decade, lang, 2)} {t.decade}
                     </b>
                   </div>
                   <div className="fact">
-                    <span>Variabilidad del inicio de lluvias</span>
+                    <span>{t.factVariability}</span>
                     <b>
-                      ±{fmt(insight.ads.onset_std_early_days as number)} → ±{fmt(insight.ads.onset_std_recent_days as number)} días
+                      ±{fmtNum(insight.ads.onset_std_early_days as number, lang)} → ±
+                      {fmtNum(insight.ads.onset_std_recent_days as number, lang)} {t.days}
                     </b>
                   </div>
                   <div className="fact">
-                    <span>Helada en brotación (últimas 15 campañas)</span>
-                    <b>{fmt((insight.ahs.event_probability_recent ?? 0) * 100)} % de campañas</b>
+                    <span>{t.factFrost}</span>
+                    <b>
+                      {fmtNum((insight.ahs.event_probability_recent ?? 0) * 100, lang)} % {t.ofSeasons}
+                    </b>
                   </div>
                   <div className="fact">
-                    <span>Ventana de siembra observada</span>
+                    <span>{t.factWindow}</span>
                     <b>{insight.win ? `${insight.win.from} – ${insight.win.to}` : '—'}</b>
                   </div>
                 </div>
                 <p className="insight">
-                  Guaman Poma situaba la siembra general en <b>Coya Raymi (16–30 sep)</b>. En las últimas campañas las
-                  lluvias firmes llegaron en promedio el <b>{String(insight.ads.mean_onset_recent ?? '—')}</b>
-                  {insight.win && (
-                    <>
-                      , en una ventana que va del <b>{insight.win.from}</b> al <b>{insight.win.to}</b>
-                    </>
-                  )}
-                  : sembrar por una fecha fija ya no basta.
+                  {t.insight(String(insight.ads.mean_onset_recent ?? '—'), insight.win?.from, insight.win?.to)}
                 </p>
               </>
             )}
@@ -236,40 +332,44 @@ export default function App() {
               <div className="section-head">
                 <div>
                   <div className="kicker">
-                    Campaña {report.data.current_campaign} · datos al {report.data.last_date}
+                    {t.season} {report.data.current_campaign} · {t.dataTo} {report.data.last_date}
                   </div>
-                  <h2 id="alertas">Las 3 alertas para esta parcela</h2>
+                  <h2 id="alertas">{t.alertsTitle}</h2>
                 </div>
-                <p>
-                  Semáforo calculado con NASA POWER corregido a {fmt(report.location.altitude)} m. Cada alerta muestra el
-                  dato que la dispara y su tendencia desde 1984.
-                </p>
+                <p>{t.alertsIntro(fmtNum(report.location.altitude, lang))}</p>
               </div>
-              <AlertCards alerts={report.alerts} />
+              <AlertCards alerts={report.alerts} t={t} lang={lang} />
             </section>
 
             <section aria-labelledby="tendencias">
               <div className="section-head">
                 <div>
-                  <div className="kicker">Detective de tendencias</div>
-                  <h2 id="tendencias">40 años de clima en la chacra</h2>
+                  <div className="kicker">{t.trendsKicker}</div>
+                  <h2 id="tendencias">{t.trendsTitle}</h2>
                 </div>
               </div>
-              <TrendCharts report={report} />
+              <TrendCharts report={report} lang={lang} />
+            </section>
+
+            <section aria-labelledby="ndvi">
+              <div className="section-head">
+                <div>
+                  <div className="kicker">{t.ndviKicker}</div>
+                  <h2 id="ndvi">{t.ndviTitle}</h2>
+                </div>
+              </div>
+              <NdviPanel ndvi={ndvi} status={ndviStatus} t={t} lang={lang} />
             </section>
 
             <section aria-labelledby="calendario">
               <div className="section-head">
                 <div>
-                  <div className="kicker">Nueva corónica y buen gobierno · 1615</div>
-                  <h2 id="calendario">El calendario de Guaman Poma frente a los datos</h2>
+                  <div className="kicker">{t.calendarKicker}</div>
+                  <h2 id="calendario">{t.calendarTitle}</h2>
                 </div>
-                <p>
-                  Para cada mes, el criterio del códice se mide con NASA POWER: primeras 15 campañas frente a las últimas
-                  15. «Se desfasa» indica un cambio de 15 % o más en la dirección desfavorable.
-                </p>
+                <p>{t.calendarIntro}</p>
               </div>
-              <CalendarGP rows={report.calendar} />
+              <CalendarGP rows={report.calendar} t={t} lang={lang} />
             </section>
           </>
         )}
@@ -278,29 +378,32 @@ export default function App() {
           <section aria-labelledby="rotaciones">
             <div className="section-head">
               <div>
-                <div className="kicker">Field Shift · rotación de cultivos</div>
-                <h2 id="rotaciones">Compara rotaciones antes de decidir</h2>
+                <div className="kicker">{t.rotKicker}</div>
+                <h2 id="rotaciones">{t.rotTitle}</h2>
               </div>
               <p>
-                Edita cada año y mira cómo cambian suelo, plagas, agua, helada y erosión con el clima real de esta
-                parcela.{' '}
-                {best && (
-                  <>
-                    Hoy la mejor opción es <b>{best.name}</b> ({best.overall}/100, riesgo{' '}
-                    {LEVEL_TEXT[best.level].toLowerCase()}).
-                  </>
-                )}
+                {t.rotIntro} {best && <b>{t.bestNow(best.name, best.overall)}</b>}
               </p>
             </div>
-            {rotError && <div className="error">No se pudo comparar: {rotError}</div>}
+            {rotError && (
+              <div className="error">
+                {t.loadError}: {rotError}
+              </div>
+            )}
             <RotationComparator
               catalog={catalog}
               sequences={sequences}
               onChange={setSequences}
               slope={slope}
               onSlope={setSlope}
+              soil={soil}
+              onSoil={setSoil}
+              priorities={priorities}
+              onPriorities={setPriorities}
               result={rot}
               loading={rotLoading}
+              t={t}
+              lang={lang}
             />
           </section>
         )}
@@ -309,21 +412,20 @@ export default function App() {
           <section aria-labelledby="fuentes">
             <div className="section-head">
               <div>
-                <div className="kicker">Transparencia</div>
-                <h2 id="fuentes">Fuentes, supuestos e incertidumbre</h2>
+                <div className="kicker">{t.sourcesKicker}</div>
+                <h2 id="fuentes">{t.sourcesTitle}</h2>
               </div>
             </div>
-            <SourcesPanel report={report} />
+            <SourcesPanel report={report} t={t} lang={lang} />
           </section>
         )}
 
-        {!report && !error && <div className="state">Cargando 40 años de datos de la NASA…</div>}
+        {!report && !error && <div className="state">{t.loading}</div>}
       </main>
 
       <footer className="wrap">
-        LaymiSat · NASA Space Apps Challenge 2026 · Datos: NASA POWER (power.larc.nasa.gov). Calendario: Felipe Guaman
-        Poma de Ayala, Nueva corónica y buen gobierno (1615). Mapa © OpenStreetMap. Herramienta de apoyo, no sustituye el
-        criterio de la comunidad ni del técnico agrario.
+        <p>{t.footer}</p>
+        <p className="ai-note">{t.aiNote}</p>
       </footer>
     </>
   )

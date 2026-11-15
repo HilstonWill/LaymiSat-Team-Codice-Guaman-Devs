@@ -29,9 +29,10 @@ interface Props {
   place: Place
   onZone: (z: Zone) => void
   onPick: (lat: number, lon: number) => void
+  labelOf?: (z: Zone) => string
 }
 
-export default function MapPicker({ zones, place, onZone, onPick }: Props) {
+export default function MapPicker({ zones, place, onZone, onPick, labelOf = (z) => z.name }: Props) {
   return (
     <div className="map" role="region" aria-label="Mapa de zonas piloto en Cusco">
       <MapContainer center={[place.lat, place.lon]} zoom={9} style={{ height: '100%', width: '100%' }} scrollWheelZoom={false}>
@@ -48,7 +49,7 @@ export default function MapPicker({ zones, place, onZone, onPick }: Props) {
             eventHandlers={{ click: () => onZone(z) }}
           >
             <Tooltip direction="top" offset={[0, -6]}>
-              {z.name} · {z.province} · {z.altitude} m
+              {labelOf(z)} · {z.province} · {z.altitude} m
             </Tooltip>
           </CircleMarker>
         ))}

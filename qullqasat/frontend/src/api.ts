@@ -1,13 +1,17 @@
+import type { Lang } from './i18n'
+
 export type Level = 'verde' | 'ambar' | 'rojo'
 
 export interface Zone {
   id: string
   name: string
+  name_en?: string
   province: string
   lat: number
   lon: number
   altitude: number
   note: string
+  note_en?: string
 }
 
 export interface Trend {
@@ -23,6 +27,7 @@ export interface Trend {
 export interface Alert {
   id: 'AHS' | 'AEH' | 'ADS'
   name: string
+  question: string
   level: Level
   headline: string
   trigger: string
@@ -43,15 +48,19 @@ export interface SeriesRow {
   onset_sday: number | null
   shift_days: number | null
   provisional: boolean
-  onset_label: string | null
 }
 
 export interface CalendarRow {
   month: number
+  page: number | null
+  source_url: string | null
   name: string
   quechua: string
   milestone: string
   criterion: string
+  action: string
+  alternative: string
+  data_sentence: string
   nasa_variables: string[]
   indicator_label: string
   unit: string
@@ -86,21 +95,48 @@ export interface Report {
 
 export interface Crop {
   name: string
+  name_en?: string
   water_mm: number
   frost_tolerance: number
   n_balance: number
-  cover_months: number
   alt_min: number
   alt_max: number
+}
+
+export interface Preset {
+  id: string
+  name: string
+  name_en?: string
+  sequence: string[]
 }
 
 export interface CropsCatalog {
   note: string
   crops: Record<string, Crop>
-  presets: { id: string; name: string; sequence: string[] }[]
+  presets: Preset[]
 }
 
-export type Criterion = 'suelo' | 'plagas' | 'agua' | 'helada' | 'erosion'
+export type Criterion = 'suelo' | 'plagas' | 'agua' | 'helada' | 'erosion' | 'forraje' | 'ingresos'
+export const CRITERIA: Criterion[] = ['suelo', 'plagas', 'agua', 'helada', 'erosion', 'forraje', 'ingresos']
+export const DEFAULT_PRIORITIES: Record<Criterion, number> = {
+  suelo: 2.5,
+  plagas: 2,
+  agua: 2,
+  helada: 2,
+  erosion: 1.5,
+  forraje: 0,
+  ingresos: 0,
+}
+
+export type Texture = 'arenoso' | 'franco' | 'arcilloso'
+export type OrganicMatter = 'baja' | 'media' | 'alta'
+export type Slope = 'plana' | 'moderada' | 'fuerte'
+
+export interface SoilInput {
+  texture: Texture
+  organic_matter: OrganicMatter
+  declared: boolean
+}
 
 export interface RotationResult {
   id: string
@@ -112,12 +148,18 @@ export interface RotationResult {
   overall: number
   level: Level
   reasons: Record<Criterion, string[]>
+  timeline: { crop: string; name: string; covered: boolean[] }[]
+  bare_rainy_months_per_season: number
+  info_gaps: string[]
+  risks: string[]
 }
 
 export interface RotationResponse {
   results: RotationResult[]
   best_id: string
   weights: Record<Criterion, number>
+  campaign_months: number[]
+  rainy_months: number[]
   assumptions: string[]
   context: {
     altitude: number
@@ -125,8 +167,30 @@ export interface RotationResponse {
     dry_spell_probability: number
     heavy_days_mean: number
     season_precip_mean: number | null
-    slope: string
+    slope: Slope
   }
+}
+
+export interface NdviSummary {
+  zone_id: string
+  source: string
+  product: string
+  first_date: string
+  last_date: string
+  bare_threshold: number
+  early_period: string
+  recent_period: string
+  seasonal: { month: number; early: number | null; recent: number | null; bare_recent: boolean }[]
+  peak_month: number | null
+  bare_months_recent: number[]
+  peak_trend: Trend
+}
+
+export interface Terrain {
+  elevation_m: number
+  slope_deg: number
+  slope_class: Slope
+  source: string
 }
 
 export interface Place {
@@ -170,23 +234,34 @@ async function request<T>(path: string, init?: RequestInit, retries = 3): Promis
   return res.json() as Promise<T>
 }
 
+const coords = (p: { lat: number; lon: number }) => ({ lat: p.lat.toFixed(2), lon: p.lon.toFixed(2) })
+
 export const api = {
   zones: () => request<Zone[]>('/api/zones'),
   crops: () => request<CropsCatalog>('/api/crops'),
-  report: (p: Place, plantAdjust: number, signal?: AbortSignal) => {
+  report: (p: Place, plantAdjust: number, lang: Lang, signal?: AbortSignal) => {
     const q = new URLSearchParams({
-      lat: p.lat.toFixed(2),
-      lon: p.lon.toFixed(2),
+      ...coords(p),
       altitude: String(Math.round(p.altitude)),
       plant_adjust: plantAdjust.toFixed(1),
+      lang,
     })
     return request<Report>(`/api/report?${q}`, { signal })
   },
+  ndvi: (p: Place, signal?: AbortSignal) =>
+    request<NdviSummary>(`/api/ndvi?${new URLSearchParams(coords(p))}`, { signal }, 0),
+  terrain: (lat: number, lon: number) =>
+    request<Terrain>(`/api/terrain?${new URLSearchParams({ lat: lat.toFixed(4), lon: lon.toFixed(4) })}`, undefined, 1),
   rotations: (
-    p: Place,
-    plantAdjust: number,
-    slope: string,
-    sequences: { id: string; name: string; sequence: string[] }[],
+    body: {
+      place: Place
+      plantAdjust: number
+      slope: Slope
+      soil: SoilInput
+      priorities: Record<Criterion, number>
+      lang: Lang
+      sequences: Preset[]
+    },
     signal?: AbortSignal,
   ) =>
     request<RotationResponse>('/api/rotations', {
@@ -194,39 +269,15 @@ export const api = {
       signal,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        lat: Number(p.lat.toFixed(2)),
-        lon: Number(p.lon.toFixed(2)),
-        altitude: Math.round(p.altitude),
-        plant_adjust: plantAdjust,
-        slope,
-        sequences,
+        lat: Number(body.place.lat.toFixed(2)),
+        lon: Number(body.place.lon.toFixed(2)),
+        altitude: Math.round(body.place.altitude),
+        plant_adjust: body.plantAdjust,
+        slope: body.slope,
+        soil: body.soil,
+        priorities: body.priorities,
+        lang: body.lang,
+        sequences: body.sequences,
       }),
     }),
-}
-
-const MONTHS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
-
-/** Días desde el 1 de agosto → "23 sep". */
-export function sdayLabel(sday: number): string {
-  const d = new Date(Date.UTC(2001, 7, 1) + Math.round(sday) * 86400000)
-  return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}`
-}
-
-export const LEVEL_TEXT: Record<Level, string> = { verde: 'Bajo', ambar: 'Atención', rojo: 'Alto' }
-
-export const CRITERIA: { key: Criterion; label: string }[] = [
-  { key: 'suelo', label: 'Suelo (N)' },
-  { key: 'plagas', label: 'Plagas' },
-  { key: 'agua', label: 'Agua' },
-  { key: 'helada', label: 'Helada' },
-  { key: 'erosion', label: 'Erosión' },
-]
-
-export function formatP(p: number): string {
-  return p < 0.001 ? 'p < 0,001' : `p = ${p.toFixed(3).replace('.', ',')}`
-}
-
-export function fmt(n: number | null | undefined, digits = 0): string {
-  if (n === null || n === undefined || Number.isNaN(n)) return '—'
-  return n.toLocaleString('es-PE', { minimumFractionDigits: digits, maximumFractionDigits: digits })
 }
