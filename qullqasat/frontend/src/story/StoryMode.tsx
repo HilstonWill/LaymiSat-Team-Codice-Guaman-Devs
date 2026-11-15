@@ -1,95 +1,25 @@
-import maplibregl, { type ExpressionSpecification, type Map as MLMap, type StyleSpecification } from 'maplibre-gl'
-import 'maplibre-gl/dist/maplibre-gl.css'
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { api, type Place, type Report, type StoryData, type Zone } from '../api'
-import { fmtNum, type Lang } from '../i18n'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import { api, type Alert, type Level, type Place, type Report, type StoryData, type Zone } from '../api'
+import CalendarGP from '../components/CalendarGP'
+import { DecisionCard } from '../components/FarmerViews'
+import { ALERT_ICONS } from '../components/Icons'
+import SectionBoundary from '../components/SectionBoundary'
+import { DICTS, fmtNum, type Dict, type Lang } from '../i18n'
 import { STORY_TEXT, type StoryDict } from './storyText'
 import './story.css'
 
+// El mapa 3D (MapLibre) y el plano (Leaflet) bajan aparte: el panel de Hoy se muestra sin esperarlos.
+const StoryMap = lazy(() => import('./StoryMap'))
+const MapPicker = lazy(() => import('../components/MapPicker'))
+
 /**
- * Modo Historia: 40 campañas contadas sobre el terreno 3D, con una línea de tiempo que se reproduce.
- * Pantalla aparte (?historia=1): no comparte estado ni componentes con la app principal.
+ * Pantalla principal del MVP: el terreno 3D como escenario, con Hoy, Calendario y 40 años.
+ * La vista técnica completa sigue en ?modo=tecnico (App.tsx).
  */
 
 const PLANT_ADJUST = -2
-const EXAGGERATION = 1.6
 const LATE_DAYS = 21 // mismo umbral que la alerta ADS ("más de 3 semanas")
 const BASE_TICK_MS = 1400
-
-const STYLE: StyleSpecification = {
-  version: 8,
-  projection: { type: 'globe' },
-  sources: {
-    sat: {
-      type: 'raster',
-      tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
-      tileSize: 256,
-      maxzoom: 18,
-      attribution: 'Imagery © Esri, Maxar, Earthstar Geographics',
-    },
-    dem: {
-      type: 'raster-dem',
-      tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
-      tileSize: 256,
-      maxzoom: 14,
-      encoding: 'terrarium',
-      attribution: 'Terrain: Mapzen / AWS Open Data (incl. NASA SRTM)',
-    },
-    demHs: {
-      type: 'raster-dem',
-      tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
-      tileSize: 256,
-      maxzoom: 14,
-      encoding: 'terrarium',
-    },
-    demFrost: {
-      type: 'raster-dem',
-      tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
-      tileSize: 256,
-      maxzoom: 12,
-      encoding: 'terrarium',
-    },
-  },
-  layers: [
-    { id: 'sat', type: 'raster', source: 'sat', paint: { 'raster-saturation': -0.25, 'raster-brightness-max': 0.92 } },
-    {
-      id: 'hillshade',
-      type: 'hillshade',
-      source: 'demHs',
-      paint: { 'hillshade-exaggeration': 0.4, 'hillshade-shadow-color': '#16203a' },
-    },
-    {
-      id: 'frost',
-      type: 'color-relief',
-      source: 'demFrost',
-      paint: { 'color-relief-opacity': 0.7, 'color-relief-color': frostRamp(3800) },
-    },
-  ],
-  sky: {
-    'sky-color': '#16203a',
-    'horizon-color': '#7fa6d6',
-    'fog-color': '#c9d8ec',
-    'sky-horizon-blend': 0.6,
-    'horizon-fog-blend': 0.5,
-    'fog-ground-blend': 0.4,
-    'atmosphere-blend': ['interpolate', ['linear'], ['zoom'], 0, 1, 8, 0.6, 12, 0],
-  },
-}
-
-/** Por debajo de la línea: transparente. En la línea: borde blanco. Encima: hielo translúcido. */
-function frostRamp(line: number): ExpressionSpecification {
-  return [
-    'interpolate',
-    ['linear'],
-    ['elevation'],
-    0, 'rgba(0,0,0,0)',
-    line - 40, 'rgba(0,0,0,0)',
-    line - 12, 'rgba(255,255,255,0.95)',
-    line + 15, 'rgba(150,205,255,0.5)',
-    line + 700, 'rgba(225,240,255,0.72)',
-    9000, 'rgba(240,248,255,0.8)',
-  ]
-}
 
 const reducedMotion = () =>
   typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
@@ -126,10 +56,30 @@ interface Row {
 }
 
 const DEFAULT_ZONE = 'pisac-parque-papa'
+const RANK: Record<Level, number> = { verde: 0, ambar: 1, rojo: 2 }
 
-export default function StoryMode() {
+function supportsWebGL() {
+  try {
+    const c = document.createElement('canvas')
+    return !!(c.getContext('webgl2') || c.getContext('webgl'))
+  } catch {
+    return false
+  }
+}
+
+export type View = 'hoy' | 'calendario' | 'historia'
+
+/**
+ * Pantalla única del MVP sobre el terreno 3D:
+ *  - Hoy: qué hago esta campaña (decisión + tres alertas) y dónde suele helar hoy.
+ *  - Calendario: la rueda de Guaman Poma frente a los datos.
+ *  - 40 años: la historia que explica por qué (línea de tiempo).
+ */
+export default function StoryMode({ initialView = 'hoy', autoplay = false }: { initialView?: View; autoplay?: boolean }) {
   const [lang, setLang] = useState<Lang>(initialLang)
   const t = STORY_TEXT[lang]
+  const d = DICTS[lang]
+  const [view, setView] = useState<View>(initialView)
   const [zones, setZones] = useState<Zone[]>([])
   const [zoneId, setZoneId] = useState(DEFAULT_ZONE)
   const zone = zones.find((z) => z.id === zoneId)
@@ -140,11 +90,19 @@ export default function StoryMode() {
   const [playing, setPlaying] = useState(false)
   const [speed, setSpeed] = useState(1)
   const [finished, setFinished] = useState(false)
+  const [flat, setFlat] = useState(() => !supportsWebGL())
+  const pendingAutoplay = useRef(autoplay)
 
   useEffect(() => {
     document.documentElement.lang = lang
-    document.title = `LaymiSat · ${t.title}`
-  }, [lang, t.title])
+    const section = view === 'historia' ? t.title : view === 'calendario' ? t.tabCalendar : t.todayKicker
+    document.title = `LaymiSat · ${section}`
+    try {
+      localStorage.setItem('laymisat-lang', lang)
+    } catch {
+      /* almacenamiento no disponible */
+    }
+  }, [lang, t, view])
 
   useEffect(() => {
     api.zones().then(setZones).catch(() => setError(true))
@@ -190,6 +148,14 @@ export default function StoryMode() {
     setFinished(false)
   }, [rows])
 
+  // Demo (?demo=1): la historia arranca sola cuando llegan los datos y termina el vuelo de entrada.
+  useEffect(() => {
+    if (!pendingAutoplay.current || !rows.length || view !== 'historia') return
+    pendingAutoplay.current = false
+    const id = window.setTimeout(() => setPlaying(true), reducedMotion() ? 0 : 5600)
+    return () => window.clearTimeout(id)
+  }, [rows, view])
+
   // Reproducción.
   useEffect(() => {
     if (!playing || !rows.length) return
@@ -206,9 +172,30 @@ export default function StoryMode() {
     return () => window.clearInterval(id)
   }, [playing, speed, rows.length])
 
+  const goView = (v: View) => {
+    setView(v)
+    if (v !== 'historia') {
+      setPlaying(false)
+      setFinished(false)
+    }
+  }
+
   const row = rows[idx]
   const refSday = report?.traditional_sowing.reference_sday ?? 53
   const refLabel = sdayLabel(refSday, lang)
+  const altitude = zone?.altitude ?? 0
+
+  // En Hoy y Calendario el mapa muestra dónde suele helar en los últimos años; en 40 años, la campaña elegida.
+  const recentLine = story?.recent.frost_line ?? null
+  const mapFrostLine = view === 'historia' ? (row?.frostLine ?? null) : recentLine
+
+  const insight = useMemo(() => {
+    if (!report) return null
+    const ads = report.alerts.find((a) => a.id === 'ADS')?.metrics as Record<string, unknown> | undefined
+    const win = (ads?.suggested_window as { from: string; to: string } | null | undefined) ?? null
+    const worst = report.alerts.reduce<Level>((w, a) => (RANK[a.level] > RANK[w] ? a.level : w), 'verde')
+    return { win, worst }
+  }, [report])
 
   const play = () => {
     if (finished || idx >= rows.length - 1) {
@@ -223,13 +210,26 @@ export default function StoryMode() {
     setIdx(Math.max(0, Math.min(rows.length - 1, i)))
   }
 
+  const tabs: { id: View; label: string }[] = [
+    { id: 'hoy', label: t.tabToday },
+    { id: 'calendario', label: t.tabCalendar },
+    { id: 'historia', label: t.tabStory },
+  ]
+  const ready = Boolean(report && story)
+
   return (
-    <div className="story">
+    <div className={`story v-${view}`}>
       <header className="story-bar">
         <a className="story-brand" href={window.location.pathname}>
           Laymi<span>Sat</span>
         </a>
-        <h1 className="story-title">{t.title}</h1>
+        <nav className="story-tabs" aria-label={t.tabsLabel}>
+          {tabs.map((tb) => (
+            <button key={tb.id} aria-current={view === tb.id ? 'page' : undefined} onClick={() => goView(tb.id)}>
+              {tb.label}
+            </button>
+          ))}
+        </nav>
         <label className="story-zone">
           <span>{t.zone}</span>
           <select value={zoneId} onChange={(e) => setZoneId(e.target.value)}>
@@ -247,203 +247,242 @@ export default function StoryMode() {
             </button>
           ))}
         </div>
-        <a className="story-back" href={window.location.pathname}>
-          {t.back}
-        </a>
       </header>
 
       <div className="story-main">
         <div className="story-stage">
-          <StoryMap zone={zone} frostLine={row?.frostLine ?? null} playing={playing} t={t} />
-          {row && report && (
-            <SceneCard row={row} t={t} lang={lang} refLabel={refLabel} altitude={zone?.altitude ?? 0} />
+          {/* Si el mapa no llega a descargarse (mala señal), el aviso queda en su lugar y el panel sigue. */}
+          <SectionBoundary message={t.mapError} resetKey={flat}>
+            <Suspense fallback={<div className="story-map story-map-loading" aria-hidden="true" />}>
+              {flat ? (
+                <FlatMap zones={zones} zone={zone} onZone={setZoneId} note={t.flatMap} lang={lang} />
+              ) : (
+                <StoryMap
+                  zone={zone}
+                  frostLine={mapFrostLine}
+                  playing={playing}
+                  level={view === 'historia' ? null : insight?.worst ?? null}
+                  t={t}
+                  onFail={() => setFlat(true)}
+                />
+              )}
+            </Suspense>
+          </SectionBoundary>
+          {view === 'historia' && row && report && (
+            <SceneCard row={row} t={t} lang={lang} refLabel={refLabel} altitude={altitude} />
           )}
-          {finished && report && story && (
-            <Summary rows={rows} report={report} story={story} t={t} lang={lang} onReplay={play} />
+          {view !== 'historia' && story && <TodayScene story={story} altitude={altitude} t={t} lang={lang} />}
+          {view === 'historia' && finished && report && story && (
+            <Summary
+              rows={rows}
+              report={report}
+              story={story}
+              t={t}
+              lang={lang}
+              onReplay={play}
+              onCta={() => goView('hoy')}
+            />
           )}
-          {!rows.length && <div className="story-state">{error ? t.error : t.loading}</div>}
+          {!ready && <div className="story-state">{error ? t.error : t.loading}</div>}
         </div>
 
-        <aside className="story-side">
-          <section>
-            <h2>{t.events}</h2>
-            <KeyEvents rows={rows} t={t} lang={lang} current={idx} onJump={jump} />
-          </section>
-          <section className="story-legend">
-            <p>
-              <i className="lg-frost" aria-hidden="true" /> {t.legendFrost}
-            </p>
-            <p>
-              <i className="lg-plot" aria-hidden="true" /> {t.legendPlot}
-            </p>
-            <p className="story-note">{t.estimate}</p>
-            <p className="story-note">{t.sources}</p>
-          </section>
+        <aside className="story-side" aria-live="polite">
+          {view === 'hoy' && report && insight && (
+            <>
+              <DecisionCard alerts={report.alerts} window={insight.win} t={d} />
+              <section>
+                <h2>{t.alertsTitle}</h2>
+                <TodayAlerts alerts={report.alerts} d={d} />
+              </section>
+              <div className="today-links">
+                <button className="btn btn-cta" onClick={() => goView('historia')}>
+                  {t.why}
+                </button>
+                <a className="today-more" href="?modo=tecnico">
+                  {t.more}
+                </a>
+              </div>
+              <p className="story-note">{t.sources}</p>
+            </>
+          )}
+
+          {view === 'calendario' && report && (
+            <section className="cal-sheet">
+              <div className="kicker">{d.calendarKicker}</div>
+              <h2 className="cal-title">{d.calendarTitle}</h2>
+              <p className="cal-tip">{t.calendarTip}</p>
+              <CalendarGP rows={report.calendar} t={d} lang={lang} />
+            </section>
+          )}
+
+          {view === 'historia' && (
+            <>
+              <section>
+                <h2>{t.events}</h2>
+                <KeyEvents rows={rows} t={t} lang={lang} current={idx} onJump={jump} />
+              </section>
+              <section className="story-legend">
+                <p>
+                  <i className="lg-frost" aria-hidden="true" /> {t.legendFrost}
+                </p>
+                <p>
+                  <i className="lg-plot" aria-hidden="true" /> {t.legendPlot}
+                </p>
+                <p className="story-note">{t.estimate}</p>
+                <p className="story-note">{t.sources}</p>
+              </section>
+            </>
+          )}
         </aside>
       </div>
 
-      <footer className="story-timeline">
-        <div className="tl-controls">
-          <button className="tl-play" onClick={playing ? () => setPlaying(false) : play} aria-pressed={playing}>
-            {playing ? (
-              <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M7 5h4v14H7zM13 5h4v14h-4z" fill="currentColor" />
-              </svg>
-            ) : (
-              <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M7 4l13 8-13 8z" fill="currentColor" />
-              </svg>
-            )}
-            {playing ? t.pause : t.play}
-          </button>
-          <button className="tl-ghost" onClick={() => jump(0)}>
-            {t.restart}
-          </button>
-          <div className="tl-speed" role="group" aria-label={t.speed}>
-            {[1, 2, 4].map((s) => (
-              <button key={s} aria-pressed={speed === s} onClick={() => setSpeed(s)}>
-                {s}×
-              </button>
-            ))}
+      {view === 'historia' && (
+        <footer className="story-timeline">
+          <div className="tl-controls">
+            <button className="tl-play" onClick={playing ? () => setPlaying(false) : play} aria-pressed={playing}>
+              {playing ? (
+                <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M7 5h4v14H7zM13 5h4v14h-4z" fill="currentColor" />
+                </svg>
+              ) : (
+                <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M7 4l13 8-13 8z" fill="currentColor" />
+                </svg>
+              )}
+              {playing ? t.pause : t.play}
+            </button>
+            <button className="tl-ghost" onClick={() => jump(0)}>
+              {t.restart}
+            </button>
+            <div className="tl-speed" role="group" aria-label={t.speed}>
+              {[1, 2, 4].map((s) => (
+                <button key={s} aria-pressed={speed === s} onClick={() => setSpeed(s)}>
+                  {s}×
+                </button>
+              ))}
+            </div>
+            <input
+              className="tl-range"
+              type="range"
+              min={0}
+              max={Math.max(0, rows.length - 1)}
+              value={idx}
+              aria-label={t.year}
+              aria-valuetext={row ? String(row.campaign) : ''}
+              onChange={(e) => jump(Number(e.target.value))}
+            />
+            <span className="tl-year">{row ? `${row.campaign}–${row.campaign + 1}` : '—'}</span>
           </div>
-          <input
-            className="tl-range"
-            type="range"
-            min={0}
-            max={Math.max(0, rows.length - 1)}
-            value={idx}
-            aria-label={t.year}
-            aria-valuetext={row ? String(row.campaign) : ''}
-            onChange={(e) => jump(Number(e.target.value))}
-          />
-          <span className="tl-year">{row ? `${row.campaign}–${row.campaign + 1}` : '—'}</span>
-        </div>
-        {rows.length > 0 && (
-          <div className="tl-charts">
-            <BarChart
-              title={t.chartRain}
-              rows={rows}
-              idx={idx}
-              onPick={jump}
-              value={(r) => r.shift}
-              color={(r) => (r.shift > LATE_DAYS ? 'var(--rojo)' : r.shift > 7 ? 'var(--ambar)' : 'var(--verde)')}
-            />
-            <LineChart
-              title={t.chartTmin}
-              rows={rows}
-              idx={idx}
-              onPick={jump}
-              value={(r) => r.tmin}
-              fmt={(v) => fmtNum(v, lang, 1)}
-              stroke="var(--terracotta)"
-            />
-            <LineChart
-              title={t.chartFrost}
-              rows={rows}
-              idx={idx}
-              onPick={jump}
-              value={(r) => r.frostLine}
-              fmt={(v) => fmtNum(v, lang)}
-              stroke="#5b9bd5"
-              refLine={zone?.altitude}
-            />
-          </div>
-        )}
-      </footer>
+          {rows.length > 0 && (
+            <div className="tl-charts">
+              <BarChart
+                title={t.chartRain}
+                rows={rows}
+                idx={idx}
+                onPick={jump}
+                value={(r) => r.shift}
+                color={(r) => (r.shift > LATE_DAYS ? 'var(--rojo)' : r.shift > 7 ? 'var(--ambar)' : 'var(--verde)')}
+              />
+              <LineChart
+                title={t.chartTmin}
+                rows={rows}
+                idx={idx}
+                onPick={jump}
+                value={(r) => r.tmin}
+                fmt={(v) => fmtNum(v, lang, 1)}
+                stroke="var(--terracotta)"
+              />
+              <LineChart
+                title={t.chartFrost}
+                rows={rows}
+                idx={idx}
+                onPick={jump}
+                value={(r) => r.frostLine}
+                fmt={(v) => fmtNum(v, lang)}
+                stroke="#5b9bd5"
+                refLine={zone?.altitude}
+              />
+            </div>
+          )}
+        </footer>
+      )}
     </div>
   )
 }
 
-/* ------------------------------------------------------------------ */
+/** Tarjeta sobre el mapa en Hoy/Calendario: dónde suele helar en los últimos años y si tu chacra queda dentro. */
+function TodayScene({ story, altitude, t, lang }: { story: StoryData; altitude: number; t: StoryDict; lang: Lang }) {
+  const r = story.recent
+  if (r.frost_line === null) return null
+  const inside = r.frost_line <= altitude
+  return (
+    <div className="scene scene-today">
+      <span className="scene-kicker">{t.todayKicker}</span>
+      <p className="scene-frost">
+        {t.recentFrost(String(r.from ?? '—'), String(r.to ?? '—'), fmtNum(r.frost_line, lang))}
+      </p>
+      <p className={`scene-plot ${inside ? 'is-frost' : 'is-ok'}`}>
+        {inside ? t.recentPlotFrost(fmtNum(altitude, lang)) : t.recentPlotOk(fmtNum(altitude, lang))}
+      </p>
+      <p className="scene-legend">
+        <i className="lg-frost" aria-hidden="true" /> {t.legendRecent}
+      </p>
+    </div>
+  )
+}
 
-function StoryMap({ zone, frostLine, playing, t }: {
+/** Las tres alertas, una por fila: tema, semáforo, veredicto y qué hacer. */
+function TodayAlerts({ alerts, d }: { alerts: Alert[]; d: Dict }) {
+  return (
+    <ul className="today-alerts">
+      {alerts.map((a) => {
+        const Icon = ALERT_ICONS[a.id]
+        return (
+          <li key={a.id} className={`today-alert ${a.level}`}>
+            <span className="ta-icon" aria-hidden="true">
+              <Icon size={20} />
+            </span>
+            <div className="ta-body">
+              <div className="ta-head">
+                <b>{d.alertShort[a.id]}</b>
+                <span className={`ta-pill ${a.level}`}>{d.levels[a.level]}</span>
+              </div>
+              <p className="ta-verdict">{d.alertVerdict[a.id]?.[a.level]}</p>
+              <p className="ta-action">
+                <span>{d.whatToDo}</span> {a.action}
+              </p>
+            </div>
+          </li>
+        )
+      })}
+    </ul>
+  )
+}
+
+/** Respaldo sin WebGL: mapa plano con las zonas piloto. */
+function FlatMap({ zones, zone, onZone, note, lang }: {
+  zones: Zone[]
   zone: Zone | undefined
-  frostLine: number | null
-  playing: boolean
-  t: StoryDict
+  onZone: (id: string) => void
+  note: string
+  lang: Lang
 }) {
-  const box = useRef<HTMLDivElement>(null)
-  const mapRef = useRef<MLMap | null>(null)
-  const marker = useRef<maplibregl.Marker | null>(null)
-  const [ready, setReady] = useState(false)
-  const intro = useRef(true)
-
-  useEffect(() => {
-    const container = box.current
-    if (!container) return
-    const style = structuredClone(STYLE)
-    const reduced = reducedMotion()
-    if (reduced) style.projection = { type: 'mercator' }
-    const map = new maplibregl.Map({
-      container,
-      style,
-      center: [-60, -8],
-      zoom: reduced ? 9 : 1.6,
-      maxPitch: 75,
-      attributionControl: { compact: true },
-    })
-    map.scrollZoom.disable()
-    map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-right')
-    map.once('style.load', () => {
-      map.setTerrain({ source: 'dem', exaggeration: EXAGGERATION })
-      setReady(true)
-    })
-    const el = document.createElement('div')
-    el.className = 'story-plot'
-    el.setAttribute('aria-hidden', 'true')
-    marker.current = new maplibregl.Marker({ element: el }).setLngLat([-71.85, -13.4]).addTo(map)
-    mapRef.current = map
-    intro.current = true
-    return () => {
-      map.remove()
-      mapRef.current = null
-    }
-  }, [])
-
-  // Vuelo a la zona (el primero es la intro desde el globo).
-  useEffect(() => {
-    const map = mapRef.current
-    if (!map || !ready || !zone) return
-    marker.current?.setLngLat([zone.lon, zone.lat])
-    const first = intro.current
-    intro.current = false
-    if (first && !reducedMotion()) map.once('moveend', () => map.setProjection({ type: 'mercator' }))
-    map.flyTo({
-      center: [zone.lon, zone.lat],
-      zoom: 10.6,
-      pitch: 62,
-      bearing: -25,
-      duration: reducedMotion() ? 0 : first ? 5200 : 2400,
-      curve: 1.5,
-      essential: true,
-    })
-  }, [zone, ready])
-
-  // Línea de helada de la campaña.
-  useEffect(() => {
-    const map = mapRef.current
-    if (!map || !ready) return
-    map.setLayoutProperty('frost', 'visibility', frostLine === null ? 'none' : 'visible')
-    if (frostLine !== null) map.setPaintProperty('frost', 'color-relief-color', frostRamp(frostLine))
-  }, [frostLine, ready])
-
-  // Órbita lenta mientras se reproduce (cámara de documental).
-  useEffect(() => {
-    const map = mapRef.current
-    if (!map || !ready || !playing || reducedMotion()) return
-    let raf = 0
-    let last = performance.now()
-    const step = (now: number) => {
-      const dt = now - last
-      last = now
-      if (!map.isMoving() || map.isRotating()) map.setBearing(map.getBearing() + dt * 0.004)
-      raf = requestAnimationFrame(step)
-    }
-    raf = requestAnimationFrame(step)
-    return () => cancelAnimationFrame(raf)
-  }, [playing, ready])
-
-  return <div ref={box} className="story-map" role="region" aria-label={t.legendFrost} />
+  const place: Place = zone
+    ? { lat: zone.lat, lon: zone.lon, altitude: zone.altitude, name: zone.name }
+    : { lat: -13.4, lon: -71.85, altitude: 3900, name: '' }
+  return (
+    <div className="story-map story-flat">
+      <MapPicker
+        key={zone?.id ?? 'none'}
+        zones={zones}
+        place={place}
+        onZone={(z) => onZone(z.id)}
+        onPick={() => {}}
+        labelOf={(z) => (lang === 'en' ? z.name_en ?? z.name : z.name)}
+      />
+      <p className="flat-note">{note}</p>
+    </div>
+  )
 }
 
 function SceneCard({ row, t, lang, refLabel, altitude }: {
@@ -532,13 +571,14 @@ function KeyEvents({ rows, t, lang, current, onJump }: {
   )
 }
 
-function Summary({ rows, report, story, t, lang, onReplay }: {
+function Summary({ rows, report, story, t, lang, onReplay, onCta }: {
   rows: Row[]
   report: Report
   story: StoryData
   t: StoryDict
   lang: Lang
   onReplay: () => void
+  onCta: () => void
 }) {
   const complete = rows.filter((r) => !r.provisional)
   const lateN = complete.filter((r) => r.shift > LATE_DAYS).length
@@ -556,9 +596,9 @@ function Summary({ rows, report, story, t, lang, onReplay }: {
       </ul>
       <p className="summary-conclusion">{t.conclusion}</p>
       <div className="summary-actions">
-        <a className="btn btn-cta" href={window.location.pathname}>
+        <button className="btn btn-cta" onClick={onCta}>
           {t.cta}
-        </a>
+        </button>
         <button className="tl-ghost" onClick={onReplay}>
           {t.replay}
         </button>

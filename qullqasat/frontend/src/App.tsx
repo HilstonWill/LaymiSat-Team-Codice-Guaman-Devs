@@ -77,6 +77,7 @@ function initialLang(): Lang {
 type Mode = 'farmer' | 'tech'
 function initialMode(): Mode {
   const q = new URLSearchParams(window.location.search)
+  // main.tsx solo monta App en ?modo=tecnico / ?full=1: aquí siempre es la vista técnica.
   if (q.get('full') === '1' || q.get('modo') === 'tecnico') return 'tech'
   try {
     if (localStorage.getItem('laymisat-mode') === 'tech') return 'tech'
@@ -305,7 +306,12 @@ export default function App() {
             </div>
             <div className="hero-toggles no-print">
               <div className="lang-toggle mode-toggle" role="group" aria-label={t.mode.label}>
-                <button className={!isTech ? 'on' : ''} aria-pressed={!isTech} onClick={() => setMode('farmer')}>
+                {/* La vista de agricultor es ahora la pantalla principal (terreno 3D). */}
+                <button
+                  className={!isTech ? 'on' : ''}
+                  aria-pressed={!isTech}
+                  onClick={() => window.location.assign(window.location.pathname)}
+                >
                   {t.mode.farmer}
                 </button>
                 <button

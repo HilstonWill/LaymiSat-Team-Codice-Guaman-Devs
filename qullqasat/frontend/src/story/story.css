@@ -34,7 +34,8 @@
 
 .story-main { display: grid; grid-template-columns: minmax(0, 1fr) 290px; min-height: 0; }
 .story-stage { position: relative; min-height: 0; }
-.story-map { position: absolute; inset: 0; }
+/* Más específico que .maplibregl-map { position: relative }, cuyo CSS ahora llega después (carga diferida). */
+.story-stage .story-map { position: absolute; inset: 0; }
 .story-map .maplibregl-ctrl-attrib { font-size: 10px; }
 .story-state { position: absolute; inset: 0; display: grid; place-items: center; color: var(--s-muted); background: rgba(16, 24, 44, 0.6); }
 
@@ -135,3 +136,86 @@
 @media (prefers-reduced-motion: reduce) {
   .scene-year, .summary-card { animation: none; }
 }
+
+/* ---------- Pantalla única: pestañas Hoy / Calendario / 40 años ---------- */
+.story.v-hoy, .story.v-calendario { grid-template-rows: auto minmax(0, 1fr); }
+.story-tabs { display: inline-flex; gap: 4px; background: var(--s-bg); border: 1px solid var(--s-line); border-radius: 999px; padding: 3px; }
+.story-tabs button {
+  background: transparent; color: var(--s-text); border: 0; border-radius: 999px; padding: 7px 16px;
+  font-weight: 600; cursor: pointer; min-height: 38px;
+}
+.story-tabs button:hover { background: rgba(244, 231, 207, 0.08); }
+.story-tabs button[aria-current='page'] { background: var(--maize); color: var(--night); }
+
+.story.v-hoy .story-main { grid-template-columns: minmax(0, 1fr) minmax(340px, 400px); }
+.story.v-calendario .story-main { grid-template-columns: minmax(0, 1fr) minmax(420px, 760px); }
+
+/* Halo de la chacra con el semáforo de la campaña */
+.story-plot.lv-verde { box-shadow: 0 0 0 7px rgba(127, 212, 151, 0.45), 0 4px 14px rgba(0, 0, 0, 0.5); }
+.story-plot.lv-ambar { box-shadow: 0 0 0 7px rgba(242, 192, 99, 0.5), 0 4px 14px rgba(0, 0, 0, 0.5); }
+.story-plot.lv-rojo { box-shadow: 0 0 0 7px rgba(255, 138, 107, 0.55), 0 4px 14px rgba(0, 0, 0, 0.5); animation: plot-pulse 2.4s ease-in-out infinite; }
+@keyframes plot-pulse { 50% { box-shadow: 0 0 0 13px rgba(255, 138, 107, 0.18), 0 4px 14px rgba(0, 0, 0, 0.5); } }
+
+.scene-kicker { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--maize); font-weight: 700; }
+.scene-legend { font-size: 0.78rem; color: var(--s-muted); display: flex; align-items: center; gap: 8px; }
+.scene-legend i { width: 14px; height: 14px; border-radius: 4px; flex: none; }
+
+/* Hoy: decisión + tres alertas */
+.story-side .decision { border-radius: 14px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; }
+.today-alerts { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.today-alert {
+  display: grid; grid-template-columns: auto 1fr; gap: 10px; padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.04); border: 1px solid var(--s-line); border-left: 4px solid currentColor; border-radius: 10px;
+}
+.today-alert.rojo { color: #ff8a6b; }
+.today-alert.ambar { color: #f2c063; }
+.today-alert.verde { color: #7fd497; }
+.ta-icon { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: rgba(255, 255, 255, 0.06); }
+.ta-body { color: var(--s-text); display: grid; gap: 3px; min-width: 0; }
+.ta-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.ta-head b { font-size: 0.98rem; }
+.ta-pill { font-size: 0.72rem; font-weight: 700; border-radius: 999px; padding: 2px 9px; color: var(--night); }
+.ta-pill.rojo { background: #ff8a6b; }
+.ta-pill.ambar { background: #f2c063; }
+.ta-pill.verde { background: #7fd497; }
+.ta-verdict { margin: 0; font-weight: 600; font-size: 0.9rem; }
+.ta-action { margin: 0; font-size: 0.86rem; color: var(--s-muted); line-height: 1.4; }
+.ta-action span { color: var(--s-text); font-weight: 600; }
+.today-links { display: flex; flex-direction: column; gap: 10px; align-items: stretch; }
+.today-links .btn-cta { justify-content: center; border: 0; cursor: pointer; }
+.today-more { color: var(--s-muted); font-size: 0.85rem; text-align: center; }
+.today-more:hover { color: var(--s-text); }
+
+/* Calendario: hoja de papel sobre el panel oscuro (la rueda usa los estilos de la app) */
+.story-side:has(.cal-sheet) { background: var(--paper); color: var(--ink); }
+.cal-sheet .kicker { color: var(--potato); }
+.cal-sheet .cal-title { font-size: 1.3rem; text-transform: none; letter-spacing: 0; color: var(--ink); margin: 2px 0 6px; }
+.cal-tip { margin: 0 0 14px; color: var(--ink-soft); font-size: 0.92rem; }
+.cal-sheet .gp { grid-template-columns: 1fr; }
+
+/* Respaldo sin WebGL */
+.story-flat .map { height: 100%; border-radius: 0; }
+.flat-note {
+  position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); z-index: 500; margin: 0;
+  background: rgba(16, 24, 44, 0.85); color: var(--s-text); font-size: 0.8rem; padding: 6px 12px; border-radius: 999px;
+}
+
+@media (min-width: 1280px) {
+  .story.v-calendario .cal-sheet .gp { grid-template-columns: minmax(280px, 340px) minmax(0, 1fr); }
+}
+@media (max-width: 900px) {
+  .story.v-hoy .story-main, .story.v-calendario .story-main { grid-template-columns: 1fr; }
+  .story-tabs { order: 5; width: 100%; }
+  .story-tabs button { flex: 1; }
+  /* En el celular la respuesta va primero y el mapa debajo. */
+  .story.v-hoy .story-side { order: -1; border-top: 0; }
+  .story.v-hoy .story-stage, .story.v-calendario .story-stage { height: 46dvh; }
+  .story.v-calendario .story-side { order: -1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .story-plot.lv-rojo { animation: none; }
+}
+
+/* Mientras baja el módulo del mapa: fondo de noche andina, sin bloquear el panel */
+.story-map-loading { background: radial-gradient(ellipse at 50% 60%, #24345a, var(--s-bg) 70%); }
+.story-stage > .error { position: absolute; inset: auto 16px 16px 16px; margin: 0; }
