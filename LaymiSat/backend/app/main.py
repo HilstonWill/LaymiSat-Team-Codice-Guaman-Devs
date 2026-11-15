@@ -33,7 +33,9 @@ app = FastAPI(
     redoc_url=None,
 )
 
-_origins = os.environ.get("LAYMI_CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173")
+# The deployed frontend (Vercel) is allowed by default; LAYMI_CORS_ORIGINS still overrides the whole list.
+_DEFAULT_ORIGINS = "http://localhost:5173,http://127.0.0.1:5173,https://qullqasat-frontend.vercel.app"
+_origins = os.environ.get("LAYMI_CORS_ORIGINS", _DEFAULT_ORIGINS)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[o.strip() for o in _origins.split(",") if o.strip()],
