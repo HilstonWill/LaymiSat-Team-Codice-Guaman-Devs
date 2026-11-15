@@ -19,6 +19,7 @@ import AlertCards from './components/AlertCards'
 import { ALERT_ICONS, ArrowDownIcon, PinIcon, PrintIcon } from './components/Icons'
 import CalendarGP from './components/CalendarGP'
 import DynamicAlerts from './components/DynamicAlerts'
+import { BestRotation, DecisionCard } from './components/FarmerViews'
 import CountUp from './components/CountUp'
 import CustomPointCard, { type TerrainState } from './components/CustomPointCard'
 import MapPicker from './components/MapPicker'
@@ -72,9 +73,35 @@ function initialLang(): Lang {
   return 'en'
 }
 
+/** Agricultor: solo lo necesario para decidir. Técnico: todos los datos (para jueces y extensionistas). */
+type Mode = 'farmer' | 'tech'
+function initialMode(): Mode {
+  const q = new URLSearchParams(window.location.search)
+  if (q.get('full') === '1' || q.get('modo') === 'tecnico') return 'tech'
+  try {
+    if (localStorage.getItem('laymisat-mode') === 'tech') return 'tech'
+  } catch {
+    /* almacenamiento no disponible */
+  }
+  return 'farmer'
+}
+
 export default function App() {
   const [lang, setLang] = useState<Lang>(initialLang)
   const t = DICTS[lang]
+  const [mode, setMode] = useState<Mode>(initialMode)
+  const isTech = mode === 'tech'
+  useEffect(() => {
+    try {
+      localStorage.setItem('laymisat-mode', mode)
+    } catch {
+      /* almacenamiento no disponible */
+    }
+  }, [mode])
+  const openFullRotations = () => {
+    setMode('tech')
+    window.setTimeout(() => document.getElementById('rotaciones')?.scrollIntoView({ behavior: 'smooth' }), 60)
+  }
   const [zones, setZones] = useState<Zone[]>([])
   const [catalog, setCatalog] = useState<CropsCatalog | null>(null)
   const [place, setPlace] = useState<Place>(DEFAULT_PLACE)
@@ -276,30 +303,47 @@ export default function App() {
                 Laymi<span>Sat</span>
               </h1>
             </div>
-            <div className="lang-toggle no-print" role="group" aria-label="Language / Idioma">
-              <button className={lang === 'en' ? 'on' : ''} aria-pressed={lang === 'en'} onClick={() => setLang('en')}>
-                EN
-              </button>
-              <button className={lang === 'es' ? 'on' : ''} aria-pressed={lang === 'es'} onClick={() => setLang('es')}>
-                ES
-              </button>
+            <div className="hero-toggles no-print">
+              <div className="lang-toggle mode-toggle" role="group" aria-label={t.mode.label}>
+                <button className={!isTech ? 'on' : ''} aria-pressed={!isTech} onClick={() => setMode('farmer')}>
+                  {t.mode.farmer}
+                </button>
+                <button
+                  className={isTech ? 'on' : ''}
+                  aria-pressed={isTech}
+                  title={t.mode.techHint}
+                  onClick={() => setMode('tech')}
+                >
+                  {t.mode.tech}
+                </button>
+              </div>
+              <div className="lang-toggle" role="group" aria-label="Language / Idioma">
+                <button className={lang === 'en' ? 'on' : ''} aria-pressed={lang === 'en'} onClick={() => setLang('en')}>
+                  EN
+                </button>
+                <button className={lang === 'es' ? 'on' : ''} aria-pressed={lang === 'es'} onClick={() => setLang('es')}>
+                  ES
+                </button>
+              </div>
             </div>
           </div>
           <p className="hero-problem">{heroProblem ?? t.heroTagline}</p>
-          <p className="hero-sub">{heroProblem ? t.heroTagline : t.heroSub}</p>
+          {isTech && <p className="hero-sub">{heroProblem ? t.heroTagline : t.heroSub}</p>}
           <div className="hero-actions no-print">
             <a className="btn btn-cta" href="#alertas">
               {t.heroCta} <ArrowDownIcon size={18} />
             </a>
-            <span className="challenge">{t.challenge}</span>
+            {isTech && <span className="challenge">{t.challenge}</span>}
           </div>
-          <div className="badges">
-            {t.heroBadges.map((b) => (
-              <span key={b} className="badge">
-                {b}
-              </span>
-            ))}
-          </div>
+          {isTech && (
+            <div className="badges">
+              {t.heroBadges.map((b) => (
+                <span key={b} className="badge">
+                  {b}
+                </span>
+              ))}
+            </div>
+          )}
           <p className="print-only" style={{ marginTop: 8 }}>
             {t.printHeader} · {placeName} · {fmtNum(place.altitude, lang)} m · {t.generated}{' '}
             {new Date().toLocaleDateString(lang === 'en' ? 'en-US' : 'es-PE')}
@@ -326,6 +370,13 @@ export default function App() {
               {!zone && <option value="custom">{t.pickedPoint}</option>}
             </select>
           </label>
+          {!isTech && (
+            <span className="field">
+              {t.altitude}
+              <strong>{fmtNum(place.altitude, lang)} m</strong>
+            </span>
+          )}
+          {isTech && (
           <label className="field">
             <span>
               {t.altitude}: <strong>{fmtNum(place.altitude, lang)} m</strong>
@@ -339,6 +390,8 @@ export default function App() {
               onChange={(e) => setPlace({ ...place, altitude: Number(e.target.value) })}
             />
           </label>
+          )}
+          {isTech && (
           <details className="advanced">
             <summary>{t.heroAdvanced}</summary>
             <label className="field">
@@ -357,6 +410,7 @@ export default function App() {
               <span id="adj-help" className="help">{t.plantAdjustHelp}</span>
             </label>
           </details>
+          )}
           <span className="spacer" />
           <button className="btn btn-secondary" onClick={() => window.print()}>
             <PrintIcon size={18} /> {t.print}
@@ -427,7 +481,26 @@ export default function App() {
                 </>
               ) : null}
             </div>
-            {report && insight && (
+            {report && insight && !isTech && (
+              <>
+                <DecisionCard alerts={report.alerts} window={insight.win} t={t} />
+                <nav className="summary" aria-label={t.heroSummary}>
+                  <div className="summary-row">
+                    {report.alerts.map((a) => {
+                      const Icon = ALERT_ICONS[a.id]
+                      return (
+                        <a key={a.id} href={`#alert-${a.id}`} className={`summary-chip ${a.level}`}>
+                          <Icon size={18} />
+                          <span>{t.alertShort[a.id]}</span>
+                          <b>{t.levels[a.level]}</b>
+                        </a>
+                      )
+                    })}
+                  </div>
+                </nav>
+              </>
+            )}
+            {report && insight && isTech && (
               <>
                 <nav className="summary" aria-label={t.heroSummary}>
                   <span className="cal-label">{t.heroSummary}</span>
@@ -493,13 +566,14 @@ export default function App() {
                   <div className="kicker keep">
                     {t.season} {report.data.current_campaign}, {t.dataTo} {report.data.last_date}
                   </div>
-                  <h2 id="alertas">{t.alertsTitle}</h2>
+                  <h2 id="alertas">{isTech ? t.alertsTitle : t.farmer.alertsTitle}</h2>
                 </div>
-                <p>{t.alertsIntro(fmtNum(report.location.altitude, lang))}</p>
+                {isTech && <p>{t.alertsIntro(fmtNum(report.location.altitude, lang))}</p>}
               </div>
               <SectionBoundary message={t.sectionError} resetKey={report}>
                 <AlertCards
                   alerts={report.alerts}
+                  simple={!isTech}
                   t={t}
                   lang={lang}
                   aiEnabled={FEATURES.aiExplain && aiEnabled}
@@ -514,6 +588,7 @@ export default function App() {
               )}
             </section>
 
+            {isTech && (
             <section aria-labelledby="altura-helada">
               <div className="section-head">
                 <div>
@@ -525,8 +600,9 @@ export default function App() {
                 <TrendCharts report={report} lang={lang} part="altitude" />
               </SectionBoundary>
             </section>
+            )}
 
-            {FEATURES.ndvi && (
+            {isTech && FEATURES.ndvi && (
               <section aria-labelledby="ndvi">
                 <div className="section-head">
                   <div>
@@ -540,7 +616,7 @@ export default function App() {
               </section>
             )}
 
-            {FEATURES.calendar && (
+            {isTech && FEATURES.calendar && (
               <section aria-labelledby="calendario">
                 <div className="section-head">
                   <div>
@@ -557,7 +633,7 @@ export default function App() {
           </>
         )}
 
-        {report && (
+        {report && isTech && (
           <section aria-labelledby="tendencias" className="evidence">
             <details>
               <summary>
@@ -574,7 +650,20 @@ export default function App() {
           </section>
         )}
 
-        {catalog && (
+        {catalog && !isTech && best && (
+          <section aria-labelledby="que-sembrar">
+            <div className="section-head">
+              <div>
+                <div className="kicker">{t.rotKicker}</div>
+                <h2 id="que-sembrar">{t.farmer.sowTitle}</h2>
+              </div>
+              <p>{t.farmer.sowIntro}</p>
+            </div>
+            <BestRotation best={best} t={t} onMore={openFullRotations} />
+          </section>
+        )}
+
+        {catalog && isTech && (
           <section aria-labelledby="rotaciones">
             <div className="section-head">
               <div>
@@ -610,7 +699,7 @@ export default function App() {
           </section>
         )}
 
-        {report && (
+        {report && isTech && (
           <section aria-labelledby="fuentes" className="evidence">
             <details>
               <summary>

@@ -40,6 +40,45 @@ INDICATORS_EN = {
     "tmax_mean": ("Mean Tmax", "°C"),
     "tmean_mean": ("Mean temperature", "°C"),
 }
+# Variables de NASA POWER que usa de verdad cada indicador (fuente única: no se confía en el JSON).
+INDICATOR_VARS = {
+    "days_tmin_below_m2": [
+        "T2M_MIN"
+    ],
+    "share_rain_2nd_half_gt25": [
+        "PRECTOTCORR"
+    ],
+    "share_gwet_below_p15": [
+        "GWETTOP"
+    ],
+    "days_frost": [
+        "T2M_MIN"
+    ],
+    "days_chuno": [
+        "T2M_MIN"
+    ],
+    "share_dry_spell_ge10": [
+        "PRECTOTCORR"
+    ],
+    "days_rain_gt45": [
+        "PRECTOTCORR"
+    ],
+    "monthly_precip": [
+        "PRECTOTCORR"
+    ],
+    "thermal_amplitude": [
+        "T2M_MAX",
+        "T2M_MIN"
+    ],
+    "tmax_mean": [
+        "T2M_MAX"
+    ],
+    "tmean_mean": [
+        "T2M_MAX",
+        "T2M_MIN"
+    ],
+}
+
 # Frase simple de "qué dicen los datos", según si el cambio es bueno o malo para la chacra.
 SENTENCES = {
     "es": {
@@ -189,7 +228,7 @@ def calendar_comparison(
                 "page": m.get("page"),
                 "source_url": m.get("source_url"),
                 "indicator": ind,
-                "nasa_variables": m["nasa_variables"],
+                "nasa_variables": INDICATOR_VARS[ind],
                 "name": m["name_en"] if en else m["name"],
                 "milestone": m["milestone_en"] if en else m["milestone"],
                 "criterion": m["criterion_en"] if en else m["criterion"],
@@ -199,6 +238,8 @@ def calendar_comparison(
                 "trend": trend,
                 "plain_before": plain_value(float(e), int(e_s.notna().sum()), unit_es, lang),
                 "plain_now": plain_value(float(r), int(r_s.notna().sum()), unit_es, lang),
+                "n_early": int(e_s.notna().sum()),
+                "n_recent": int(r_s.notna().sum()),
                 "indicator_label": label,
                 "unit": unit,
                 "early": None if math.isnan(e) else round(float(e), 2),

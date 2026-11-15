@@ -74,3 +74,15 @@ def test_calendar_trend_and_plain_language():
     assert trend_of(6.7, 13.3, "higher_is_better", "% de años") == "same"
     assert plain_value(13.33, 15, "% de años", "es") == "2 de 15 años"
     assert plain_value(0.7, 15, "días/mes", "es") == "0,7 días al mes"
+
+
+def test_calendar_nasa_variables_match_indicator():
+    """La variable NASA que se muestra es la que se usa en el cálculo (antes noviembre y enero decían T2M_MIN)."""
+    from app.calendar_gp import INDICATOR_VARS
+
+    cal = load_calendar()
+    by_month = {m["month"]: m for m in cal["months"]}
+    assert by_month[11]["indicator"] == "share_dry_spell_ge10" and INDICATOR_VARS["share_dry_spell_ge10"] == ["PRECTOTCORR"]
+    assert INDICATOR_VARS["monthly_precip"] == ["PRECTOTCORR"]
+    for m in cal["months"]:
+        assert m["nasa_variables"] == INDICATOR_VARS[m["indicator"]]

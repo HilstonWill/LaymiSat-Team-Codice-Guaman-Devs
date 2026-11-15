@@ -7,8 +7,7 @@
       "quechua": "Chacra Yapuy Quilla",
       "milestone": "Mes de abrir las tierras (roturar las chacras) para la siembra.",
       "nasa_variables": [
-        "T2M_MIN",
-        "PRECTOTCORR"
+        "T2M_MIN"
       ],
       "criterion": "Sin descensos térmicos bajo −2 °C al roturar.",
       "indicator": "days_tmin_below_m2",
@@ -28,8 +27,7 @@
       "quechua": "Coya Raymi Quilla",
       "milestone": "Se siembra el maíz (sara tarpuy) y la papa temprana (mawai papa tarpuy).",
       "nasa_variables": [
-        "PRECTOTCORR",
-        "RH2M"
+        "PRECTOTCORR"
       ],
       "criterion": "Lluvia > 25 mm en la segunda quincena para la siembra temprana.",
       "indicator": "share_rain_2nd_half_gt25",
@@ -49,7 +47,6 @@
       "quechua": "Uma Raymi Quilla",
       "milestone": "Se cuidan las sementeras de pájaros, perdices y zorrillos (oxear con la honda).",
       "nasa_variables": [
-        "PRECTOTCORR",
         "GWETTOP"
       ],
       "criterion": "Humedad superficial del suelo bajo el percentil 15 = estrés para lo sembrado.",
@@ -70,7 +67,7 @@
       "quechua": "Aya Marcay Quilla",
       "milestone": "Gran falta de agua del cielo: mes de regar las sementeras (chacra carpay, yaku wanay quilla).",
       "nasa_variables": [
-        "T2M_MIN"
+        "PRECTOTCORR"
       ],
       "criterion": "Años con 10 o más días seguidos casi sin lluvia en el mes.",
       "indicator": "share_dry_spell_ge10",
@@ -90,8 +87,7 @@
       "quechua": "Capac Inti Raymi Quilla",
       "milestone": "Se siembran papas, ocas, quinua y maíz de temporal con las lluvias («se a de senbrar papas, oca s y quinua»).",
       "nasa_variables": [
-        "PRECTOTCORR",
-        "ALLSKY_SFC_SW_DWN"
+        "PRECTOTCORR"
       ],
       "criterion": "Lluvia > 25 mm en la segunda quincena para la siembra de temporal.",
       "indicator": "share_rain_2nd_half_gt25",
@@ -111,7 +107,7 @@
       "quechua": "Camay Quilla",
       "milestone": "Capac Raymi: gran aguacero, tiempo de lluvias y de aporcar; se comen papa y maíz tiernos.",
       "nasa_variables": [
-        "T2M_MIN"
+        "PRECTOTCORR"
       ],
       "criterion": "Lluvia del mes (época de aporque).",
       "indicator": "monthly_precip",
@@ -172,7 +168,7 @@
       "milestone": "Madura el maíz y las papas; se cuidan de ladrones y animales.",
       "nasa_variables": [
         "T2M_MAX",
-        "RH2M"
+        "T2M_MIN"
       ],
       "criterion": "Baja la humedad y crece la amplitud térmica.",
       "indicator": "thermal_amplitude",
@@ -192,8 +188,7 @@
       "quechua": "Hatun Cusqui Aymoray Quilla",
       "milestone": "Mes de la cosecha: segar y amontonar el maíz; heladas para el chuño.",
       "nasa_variables": [
-        "T2M_MIN",
-        "RH2M"
+        "T2M_MIN"
       ],
       "criterion": "Heladas secas (Tmin < 0 °C) favorables para el chuño.",
       "indicator": "days_chuno",
@@ -213,8 +208,7 @@
       "quechua": "Haucai Cusqui Quilla",
       "milestone": "Mes del descanso de la cosecha: turno de la cava (cosecha) de la papa.",
       "nasa_variables": [
-        "T2M_MAX",
-        "ALLSKY_SFC_SW_DWN"
+        "T2M_MAX"
       ],
       "criterion": "Estabilidad térmica para almacenar.",
       "indicator": "tmax_mean",
@@ -234,8 +228,8 @@
       "quechua": "Chacra Conacuy Quilla",
       "milestone": "Mes de la repartición de tierras; se lleva el maíz y la papa de la cosecha.",
       "nasa_variables": [
-        "T2M_MIN",
-        "T2M_MAX"
+        "T2M_MAX",
+        "T2M_MIN"
       ],
       "criterion": "Anomalía térmica acumulada para planificar.",
       "indicator": "tmean_mean",

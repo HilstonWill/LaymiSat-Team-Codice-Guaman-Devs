@@ -130,6 +130,19 @@ El orden de las alertas es fijo (helada, agua, calendario). No se reordenan por 
 | **Línea de cultivos** | Cada secuencia es una franja de 6 bloques coloreados por familia: papa (morado), otros tubérculos (lila), granos (maíz), leguminosas (verde), descanso/purum (rayado). Se ve sin leer que la actual repite papa y que la alternativa mete leguminosas y descanso. Cada bloque tiene el nombre completo para lectores de pantalla. |
 | **Rotaciones** | Primero 3 tarjetas de resultado: secuencia en una línea, puntaje con color, "Fuerte en / Débil en" (tomado de los puntajes, ≥ 70 y < 45). Las prioridades, el suelo, los 18 selectores, las barras, la cobertura del suelo, los riesgos y los vacíos de información van en "Personalizar mi rotación" (plegado). |
 
+### Modo agricultor y modo técnico (`App.tsx`, `FarmerViews.tsx`)
+Un interruptor **Agricultor | Técnico** en la portada (junto a EN/ES). Por defecto se abre en **Agricultor**; la elección se guarda en `localStorage` (`laymisat-mode`). Con `?modo=tecnico` o `?full=1` se abre en Técnico (útil para los jueces).
+
+| Modo agricultor (ver poco, decidir rápido) | Solo en modo técnico |
+|---|---|
+| Mapa + "Mi ubicación" (la altitud se lee, no se ajusta) | Control de altitud y "Avanzado" (ajuste de helada) |
+| Tarjeta **"¿Qué hago ahora?"**: color del peor semáforo, título corto, la acción de esa alerta y "Mejores días para sembrar" | Las 4 cifras de la ficha (°C/década, % de campañas…) y la nota de la celda NASA POWER |
+| 3 chips de semáforo | Insignias, subtítulo y nombre del reto en la portada |
+| 3 alertas en modo `simple`: pregunta, veredicto, medidor y "Qué hacer" (sin titular con cifras ni "Detalle técnico") | Titular con cifras y "Detalle técnico" de cada alerta |
+| **Qué sembrar**: la mejor rotación en pasos numerados (1 → 2 → …), una etiqueta ("Buena opción") y un solo "Ojo:" | ¿A qué altura hiela?, calendario de Guaman Poma, evidencia de 40 años, comparador completo y fuentes |
+
+Reglas: en modo agricultor, **una sola acción por tarjeta**, nada de unidades técnicas y como máximo 3 colores con significado (verde, ámbar, rojo). Toda sección nueva entra primero en modo técnico; pasa a modo agricultor solo si responde "¿qué hago?" en una frase. "Ver la comparación completa" cambia a Técnico y baja hasta el comparador.
+
 ### Rueda del año andino (`CalendarGP.tsx`)
 | Pieza | Regla de UX |
 |---|---|
@@ -138,6 +151,9 @@ El orden de las alertas es fijo (helada, agua, calendario). No se reordenan por 
 | **Detalle en 3 líneas** | *Guaman Poma escribió* (con enlace a la página del manuscrito) → *La NASA mide hoy* (etiqueta "Mejor/Peor/Casi igual que antes" + cifra simple: "4 de 15 años; antes 2 de 15") → *Qué hacer* (y "O sembrar en su lugar" si empeoró o no coincide). Lo técnico (unidades, periodos, variables) va plegado en "Detalle técnico". |
 | **Escenario andino** | La rueda va sobre un fondo de noche andina (azul `--night`) con la misma franja textil de la portada arriba y abajo. Por fuera, un anillo **tocapu** (48 rombos en maíz, terracota, morado papa y verde) y un anillo de **estaciones** (lluvias nov–mar, transición abr/oct, seca may–sep). En el centro, la **chakana** (cruz andina escalonada) en contorno maíz, y un **Inti** (sol) que gira despacio marca el mes de hoy. Todo es decorativo (`aria-hidden`): el significado está en la leyenda. |
 | **Movimiento** | Al cargar, los meses aparecen uno a uno (55 ms entre cada uno), como si la rueda girara; el mes elegido brilla con un borde blanco. Con `prefers-reduced-motion` no hay animaciones. Al imprimir, fondo blanco y sin franjas. |
+| **La pregunta del mes** | El detalle abre con la pregunta del agricultor según el indicador ("¿Faltará el agua?", "¿Llega la lluvia para sembrar?"), con su ícono (sol, copo, gota, termómetro) y la respuesta en una frase armada con los mismos números del gráfico ("Peor que antes: 4 de cada 15 años con veranillo de 10 días o más (antes, 2)"). Si el mes no coincide con el códice, la respuesta empieza con "Rara vez". Después van "Qué hacer" y, más pequeño, lo que escribió Guaman Poma. Los 15 puntos son pictogramas del fenómeno. |
+| **Rueda con avisos** | Leyenda de 3: se mantiene, "Ojo: cambió o no coincide" y contexto. Los meses que empeoraron o no coinciden llevan un "!" sobre la rueda. El anillo de estaciones se explica en una línea, sin leyenda propia. |
+| **Dato NASA como gráfico** | En el detalle, "La NASA mide hoy" compara **Antes (1984–1998)** y **Hoy (2011–2025)**: si el indicador es "% de años", dos filas de 15 puntos (cada punto una campaña, los rellenos cumplen la condición; cuentan campañas, no siguen su orden); si es días, mm o °C, dos barras a la misma escala. La fila de hoy toma el color del veredicto (rojo peor, verde mejor, azul puna igual). Debajo, la fuente exacta: la variable NASA POWER que de verdad usa el cálculo (se deriva del indicador, no del JSON) y si se corrigió por altitud (solo las temperaturas). |
 | **Sin ruido** | Un cambio cuenta solo si supera el 15 % relativo **y** un mínimo absoluto (0,5 días/mes, 10 puntos de % de años, 0,3 °C). Así 0,0 → 0,1 días no se presenta como cambio. |
 | **Accesibilidad** | Cada mes es un botón (`role=button`, `aria-pressed`, etiqueta "Noviembre, Aya Marcay Quilla: Empeoró"); flechas ←/→, Inicio y Fin cambian de mes; el detalle se anuncia con `aria-live`. Botones ‹ › de 40–44 px. En pantallas < 860 px la rueda va arriba y el detalle debajo. |
 

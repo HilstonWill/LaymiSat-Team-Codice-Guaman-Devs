@@ -62,6 +62,110 @@ const SHORT: Record<Lang, string[]> = {
   en: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
 }
 
+type Glyph = 'frost' | 'sun' | 'drop' | 'thermo'
+const GLYPH: Record<string, Glyph> = {
+  days_tmin_below_m2: 'frost',
+  days_frost: 'frost',
+  days_chuno: 'frost',
+  share_dry_spell_ge10: 'sun',
+  tmax_mean: 'sun',
+  share_rain_2nd_half_gt25: 'drop',
+  share_gwet_below_p15: 'drop',
+  days_rain_gt45: 'drop',
+  monthly_precip: 'drop',
+  thermal_amplitude: 'thermo',
+  tmean_mean: 'thermo',
+}
+
+function GlyphIcon({ kind, className }: { kind: Glyph; className?: string }) {
+  const common = { width: 18, height: 18, viewBox: '0 0 24 24', 'aria-hidden': true as const, className }
+  if (kind === 'sun')
+    return (
+      <svg {...common}>
+        <circle cx="12" cy="12" r="4.5" fill="currentColor" />
+        <path
+          d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+      </svg>
+    )
+  if (kind === 'frost')
+    return (
+      <svg {...common}>
+        <path
+          d="M12 2v20M3.3 7l17.4 10M3.3 17L20.7 7M9 4l3 2 3-2M9 20l3-2 3 2"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          fill="none"
+        />
+      </svg>
+    )
+  if (kind === 'thermo')
+    return (
+      <svg {...common}>
+        <path d="M10 4a2 2 0 0 1 4 0v9.5a4 4 0 1 1-4 0z" fill="none" stroke="currentColor" strokeWidth="2" />
+        <circle cx="12" cy="17" r="2" fill="currentColor" />
+      </svg>
+    )
+  return (
+    <svg {...common}>
+      <path d="M12 3c3 4.5 6 7.6 6 11a6 6 0 0 1-12 0c0-3.4 3-6.5 6-11z" fill="currentColor" />
+    </svg>
+  )
+}
+
+/**
+ * Comparación visual "antes vs hoy" del indicador NASA del mes.
+ * - % de años: una fila de puntos por periodo (cada punto es una campaña; los rellenos cumplen la condición).
+ *   Los puntos cuentan campañas, no siguen su orden cronológico.
+ * - Otras unidades: dos barras a la misma escala.
+ */
+function DataCompare({ row, w }: { row: CalendarRow; w: Dict['wheel'] }) {
+  const isShare = row.unit.startsWith('%')
+  const tone = row.trend === 'worse' ? 'worse' : row.trend === 'better' ? 'better' : 'same'
+  const periods = [
+    { key: 'early', label: w.then, period: row.early_period, value: row.early, n: row.n_early, text: row.plain_before },
+    { key: 'recent', label: w.now, period: row.recent_period, value: row.recent, n: row.n_recent, text: row.plain_now },
+  ]
+  const max = Math.max(Math.abs(row.early ?? 0), Math.abs(row.recent ?? 0), 0.0001) * 1.15
+  return (
+    <div className={`gp-compare tone-${tone}`}>
+      {periods.map((p) => {
+        const filled = isShare && p.value !== null ? Math.round((p.value * p.n) / 100) : 0
+        return (
+          <div key={p.key} className={`gp-cmp-row is-${p.key}`}>
+            <div className="gp-cmp-label">
+              <b>{p.label}</b>
+              <span>{p.period}</span>
+            </div>
+            {isShare ? (
+              <div className="gp-dots gp-glyphs" role="img" aria-label={p.text}>
+                {Array.from({ length: p.n }, (_, i) => (
+                  <GlyphIcon key={i} kind={GLYPH[row.indicator] ?? 'drop'} className={i < filled ? 'on' : ''} />
+                ))}
+              </div>
+            ) : (
+              <div className="gp-bar" role="img" aria-label={p.text}>
+                <i style={{ width: `${p.value === null ? 0 : (Math.abs(p.value) / max) * 100}%` }} />
+              </div>
+            )}
+            <span className="gp-cmp-value">{p.text}</span>
+          </div>
+        )
+      })}
+      {isShare && <p className="gp-cmp-help">{w.dotHelp}</p>}
+      <p className="gp-source">
+        {row.nasa_variables.some((v) => v.startsWith('T2M'))
+          ? w.sourceTemp(row.nasa_variables.join(', '))
+          : w.sourceCell(row.nasa_variables.join(', '))}
+      </p>
+    </div>
+  )
+}
+
 export default function CalendarGP({ rows, t, lang }: { rows: CalendarRow[]; t: Dict; lang: Lang }) {
   const w = t.wheel
   const n = rows.length
@@ -100,6 +204,19 @@ export default function CalendarGP({ rows, t, lang }: { rows: CalendarRow[]; t: 
   const digits = row.unit === '°C' ? 1 : row.unit === 'mm' || row.unit.startsWith('%') ? 0 : 1
   const showInstead = (row.status === 'se_desfasa' || row.status === 'no_coincide') && row.alternative
   const trendClass = row.trend === 'worse' ? 'worse' : row.trend === 'better' ? 'better' : 'same'
+  // Respuesta en una frase, armada con los mismos números que el gráfico.
+  const what = w.what[row.indicator] ?? ''
+  // Si la condición del códice casi nunca se da, la respuesta lo dice primero ("Rara vez").
+  const lead = row.status === 'no_coincide' ? w.rarely : row.data_sentence
+  const answer = row.unit.startsWith('%')
+    ? w.answerShare(
+        lead,
+        Math.round(((row.recent ?? 0) * row.n_recent) / 100),
+        row.n_recent,
+        what,
+        Math.round(((row.early ?? 0) * row.n_early) / 100),
+      )
+    : w.answerValue(lead, row.plain_now, what, row.plain_before)
   const step = 360 / n
   const todayMid = -90 + todayIdx * step
   const [tdx, tdy] = pt(todayMid, R_TOC + 17)
@@ -162,6 +279,14 @@ export default function CalendarGP({ rows, t, lang }: { rows: CalendarRow[]; t: 
                 <text x={lx} y={ly + 4} textAnchor="middle">
                   {SHORT[lang][r.month - 1]}
                 </text>
+                {(r.status === 'se_desfasa' || r.status === 'no_coincide') && (
+                  <g className="gp-warn" aria-hidden="true">
+                    <circle cx={pt(mid, R_OUT - 14)[0]} cy={pt(mid, R_OUT - 14)[1]} r={8} />
+                    <text x={pt(mid, R_OUT - 14)[0]} y={pt(mid, R_OUT - 14)[1] + 4} textAnchor="middle">
+                      !
+                    </text>
+                  </g>
+                )}
               </g>
             )
           })}
@@ -195,16 +320,10 @@ export default function CalendarGP({ rows, t, lang }: { rows: CalendarRow[]; t: 
         </svg>
         <ul className="gp-legend" aria-hidden="true">
           <li className="st-se_mantiene">{t.status.se_mantiene}</li>
-          <li className="st-se_desfasa">{t.status.se_desfasa}</li>
-          <li className="st-no_coincide">{t.status.no_coincide}</li>
+          <li className="st-ojo">{w.watch}</li>
           <li className="st-informativo">{t.status.informativo}</li>
         </ul>
-        <ul className="gp-legend gp-seasons" aria-hidden="true">
-          <li className="rainy">{w.rainy}</li>
-          <li className="transition">{w.transition}</li>
-          <li className="dry">{w.dry}</li>
-          <li className="sun">{w.today}</li>
-        </ul>
+        <p className="gp-ring-note">{w.ringNote}</p>
         <p className="gp-summary">
           {w.summary(count('se_mantiene'), count('se_desfasa'), count('no_coincide'), count('informativo'))}
         </p>
@@ -226,25 +345,13 @@ export default function CalendarGP({ rows, t, lang }: { rows: CalendarRow[]; t: 
           </button>
         </header>
 
-        <section className="gp-line">
-          <span className="gp-label">{w.said}</span>
-          <p>{row.milestone}</p>
-          {row.source_url && row.page && (
-            <a className="gp-src" href={row.source_url} target="_blank" rel="noopener noreferrer">
-              {w.seeManuscript(row.page)}
-            </a>
-          )}
-        </section>
-
-        <section className="gp-line">
-          <span className="gp-label">{w.nasa}</span>
-          <p>
-            {row.data_sentence && <span className={`gp-trend ${trendClass}`}>{row.data_sentence}</span>}{' '}
-            {row.indicator_label}: <b>{row.plain_now}</b>{' '}
-            <span className="gp-before">
-              ({w.before}: {row.plain_before})
-            </span>
+        <section className={`gp-ask tone-${trendClass}`}>
+          <p className="gp-question">
+            <GlyphIcon kind={GLYPH[row.indicator] ?? 'drop'} className="gp-q-icon" />
+            {w.q[row.indicator] ?? row.indicator_label}
           </p>
+          <p className="gp-answer">{answer}</p>
+          <DataCompare row={row} w={w} />
           {row.status === 'no_coincide' && <p className="gp-note">{w.noMatch}</p>}
         </section>
 
@@ -259,6 +366,16 @@ export default function CalendarGP({ rows, t, lang }: { rows: CalendarRow[]; t: 
             )}
           </section>
         )}
+
+        <section className="gp-line gp-said">
+          <span className="gp-label">{w.said}</span>
+          <p>{row.milestone}</p>
+          {row.source_url && row.page && (
+            <a className="gp-src" href={row.source_url} target="_blank" rel="noopener noreferrer">
+              {w.seeManuscript(row.page)}
+            </a>
+          )}
+        </section>
 
         <details className="gp-tech">
           <summary>{w.technical}</summary>

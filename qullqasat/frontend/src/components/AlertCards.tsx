@@ -91,13 +91,15 @@ function AlertAi({ id, t, explain, resetKey }: {
   )
 }
 
-export default function AlertCards({ alerts, t, lang, aiEnabled = false, explain, resetKey }: {
+export default function AlertCards({ alerts, t, lang, aiEnabled = false, explain, resetKey, simple = false }: {
   alerts: Alert[]
   t: Dict
   lang: Lang
   aiEnabled?: boolean
   explain?: (id: AlertId) => Promise<Explanation>
   resetKey?: unknown
+  /** Modo agricultor: pregunta, veredicto, medidor y qué hacer; sin cifras ni detalle técnico. */
+  simple?: boolean
 }) {
   return (
     <div className="grid grid-3 alerts" aria-live="polite">
@@ -117,12 +119,12 @@ export default function AlertCards({ alerts, t, lang, aiEnabled = false, explain
             </h3>
             <p className={`verdict ${a.level}`}>{t.alertVerdict[a.id]?.[a.level]}</p>
             {meterFor(a, t, lang)}
-            <p className="headline">{a.headline}</p>
+            {!simple && <p className="headline">{a.headline}</p>}
             <div className="action">
               <span className="action-label">{t.whatToDo}</span> {a.action}
             </div>
             {aiEnabled && explain && <AlertAi id={a.id} t={t} explain={explain} resetKey={resetKey} />}
-            <details className="tech">
+            {!simple && <details className="tech">
               <summary>{t.technical}</summary>
               <p className="meta">
                 <b>{a.id} · {a.name}.</b> {t.trigger}: {a.trigger}
@@ -131,7 +133,7 @@ export default function AlertCards({ alerts, t, lang, aiEnabled = false, explain
                 {t.trendSince} ({tr.variable}): <b>{tr.direction}</b> · {tr.slope_per_decade > 0 ? '+' : ''}
                 {fmtNum(tr.slope_per_decade, lang, 2)} {tr.unit} · {pValue(tr.p_value, lang)}
               </p>
-            </details>
+            </details>}
           </article>
         )
       })}

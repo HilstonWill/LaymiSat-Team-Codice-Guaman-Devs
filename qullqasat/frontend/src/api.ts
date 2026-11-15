@@ -64,6 +64,9 @@ export interface CalendarRow {
   trend: 'better' | 'worse' | 'same' | 'up' | 'down'
   plain_before: string
   plain_now: string
+  indicator: string
+  n_early: number
+  n_recent: number
   nasa_variables: string[]
   indicator_label: string
   unit: string
