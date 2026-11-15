@@ -505,9 +505,6 @@ export default function StoryMode({ initialView = 'zonas' }: { initialView?: Vie
                 ) : (
                   !rotError && <p className="rot-loading">{t.rotLoading}</p>
                 )}
-                <a className="rot-tech-link" href="?modo=tecnico#rotaciones">
-                  {t.rotTechLink}
-                </a>
               </div>
             </section>
           )}

@@ -9,7 +9,6 @@ const es = {
   todayRotSub: 'La que mejor se adapta a tu zona con el clima 2011–2025',
   todayRotCta: 'Comparar con mi rotación',
   rotLoading: 'Preparando el comparador de rotaciones…',
-  rotTechLink: 'Ver el comparador técnico completo (todas las secuencias, cobertura del suelo y supuestos) →',
   rp: {
     kicker: (place: string) => `${place} · clima NASA 2011–2025`,
     title: 'Planifica la rotación de tu chacra',
@@ -192,7 +191,6 @@ const en: StoryDict = {
   todayRotSub: 'The best fit for your area with the 2011–2025 climate',
   todayRotCta: 'Compare with my rotation',
   rotLoading: 'Preparing the rotation comparator…',
-  rotTechLink: 'See the full technical comparator (all sequences, soil cover and assumptions) →',
   rp: {
     kicker: (place) => `${place} · NASA climate 2011–2025`,
     title: 'Plan the rotation of your plot',
