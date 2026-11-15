@@ -58,7 +58,7 @@ function initialLang(): Lang {
   } catch {
     /* almacenamiento no disponible */
   }
-  return 'es'
+  return 'en' // inglés por defecto (revisores); el español queda a un clic en EN | ES
 }
 
 interface Row {
@@ -414,7 +414,16 @@ export default function StoryMode({ initialView = 'zonas' }: { initialView?: Vie
             />
           )}
           {!ready && (
-            <div className="story-state">{error ? t.error : view === 'zonas' ? t.zonesLoading : t.loading}</div>
+            <div className="story-state">
+              {error ? t.error : view === 'zonas' ? t.zonesLoading : t.loading}
+              {error && (
+                <div>
+                  <button type="button" className="retry-btn" onClick={() => window.location.reload()}>
+                    {lang === 'en' ? 'Try again' : 'Reintentar'}
+                  </button>
+                </div>
+              )}
+            </div>
           )}
         </div>
 

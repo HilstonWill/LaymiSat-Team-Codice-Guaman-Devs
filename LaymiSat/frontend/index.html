@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="es">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -9,9 +9,24 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <title>LaymiSat</title>
+    <style>
+      html, body { margin: 0; background: #0f1a2e; }
+      .boot { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; color: #f4e7cf; font-family: 'Poppins', system-ui, sans-serif; }
+      .boot b { font-size: 1.4rem; letter-spacing: 0.04em; }
+      .boot-spin { width: 28px; height: 28px; border-radius: 50%; border: 3px solid rgba(224, 164, 58, 0.3); border-top-color: #e0a43a; animation: boot-spin 0.9s linear infinite; }
+      @keyframes boot-spin { to { transform: rotate(360deg); } }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Pantalla de arranque: se ve al instante y React la sustituye al montar, así nunca hay una página en blanco. -->
+      <div class="boot" role="status" aria-live="polite">
+        <span class="boot-spin" aria-hidden="true"></span>
+        <b>LaymiSat</b>
+        <span>Loading the app…</span>
+      </div>
+    </div>
+    <noscript>LaymiSat needs JavaScript enabled to show the map and the agroclimatic alerts.</noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

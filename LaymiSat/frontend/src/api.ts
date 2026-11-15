@@ -239,7 +239,7 @@ const setWaking = (v: boolean) => {
   serverStatus.dispatchEvent(new CustomEvent('change', { detail: v }))
 }
 export const isServerWaking = () => waking
-const WAKE_AFTER_MS = 6000 // un informe normal tarda ~3 s; más de 6 s es casi seguro el servidor despertando
+const WAKE_AFTER_MS = 2500 // avisa pronto: con el servidor dormido la pantalla no debe parecer colgada
 // Esperas entre reintentos: ~60 s en total, lo que tarda en despertar el servidor gratuito.
 const BACKOFF_MS = [1500, 3000, 5000, 8000, 10000, 12000, 15000]
 

@@ -1071,6 +1071,10 @@ input[type='range'] { accent-color: var(--accent); }
 .wake-notice b { font-family: 'Poppins', system-ui, sans-serif; }
 .wake-notice p { margin: 2px 0 0; font-size: 0.88rem; line-height: 1.45; color: #cfd5e3; }
 .wake-spin { flex: none; width: 20px; height: 20px; margin-top: 2px; border-radius: 50%; border: 3px solid rgba(224, 164, 58, 0.3); border-top-color: #e0a43a; animation: wake-spin 0.9s linear infinite; }
+.wake-notice .wake-secs { font-size: 0.8rem; color: #e0a43a; font-variant-numeric: tabular-nums; }
+.wake-bar { margin-top: 8px; height: 4px; border-radius: 2px; background: rgba(224, 164, 58, 0.2); overflow: hidden; }
+.wake-bar i { display: block; height: 100%; background: #e0a43a; transition: width 1s linear; }
+.story-state .retry-btn { margin-top: 12px; padding: 8px 18px; border-radius: 999px; border: 1px solid rgba(224, 164, 58, 0.7); background: transparent; color: inherit; font: inherit; cursor: pointer; }
 @keyframes wake-spin { to { transform: rotate(360deg); } }
 @keyframes wake-in { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
 @media (prefers-reduced-motion: reduce) { .wake-notice, .wake-spin { animation: none; } }
