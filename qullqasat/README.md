@@ -1,11 +1,14 @@
-# QullqaSat
+# LaymiSat
 
 **Alerta agroclimática y validación ancestral para la papa nativa de Cusco.**
 NASA Space Apps Challenge 2026 · Retos: *Be An Earth System Trend Detective!* + *Field Shift*.
 
-QullqaSat cruza 40 años de datos diarios de **NASA POWER** (1984 → hoy) con el calendario agrícola de
+LaymiSat cruza 40 años de datos diarios de **NASA POWER** (1984 → hoy) con el calendario agrícola de
 **Felipe Guaman Poma de Ayala (1615)** para responder a lo que decide una comunidad altoandina:
 *¿cuándo sembrar, con qué riesgo y con qué rotación?*
+
+> **Laymi**: sistema andino de rotación comunal por sectores. Cada año se siembra papa en un sector, luego otros
+> cultivos, y la tierra descansa varios años (purum). LaymiSat lo pone a prueba con datos satelitales.
 
 ## Qué hace
 
@@ -45,9 +48,10 @@ La carpeta `backend/cache/` trae ya descargadas las 2 celdas NASA POWER que cubr
 Cada punto se ajusta al centro de su celda POWER (0,5° × 0,625°), lo que limita la caché a unas 80 celdas en toda la región.
 La caché se refresca cada 3 días con un candado por celda y escritura atómica; si NASA POWER no responde, se usa la caché antigua.
 Guion de demo y pitch: [docs/DEMO.md](docs/DEMO.md).
+Guía del frontend para el equipo (cómo funciona cada sección, datos NASA y tareas pendientes): [docs/GUIA_FRONTEND.md](docs/GUIA_FRONTEND.md).
 
 ## Despliegue
-- **Backend** (Render/Railway): `uvicorn app.main:app --host 0.0.0.0 --port $PORT`; variables `QULLQA_CORS_ORIGINS=https://<tu-frontend>` y `QULLQA_PUBLIC_DOCS=0` para ocultar `/docs`. Antes de publicar, añadir un límite de peticiones por IP en el proxy.
+- **Backend** (Render/Railway): `uvicorn app.main:app --host 0.0.0.0 --port $PORT`; variables `LAYMI_CORS_ORIGINS=https://<tu-frontend>` y `LAYMI_PUBLIC_DOCS=0` para ocultar `/docs`. Antes de publicar, añadir un límite de peticiones por IP en el proxy.
 - **Frontend** (Vercel): `npm run build`; variable `VITE_API_URL=https://<tu-backend>`.
 
 ## API
