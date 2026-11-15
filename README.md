@@ -90,7 +90,7 @@ qullqasat/
 ```
 
 ### How we work
-**Team roles, file ownership and rules: [qullqasat/docs/EQUIPO.md](qullqasat/docs/EQUIPO.md)** (portada y alertas: Cristian · calendario: Yaqui · rotaciones: Will · tendencias: Raúl y Jennifer).
+**Team roles, file ownership and rules: [qullqasat/docs/EQUIPO.md](qullqasat/docs/EQUIPO.md)** · **Style & UX guide: [qullqasat/docs/ESTILO.md](qullqasat/docs/ESTILO.md)** (portada y alertas: Cristian · calendario: Yaqui · rotaciones: Will · tendencias: Raúl y Jennifer).
 
 1. Create a branch: `git checkout -b feat/<short-name>`.
 2. Make your change; keep the UI texts in **both** languages (`frontend/src/i18n.ts`).

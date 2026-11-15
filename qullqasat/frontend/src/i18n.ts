@@ -40,7 +40,7 @@ const en = {
   technical: 'Technical detail',
   trendSince: 'Trend since 1984',
   trigger: 'Trigger',
-  levels: { verde: 'Low', ambar: 'Attention', rojo: 'High' },
+  levels: { verde: 'Low risk', ambar: 'Attention', rojo: 'High risk' },
   trendsKicker: 'Trend detective',
   trendsTitle: '40 years of climate in the field',
   calendarKicker: 'Nueva corónica y buen gobierno · 1615',
@@ -114,6 +114,24 @@ const en = {
     'LaymiSat · NASA Space Apps Challenge 2026 · Data: NASA POWER (power.larc.nasa.gov), MODIS MOD13Q1 via ORNL DAAC, NASA SRTM via OpenTopoData. Calendar: Felipe Guaman Poma de Ayala, Nueva corónica y buen gobierno (1615). Map © OpenStreetMap. A support tool: it does not replace the judgement of the community or the agricultural extension agent.',
   aiNote:
     'AI disclosure: the software was written with the help of an AI coding assistant (Claude) from the team’s own design; data analysis uses NASA data and explicit rules, not generative AI.',
+  // --- portada y alertas (Cristian) ---
+  heroTagline: 'When to sow, with what risk, and which crop rotation — for native-potato farms in the high Andes of Cusco.',
+  heroSub: '40 years of NASA satellite data read alongside the 1615 Andean farming calendar of Guaman Poma de Ayala.',
+  heroCta: "See this plot's alerts",
+  heroBadges: ['NASA POWER · MODIS · SRTM', '40 years of daily data', 'Guaman Poma · 1615'],
+  heroAdvanced: 'Advanced',
+  heroSummary: 'This season at a glance',
+  heroPlotAltitude: 'Plot altitude',
+  heroAltSource: (src: string) => `source: ${src}`,
+  alertVerdict: {
+    AHS: { rojo: 'Very likely.', ambar: 'It could.', verde: 'Unlikely at this altitude.' },
+    AEH: { rojo: 'No — less rain than normal.', ambar: 'Just barely.', verde: 'Yes, normal rain so far.' },
+    ADS: { rojo: 'No — the rains are late.', ambar: 'With some delay.', verde: 'Yes, on time.' },
+  } as Record<'AHS' | 'AEH' | 'ADS', Record<'verde' | 'ambar' | 'rojo', string>>,
+  alertMeterFrost: (hits: string, n: string) => `Frost in ${hits} of the last ${n} seasons · line = alert threshold (half the seasons)`,
+  alertMeterRain: (pct: string) => `Rain so far: percentile ${pct} of 1991–2020 · line = dry threshold (P20)`,
+  alertMeterShift: (d: string) => `Rain onset ${d} days vs Coya Raymi · line = +21 days`,
+  alertShort: { AHS: 'Frost', AEH: 'Sowing rain', ADS: 'Calendar' } as Record<'AHS' | 'AEH' | 'ADS', string>,
 }
 
 type Dict = typeof en
@@ -158,7 +176,7 @@ const es: Dict = {
   technical: 'Detalle técnico',
   trendSince: 'Tendencia desde 1984',
   trigger: 'Detonador',
-  levels: { verde: 'Bajo', ambar: 'Atención', rojo: 'Alto' },
+  levels: { verde: 'Riesgo bajo', ambar: 'Atención', rojo: 'Riesgo alto' },
   trendsKicker: 'Detective de tendencias',
   trendsTitle: '40 años de clima en la chacra',
   calendarKicker: 'Nueva corónica y buen gobierno · 1615',
@@ -232,6 +250,24 @@ const es: Dict = {
     'LaymiSat · NASA Space Apps Challenge 2026 · Datos: NASA POWER (power.larc.nasa.gov), MODIS MOD13Q1 vía ORNL DAAC, NASA SRTM vía OpenTopoData. Calendario: Felipe Guaman Poma de Ayala, Nueva corónica y buen gobierno (1615). Mapa © OpenStreetMap. Herramienta de apoyo: no sustituye el criterio de la comunidad ni del técnico agrario.',
   aiNote:
     'Uso de IA: el software se escribió con ayuda de un asistente de programación con IA (Claude) a partir del diseño del propio equipo; el análisis usa datos de la NASA y reglas explícitas, no IA generativa.',
+  // --- portada y alertas (Cristian) ---
+  heroTagline: 'Cuándo sembrar, con qué riesgo y con qué rotación de cultivos, para las chacras de papa nativa de los Andes de Cusco.',
+  heroSub: '40 años de datos satelitales de la NASA leídos junto al calendario agrícola andino de Guaman Poma de Ayala (1615).',
+  heroCta: 'Ver las alertas de esta parcela',
+  heroBadges: ['NASA POWER · MODIS · SRTM', '40 años de datos diarios', 'Guaman Poma · 1615'],
+  heroAdvanced: 'Avanzado',
+  heroSummary: 'Esta campaña de un vistazo',
+  heroPlotAltitude: 'Altitud de la parcela',
+  heroAltSource: (src: string) => `fuente: ${src}`,
+  alertVerdict: {
+    AHS: { rojo: 'Muy probable.', ambar: 'Puede pasar.', verde: 'Poco probable a esta altitud.' },
+    AEH: { rojo: 'No: llovió menos de lo normal.', ambar: 'Apenas.', verde: 'Sí, lluvia normal hasta ahora.' },
+    ADS: { rojo: 'No: las lluvias vienen tarde.', ambar: 'Con algo de retraso.', verde: 'Sí, a tiempo.' },
+  } as Record<'AHS' | 'AEH' | 'ADS', Record<'verde' | 'ambar' | 'rojo', string>>,
+  alertMeterFrost: (hits: string, n: string) => `Heló en ${hits} de las últimas ${n} campañas · línea = umbral de alerta (la mitad)`,
+  alertMeterRain: (pct: string) => `Lluvia hasta hoy: percentil ${pct} de 1991–2020 · línea = umbral seco (P20)`,
+  alertMeterShift: (d: string) => `Inicio de lluvias ${d} días frente a Coya Raymi · línea = +21 días`,
+  alertShort: { AHS: 'Helada', AEH: 'Lluvia de siembra', ADS: 'Calendario' } as Record<'AHS' | 'AEH' | 'ADS', string>,
 }
 
 export const DICTS: Record<Lang, Dict> = { en, es }

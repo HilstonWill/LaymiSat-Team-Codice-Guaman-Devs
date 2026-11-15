@@ -1,28 +1,84 @@
-import type { Alert } from '../api'
+import type { Alert, Level } from '../api'
 import { fmtNum, pValue, type Dict, type Lang } from '../i18n'
+import { ALERT_ICONS } from './Icons'
+
+/** Medidor horizontal: relleno del valor + marca del umbral de la alerta. Ver docs/ESTILO.md › Medidor. */
+function Meter({ value, min, max, threshold, level, label }: {
+  value: number | null
+  min: number
+  max: number
+  threshold: number
+  level: Level
+  label: string
+}) {
+  if (value === null || Number.isNaN(value)) return null
+  const pct = (v: number) => Math.max(0, Math.min(100, ((v - min) / (max - min)) * 100))
+  return (
+    <div className="meter" role="img" aria-label={label}>
+      <div className="meter-track">
+        <i className={`meter-fill ${level}`} style={{ width: `${pct(value)}%` }} />
+        <i className="meter-threshold" style={{ left: `${pct(threshold)}%` }} />
+      </div>
+      <span className="meter-label">{label}</span>
+    </div>
+  )
+}
+
+function meterFor(a: Alert, t: Dict, lang: Lang) {
+  const m = a.metrics as Record<string, number | null>
+  const c = a.current as Record<string, number | string | null>
+  if (a.id === 'AHS') {
+    const p = m.event_probability_recent ?? null
+    const n = (m.recent_n as number | null) ?? 15
+    const hits = p === null ? null : Math.round(p * n)
+    return (
+      <Meter value={p === null ? null : p * 100} min={0} max={100} threshold={50} level={a.level}
+        label={t.alertMeterFrost(fmtNum(hits, lang), fmtNum(n, lang))} />
+    )
+  }
+  if (a.id === 'AEH') {
+    const pct = (c.percentile as number | null) ?? null
+    return (
+      <Meter value={pct} min={0} max={100} threshold={20} level={a.level}
+        label={t.alertMeterRain(fmtNum(pct, lang))} />
+    )
+  }
+  const shift = (c.shift_days as number | null) ?? null
+  return (
+    <Meter value={shift} min={-30} max={90} threshold={21} level={a.level}
+      label={shift === null ? '' : t.alertMeterShift(`${shift > 0 ? '+' : ''}${fmtNum(shift, lang)}`)} />
+  )
+}
 
 export default function AlertCards({ alerts, t, lang }: { alerts: Alert[]; t: Dict; lang: Lang }) {
   return (
-    <div className="grid grid-3">
+    <div className="grid grid-3 alerts" aria-live="polite">
       {alerts.map((a) => {
         const tr = a.trend
+        const Icon = ALERT_ICONS[a.id]
         return (
-          <article key={a.id} className={`card alert ${a.level}`} aria-label={`${a.question} ${t.levels[a.level]}`}>
+          <article key={a.id} id={`alert-${a.id}`} className={`card alert ${a.level}`} aria-labelledby={`q-${a.id}`}>
             <div className="alert-top">
-              <span className="code">{a.id}</span>
+              <span className={`alert-icon ${a.level}`}>
+                <Icon size={26} />
+              </span>
               <span className={`pill ${a.level}`}>{t.levels[a.level]}</span>
             </div>
-            <h3 className="question">{a.question ?? a.name}</h3>
+            <h3 className="question" id={`q-${a.id}`}>
+              {a.question ?? a.name}
+            </h3>
+            <p className={`verdict ${a.level}`}>{t.alertVerdict[a.id]?.[a.level]}</p>
+            {meterFor(a, t, lang)}
             <p className="headline">{a.headline}</p>
             <div className="action">
-              <b>{t.whatToDo}</b> {a.action}
+              <span className="action-label">{t.whatToDo}</span> {a.action}
             </div>
-            <details>
+            <details className="tech">
               <summary>{t.technical}</summary>
-              <p className="meta" style={{ marginTop: 6 }}>
-                <b>{a.name}.</b> {t.trigger}: {a.trigger}
+              <p className="meta">
+                <b>{a.id} · {a.name}.</b> {t.trigger}: {a.trigger}
               </p>
-              <p className="trend-chip" style={{ marginTop: 6 }}>
+              <p className="trend-chip">
                 {t.trendSince} ({tr.variable}): <b>{tr.direction}</b> · {tr.slope_per_decade > 0 ? '+' : ''}
                 {fmtNum(tr.slope_per_decade, lang, 2)} {tr.unit} · {pValue(tr.p_value, lang)}
               </p>

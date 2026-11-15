@@ -1,7 +1,7 @@
 # LaymiSat: reparto del equipo y reglas de trabajo
 
 Objetivo: que cada persona mejore **su sección** sin pisar el trabajo de las demás y sin perder la dirección del proyecto.
-Lee antes la [guía del frontend](GUIA_FRONTEND.md) (qué hace cada parte) y el [checklist de Space Apps](CUMPLIMIENTO_SPACE_APPS.md).
+Lee antes la [guía del frontend](GUIA_FRONTEND.md) (qué hace cada parte), la **[guía de estilo y UX](ESTILO.md)** (cómo se ve y cómo habla la app; obligatoria) y el [checklist de Space Apps](CUMPLIMIENTO_SPACE_APPS.md).
 
 **Cierre de la entrega: domingo 15 de noviembre, 23:59 (hora del evento local).** Todo lo que se quiera mostrar debe estar en `main` y desplegado antes.
 
@@ -85,6 +85,7 @@ Luego abre un **Pull Request** en GitHub hacia `main`. Otra persona del equipo l
 - [ ] `pytest` en verde si tocaste el backend (en `qullqasat/backend`).
 - [ ] Textos nuevos en **inglés y español**.
 - [ ] Probado en la app, también con ancho de celular (sin scroll horizontal).
+- [ ] Sigue la [guía de estilo](ESTILO.md): tokens, orden pregunta → respuesta → evidencia → acción, checklist de accesibilidad.
 - [ ] Nada de datos personales, fotos de menores de 18 años ni logos de la NASA.
 - [ ] Si usaste IA para generar código, imágenes o textos, añádelo a `qullqasat/AI_DISCLOSURE.md`.
 

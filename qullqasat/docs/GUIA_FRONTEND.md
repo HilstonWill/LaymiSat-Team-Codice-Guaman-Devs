@@ -1,5 +1,7 @@
 # LaymiSat: guía del frontend para el equipo
 
+> Estilo visual, tono de los textos y accesibilidad: **[ESTILO.md](ESTILO.md)**.
+
 Este documento explica **qué hace cada parte de la pantalla, de dónde salen los datos de la NASA y cómo se calcula cada cosa**, para que el equipo pueda mejorar el frontend sin romper la lógica. Al final están las **tareas pendientes** listas para repartir.
 
 > Estado: v1.1 (15 nov 2026). Bilingüe (inglés por defecto), Field Shift completo, NDVI MODIS y SRTM. Backend: 70 tests, 97 % de cobertura.

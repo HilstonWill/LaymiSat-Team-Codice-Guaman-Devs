@@ -14,6 +14,7 @@ import {
   type Zone,
 } from './api'
 import AlertCards from './components/AlertCards'
+import { ALERT_ICONS, ArrowDownIcon, PinIcon, PrintIcon } from './components/Icons'
 import CalendarGP from './components/CalendarGP'
 import MapPicker from './components/MapPicker'
 import NdviPanel from './components/NdviPanel'
@@ -204,10 +205,16 @@ export default function App() {
               </button>
             </div>
           </div>
-          <p className="tagline">{t.tagline}</p>
-          <p className="challenge">{t.challenge}</p>
+          <p className="tagline">{t.heroTagline}</p>
+          <p className="hero-sub">{t.heroSub}</p>
+          <div className="hero-actions no-print">
+            <a className="btn btn-cta" href="#alertas">
+              {t.heroCta} <ArrowDownIcon size={18} />
+            </a>
+            <span className="challenge">{t.challenge}</span>
+          </div>
           <div className="badges">
-            {t.badges.map((b) => (
+            {t.heroBadges.map((b) => (
               <span key={b} className="badge">
                 {b}
               </span>
@@ -252,22 +259,27 @@ export default function App() {
               onChange={(e) => setPlace({ ...place, altitude: Number(e.target.value) })}
             />
           </label>
-          <label className="field" title={t.plantAdjustHelp}>
-            <span>
-              {t.plantAdjust}: <strong>{fmtNum(plantAdjust, lang, 1)} °C</strong>
-            </span>
-            <input
-              type="range"
-              min={-4}
-              max={0}
-              step={0.5}
-              value={plantAdjust}
-              onChange={(e) => setPlantAdjust(Number(e.target.value))}
-            />
-          </label>
+          <details className="advanced">
+            <summary>{t.heroAdvanced}</summary>
+            <label className="field">
+              <span>
+                {t.plantAdjust}: <strong>{fmtNum(plantAdjust, lang, 1)} °C</strong>
+              </span>
+              <input
+                type="range"
+                min={-4}
+                max={0}
+                step={0.5}
+                value={plantAdjust}
+                aria-describedby="adj-help"
+                onChange={(e) => setPlantAdjust(Number(e.target.value))}
+              />
+              <span id="adj-help" className="help">{t.plantAdjustHelp}</span>
+            </label>
+          </details>
           <span className="spacer" />
-          <button className="btn" onClick={() => window.print()}>
-            {t.print}
+          <button className="btn btn-secondary" onClick={() => window.print()}>
+            <PrintIcon size={18} /> {t.print}
           </button>
         </div>
         {loading && <div className="loading-bar" />}
@@ -283,7 +295,9 @@ export default function App() {
         <section className="top">
           <MapPicker zones={zones} place={place} onZone={selectZone} onPick={pickPoint} labelOf={zoneLabel} />
           <div className="card place-card">
-            <div className="kicker">{zone ? `${t.province} ${zone.province}` : t.customPoint}</div>
+            <div className="kicker">
+              <PinIcon size={14} /> {zone ? `${t.province} ${zone.province}` : t.customPoint}
+            </div>
             <h3>{placeName}</h3>
             <p className="meta">{zone ? (lang === 'en' ? zone.note_en ?? zone.note : zone.note) : t.clickMap}</p>
             {srtmNote && (
@@ -293,6 +307,21 @@ export default function App() {
             )}
             {report && insight && (
               <>
+                <nav className="summary" aria-label={t.heroSummary}>
+                  <span className="cal-label">{t.heroSummary}</span>
+                  <div className="summary-row">
+                    {report.alerts.map((a) => {
+                      const Icon = ALERT_ICONS[a.id]
+                      return (
+                        <a key={a.id} href={`#alert-${a.id}`} className={`summary-chip ${a.level}`}>
+                          <Icon size={18} />
+                          <span>{t.alertShort[a.id]}</span>
+                          <b>{t.levels[a.level]}</b>
+                        </a>
+                      )
+                    })}
+                  </div>
+                </nav>
                 <div className="facts">
                   <div className="fact">
                     <span>{t.factNights}</span>
@@ -302,11 +331,8 @@ export default function App() {
                     </b>
                   </div>
                   <div className="fact">
-                    <span>{t.factVariability}</span>
-                    <b>
-                      ±{fmtNum(insight.ads.onset_std_early_days as number, lang)} → ±
-                      {fmtNum(insight.ads.onset_std_recent_days as number, lang)} {t.days}
-                    </b>
+                    <span>{t.heroPlotAltitude}</span>
+                    <b>{fmtNum(report.location.altitude, lang)} m</b>
                   </div>
                   <div className="fact">
                     <span>{t.factFrost}</span>

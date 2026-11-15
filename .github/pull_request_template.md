@@ -9,6 +9,7 @@
 - [ ] `pytest` en verde (si toqué el backend)
 - [ ] Textos nuevos en inglés **y** español (`frontend/src/i18n.ts`)
 - [ ] Probado en la app, también en ancho de celular
+- [ ] Sigue `qullqasat/docs/ESTILO.md` (tokens, orden de la tarjeta, contraste AA, 44 px)
 - [ ] Solo toqué archivos de mi sección (o avisé al responsable)
 - [ ] Sin datos personales, fotos de menores ni logos de la NASA
 - [ ] Uso de IA declarado en `qullqasat/AI_DISCLOSURE.md` (si aplica)

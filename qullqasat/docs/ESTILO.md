@@ -1,0 +1,163 @@
+# LaymiSat: guía de estilo y experiencia de usuario
+
+Este documento fija **cómo se ve, cómo habla y cómo se comporta** LaymiSat, para que las cinco personas del equipo construyan
+secciones que parezcan hechas por una sola mano. Aplica a todo el frontend. La portada y las alertas son la referencia:
+cuando dudes, imítalas.
+
+> Archivos clave: `frontend/src/index.css` (tokens y estilos), `frontend/src/components/Icons.tsx` (íconos),
+> `frontend/src/i18n.ts` (textos EN/ES), `frontend/src/components/AlertCards.tsx` (componente de referencia).
+
+---
+
+## 1. Para quién diseñamos
+- **Usuario principal:** técnico de la Agencia Agraria o de una ONG que asesora a la asamblea comunal. Lee español, a veces en un celular con poca señal y al sol.
+- **Usuario final:** familias que siembran papa nativa a 3.200–4.200 m. Muchas no leen gráficos; deciden en asamblea.
+- **Jurado de Space Apps:** lee en inglés, en pocos minutos, sin contexto andino.
+
+Por eso cada pantalla debe responder **en 5 segundos** a "¿qué tengo que decidir y qué me dicen los datos?".
+
+## 2. Principios
+1. **Pregunta primero.** Cada bloque empieza con la pregunta del agricultor, luego la respuesta corta, y después la evidencia.
+2. **Decisión antes que dato.** Lo primero que se ve es qué hacer; la estadística va plegada en "Detalle técnico".
+3. **El color nunca va solo.** El estado se expresa con color + texto ("Riesgo alto") + ícono.
+4. **Lenguaje sencillo y bilingüe.** Inglés por defecto (regla de Space Apps); español completo; los términos en quechua se explican.
+5. **Honestidad visible.** Fuente, periodo y límites siempre a un clic. Si un dato no confirma la hipótesis, se dice.
+6. **Celular primero, poca señal.** Sin scroll horizontal, áreas táctiles de 44 px, caché local y ficha imprimible.
+
+## 3. Qué cambió en la portada y las alertas, y por qué
+Criterios: las 10 heurísticas de Nielsen, WCAG 2.2 AA y jerarquía visual. Los problemas se midieron en la app y el contraste se calculó con la fórmula WCAG.
+
+| Problema detectado | Heurística / criterio | Cambio aplicado |
+|---|---|---|
+| La cabecera no decía qué decide el usuario; texto largo y 5 insignias compitiendo | Estética y diseño minimalista | Propuesta de valor en una línea ("Cuándo sembrar, con qué riesgo y con qué rotación…"), subtítulo corto y 3 insignias |
+| No había una acción principal: había que adivinar que se debía bajar | Visibilidad del estado / control del usuario | Botón principal "Ver las alertas de esta parcela" (maíz sobre índigo) que lleva a las alertas |
+| El "ajuste de helada a nivel de planta" (parámetro técnico) estaba al mismo nivel que zona y altitud | Flexibilidad y eficiencia; revelación progresiva | Se movió a "Avanzado", plegado, con una frase de ayuda |
+| Para conocer el riesgo había que bajar hasta las alertas | Reconocer antes que recordar | Resumen "Esta campaña de un vistazo" en la ficha de la zona: 3 chips (ícono + tema + nivel) que llevan a cada alerta |
+| La métrica "Variabilidad del inicio de lluvias" era técnica y no se repetía entre zonas | Coincidencia con el mundo real; honestidad | Sustituida por "Altitud de la parcela" (el dato que más cambia el riesgo) |
+| La alerta abría con un dato estadístico ("En 93 % de las últimas 15 campañas…") | Coincidencia con el mundo real | Pregunta → **respuesta corta en color** ("Muy probable.") → medidor → evidencia → acción |
+| El nivel de riesgo solo se veía en el borde de color y en "Alto/Bajo" | WCAG 1.4.1 (uso del color) | Ícono por tipo de alerta (helada, agua, calendario) + texto + color |
+| "Bajo" junto a "Lluvia de siembra" se leía como "llovió poco" | Prevención de errores (ambigüedad) | Etiquetas "Riesgo bajo / Atención / Riesgo alto" |
+| No se entendía qué tan cerca estaba el valor del umbral | Visibilidad del estado del sistema | Medidor con relleno y una línea en el umbral de la alerta |
+| Verde y ámbar no llegaban a 4,5:1 (3,7 y 3,2) y el gris secundario tampoco (4,0) | WCAG 1.4.3 (contraste AA) | Nuevos tokens `--verde-text`, `--ambar-text` y `--muted` (5,8, 5,5 y 5,4) |
+| Los enlaces internos dejaban el título debajo de la barra fija | Visibilidad | `scroll-margin-top: 96px` en secciones y alertas |
+| Animaciones sin control | WCAG 2.3.3 (movimiento) | `prefers-reduced-motion` desactiva el desplazamiento suave y la barra de carga |
+| Botones y chips pequeños en celular | WCAG 2.5.8 (tamaño del objetivo) | Mínimo 44 px de alto (`--tap`) |
+
+## 4. Tokens de diseño (`index.css › :root`)
+**No uses colores, tamaños ni sombras sueltos: usa estos tokens.** Si falta uno, se añade aquí y en `:root`, con acuerdo del equipo.
+
+### Color
+| Token | Valor | Uso |
+|---|---|---|
+| `--ink` | `#1f2a44` | Texto principal, botón oscuro |
+| `--ink-soft` | `#4a5570` | Texto secundario largo |
+| `--muted` | `#5c6378` | Metadatos, etiquetas pequeñas (contraste 5,4:1) |
+| `--paper` | `#f7f2e8` | Fondo de página |
+| `--card` | `#fffdf8` | Fondo de tarjetas |
+| `--line` | `#e4dccb` | Bordes y divisores |
+| `--night` | `#16203a` | Fondo de la cabecera |
+| `--maize` | `#e0a43a` | Acento: botón principal, foco, acciones |
+| `--terracotta` | `#b8532f` | Etiquetas de sección (kicker), "Qué hacer", líneas de umbral |
+| `--potato` | `#6b3d7a` | Quechua y datos recientes en gráficos |
+| `--leaf` | `#3f7d4e` | Cobertura del suelo y vegetación |
+| `--sky` | `#3d6fa8` | Enlaces, datos de lluvia |
+| `--verde` / `--verde-bg` / `--verde-text` | `#2f8a4c` / `#e3f2e6` / `#23683a` | Riesgo bajo: relleno / fondo / **texto** |
+| `--ambar` / `--ambar-bg` / `--ambar-text` | `#b7790f` / `#fbf0d6` / `#855800` | Atención |
+| `--rojo` / `--rojo-bg` / `--rojo-text` | `#b3361f` / `#f9e2db` / `#b3361f` | Riesgo alto |
+
+Regla: **el texto de estado usa `--*-text`**. `--verde` y `--ambar` son solo para rellenos (barras, medidores, bordes).
+
+### Tipografía
+| Rol | Fuente | Tamaño |
+|---|---|---|
+| Marca, títulos de sección (h1, h2) | Fraunces 700 | h1 2,2rem · h2 1,55rem |
+| Pregunta de alerta, títulos de tarjeta (h3) | Fraunces 700 | 1,1–1,2rem |
+| Respuesta corta (veredicto) | Fraunces 700 | 1,35rem, en el color del nivel |
+| Texto | IBM Plex Sans 400 | 1rem (mínimo 0,85rem) |
+| Etiquetas pequeñas (kicker, `cal-label`, `action-label`) | IBM Plex Sans 600–700, MAYÚSCULAS, espaciado 0,08–0,12em | 0,68–0,72rem |
+| Metadatos (`meta`, `meter-label`) | IBM Plex Sans | 0,75–0,8rem, `--muted` |
+
+### Espacio, forma y profundidad
+- **Espaciado:** múltiplos de 4 px (4, 8, 12, 16, 24, 34). Entre tarjetas, 16 px; dentro de una tarjeta, 18 px de padding.
+- **Radios:** tarjetas 14 px (`--radius`), controles y chips 10 px, píldoras y barras 999 px.
+- **Sombra:** solo `--shadow`, en tarjetas.
+- **Área táctil:** mínimo 44 px de alto (`--tap`) en botones, chips y desplegables.
+- **Cortes de diseño:** ≤1000 px pasa a una columna; ≤560 px es móvil (chips apilados, botón principal a todo el ancho).
+
+## 5. Componentes
+| Componente | Clase | Cuándo usarlo |
+|---|---|---|
+| Botón principal | `.btn.btn-cta` | Una sola acción principal por pantalla (p. ej. "Ver las alertas") |
+| Botón | `.btn` | Acción importante en barras (fondo `--ink`) |
+| Botón secundario | `.btn.btn-secondary` | Acciones de apoyo (Imprimir) |
+| Tarjeta | `.card` | Todo bloque de contenido |
+| Píldora de nivel | `.pill.verde/.ambar/.rojo` | Nivel de riesgo junto a un título |
+| Chip de resumen | `.summary-chip.<nivel>` | Acceso rápido a una alerta desde la portada |
+| Medidor | `Meter` en `AlertCards.tsx` | Mostrar un valor frente a un umbral (relleno + línea de umbral + texto) |
+| Dato destacado | `.fact` dentro de `.facts` | Cifra clave con su etiqueta arriba |
+| Etiqueta de sección | `.kicker` | Línea pequeña sobre un título (contexto: provincia, fuente, temporada) |
+| Bloque de acción | `.action` + `.action-label` | "Qué hacer", siempre con borde de maíz a la izquierda |
+| Detalle técnico | `<details className="tech">` | Umbral, tendencia, p-valor, fórmulas: siempre plegado |
+| Error | `.error` y `SectionBoundary` | Error de carga o de una sección; nunca dejes la página en blanco |
+
+### Anatomía de una tarjeta de alerta (orden fijo)
+1. **Ícono** del tema (46 px, fondo del nivel) y **píldora** con el nivel ("Riesgo alto").
+2. **Pregunta** del agricultor (h3).
+3. **Veredicto**: respuesta en 2–6 palabras, en el color del nivel ("Muy probable.").
+4. **Medidor** con la línea del umbral y una frase que la explica.
+5. **Evidencia**: la cifra concreta con periodo y fuente (`headline`).
+6. **Qué hacer**: acción en imperativo.
+7. **Detalle técnico** plegado: detonador, tendencia y p-valor.
+
+El orden de las alertas es fijo (helada, agua, calendario). No se reordenan por gravedad, para que la persona usuaria las reconozca siempre en el mismo sitio.
+
+## 6. Íconos
+- Trazo de 2 px, cuadrícula de 24×24, `currentColor`, extremos redondeados. Están en `components/Icons.tsx`.
+- Siempre llevan `aria-hidden`: el significado lo dan el texto y la etiqueta, no el dibujo.
+- Correspondencia fija: **helada = copo**, **agua = gota**, **calendario = calendario**, ubicación = pin, imprimir = impresora.
+- No uses emojis ni logos de la NASA (regla de Space Apps).
+
+## 7. Voz y tono
+| Regla | Sí | No |
+|---|---|---|
+| Pregunta en lenguaje del agricultor | "¿Va a helar cuando brote la papa?" | "Alerta de heladas severas (AHS)" |
+| Veredicto corto, de 2 a 6 palabras | "Sí, a tiempo." | "La desviación es inferior al umbral" |
+| Acción en imperativo, verbo primero | "Siembra con lluvias firmes…" | "Se recomienda considerar…" |
+| Cifras con periodo y fuente | "93 % de las últimas 15 campañas (NASA POWER)" | "Muchas heladas" |
+| Nivel como riesgo | "Riesgo bajo" | "Bajo" (ambiguo) |
+| Términos técnicos explicados o en el glosario | "veranillo (días seguidos casi sin lluvia)" | "dry spell ≥10 d" sin explicar |
+| Paridad EN/ES | Mismo contenido en los dos idiomas | Texto solo en un idioma |
+
+Los textos viven en `i18n.ts` (ver las reglas de prefijos en `docs/EQUIPO.md`), nunca escritos directamente en un componente.
+
+## 8. Accesibilidad (checklist WCAG 2.2 AA)
+- [ ] Contraste de texto ≥ 4,5:1 (≥ 3:1 en texto grande ≥ 24 px o negrita ≥ 19 px). Usa los tokens `--*-text`.
+- [ ] El estado no depende solo del color (texto + ícono).
+- [ ] Todo se puede usar con teclado; el foco se ve (contorno maíz de 3 px).
+- [ ] Áreas táctiles ≥ 44 px.
+- [ ] Los gráficos y medidores tienen `aria-label` con la conclusión, no solo los números.
+- [ ] `lang` del documento correcto (`en`/`es`); la app lo actualiza al cambiar de idioma.
+- [ ] Las actualizaciones de las alertas se anuncian (`aria-live="polite"`).
+- [ ] Se respeta `prefers-reduced-motion`.
+- [ ] Sin scroll horizontal a 375 px.
+
+## 9. Estados
+| Estado | Cómo se muestra |
+|---|---|
+| Cargando | Barra fina bajo los controles y el texto "Cargando 40 años de datos de la NASA…". No bloquees la página. |
+| Error de red/API | `.error` con el motivo y qué hacer; los datos anteriores no se quedan como si fueran de otro lugar. |
+| Error de una sección | `SectionBoundary` muestra un aviso solo en esa sección. |
+| Sin datos (p. ej. NDVI fuera de las zonas piloto) | Tarjeta con una frase que explica por qué y qué sí se puede ver. |
+| Datos provisionales | Mención explícita ("últimos 90 días, provisionales"). |
+
+## 10. Impresión
+La ficha impresa (`@media print`) oculta controles, mapa, botones y resumen. Muestra la cabecera con zona, altitud y fecha, las alertas, los gráficos y las fuentes. Debe caber en 1–2 páginas A4/Carta.
+
+## 11. Cómo añadir una sección o una alerta nueva sin romper el estilo
+1. Empieza por la **pregunta** del usuario y escribe el texto en `i18n.ts` (EN y ES).
+2. Usa una `.card` dentro de una `<section>` con `.section-head` (kicker + h2 + frase de contexto).
+3. Respeta el orden pregunta → respuesta → evidencia → acción → detalle técnico plegado.
+4. Usa solo tokens y componentes de esta guía; si necesitas uno nuevo, añádelo aquí.
+5. Envuélvela en `SectionBoundary`.
+6. Pasa el checklist de accesibilidad (sección 8) y prueba a 375 px y en los dos idiomas.
+7. Adjunta capturas antes/después en el Pull Request.
