@@ -16,7 +16,7 @@ import {
   type Zone,
 } from '../api'
 import { BestRotation } from '../components/FarmerViews'
-import RotationComparator from '../components/RotationComparator'
+import RotationPlanner from './RotationPlanner'
 import SeasonCalendar from './SeasonCalendar'
 import { ALERT_ICONS } from '../components/Icons'
 import SectionBoundary from '../components/SectionBoundary'
@@ -470,18 +470,6 @@ export default function StoryMode({ initialView = 'zonas' }: { initialView?: Vie
           {view === 'rotaciones' && (
             <section className="rot-sheet" aria-labelledby="rot-title">
               <div className="rot-sheet-inner">
-                <div className="section-head">
-                  <div>
-                    <div className="kicker">
-                      {zone ? `${zoneName(zone)} · ` : ''}
-                      {d.rotKicker}
-                    </div>
-                    <h2 id="rot-title">{d.rotTitle}</h2>
-                  </div>
-                  <p>
-                    {d.rotIntro} {bestRot && <b>{d.bestNow(bestRot.name, bestRot.overall)}</b>}
-                  </p>
-                </div>
                 {rotError && (
                   <div className="error">
                     {d.loadError}: {rotError}
@@ -489,7 +477,7 @@ export default function StoryMode({ initialView = 'zonas' }: { initialView?: Vie
                 )}
                 {catalog ? (
                   <SectionBoundary message={d.sectionError} resetKey={rot}>
-                    <RotationComparator
+                    <RotationPlanner
                       catalog={catalog}
                       sequences={sequences}
                       onChange={setSequences}
@@ -501,13 +489,18 @@ export default function StoryMode({ initialView = 'zonas' }: { initialView?: Vie
                       onPriorities={setPriorities}
                       result={rot}
                       loading={rotLoading}
-                      t={d}
+                      t={t}
+                      d={d}
                       lang={lang}
+                      place={zone ? zoneName(zone) : ''}
                     />
                   </SectionBoundary>
                 ) : (
                   !rotError && <p className="rot-loading">{t.rotLoading}</p>
                 )}
+                <a className="rot-tech-link" href="?modo=tecnico#rotaciones">
+                  {t.rotTechLink}
+                </a>
               </div>
             </section>
           )}
