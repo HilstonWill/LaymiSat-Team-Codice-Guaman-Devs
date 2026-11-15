@@ -337,7 +337,7 @@ export const dynamicApi = {
     request<SowingCurve>(`/api/sowing?${plotQuery(p, plantAdjust)}`, { signal }),
   forecast: (p: Place, plantAdjust: number, signal?: AbortSignal) =>
     request<ForecastSummary>(`/api/forecast?${plotQuery(p, plantAdjust)}`, { signal }, 0),
-  explain: (p: Place, plantAdjust: number, lang: Lang, placeName: string, question?: string) =>
+  explain: (p: Place, plantAdjust: number, lang: Lang, placeName: string, question?: string, focus?: 'AHS' | 'AEH' | 'ADS') =>
     request<Explanation>(
       '/api/explain',
       {
@@ -351,6 +351,7 @@ export const dynamicApi = {
           lang,
           place_name: placeName.slice(0, 80),
           question: question?.slice(0, 300) || null,
+          focus: focus ?? null,
         }),
       },
       0,

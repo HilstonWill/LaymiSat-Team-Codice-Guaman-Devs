@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
   api,
+  dynamicApi,
   DEFAULT_PRIORITIES,
   type Criterion,
   type CropsCatalog,
@@ -67,6 +68,11 @@ export default function App() {
   const [ndvi, setNdvi] = useState<NdviSummary | null>(null)
   const [ndviStatus, setNdviStatus] = useState<'loading' | 'ok' | 'not_pilot' | 'error'>('loading')
   const [srtmNote, setSrtmNote] = useState<string | null>(null)
+  const [aiEnabled, setAiEnabled] = useState(false)
+
+  useEffect(() => {
+    dynamicApi.health().then((h) => setAiEnabled(Boolean(h.ai))).catch(() => setAiEnabled(false))
+  }, [])
 
   const dPlace = useDebounced(place, 350)
   const dAdjust = useDebounced(plantAdjust, 350)
@@ -367,7 +373,14 @@ export default function App() {
                 <p>{t.alertsIntro(fmtNum(report.location.altitude, lang))}</p>
               </div>
               <SectionBoundary message={t.sectionError} resetKey={report}>
-                <AlertCards alerts={report.alerts} t={t} lang={lang} />
+                <AlertCards
+                  alerts={report.alerts}
+                  t={t}
+                  lang={lang}
+                  aiEnabled={aiEnabled}
+                  resetKey={report}
+                  explain={(id) => dynamicApi.explain(dPlace, dAdjust, lang, placeName, undefined, id)}
+                />
               </SectionBoundary>
               <SectionBoundary message={t.sectionError} resetKey={dPlace}>
                 <DynamicAlerts place={dPlace} plantAdjust={dAdjust} placeName={placeName} t={t} lang={lang} />

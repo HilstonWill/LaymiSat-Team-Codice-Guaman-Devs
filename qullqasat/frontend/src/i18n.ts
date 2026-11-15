@@ -158,6 +158,8 @@ const en = {
   alertAiOff: 'AI explanations are not enabled on this server.',
   alertAiPrivacy: 'Do not include names, phone numbers or other personal data.',
   alertAiSkip: 'Show it all now',
+  alertAiCard: 'Explain this alert with AI',
+  alertAiCardHide: 'Hide explanation',
 }
 
 type Dict = typeof en
@@ -320,6 +322,8 @@ const es: Dict = {
   alertAiOff: 'Las explicaciones con IA no están activadas en este servidor.',
   alertAiPrivacy: 'No incluyas nombres, teléfonos ni otros datos personales.',
   alertAiSkip: 'Mostrar todo ya',
+  alertAiCard: 'Explicar esta alerta con IA',
+  alertAiCardHide: 'Ocultar explicación',
 }
 
 export const DICTS: Record<Lang, Dict> = { en, es }

@@ -46,8 +46,11 @@ LANG_NAME = {"en": "English", "es": "Spanish (Peru)"}
 
 SYSTEM = (
     "You are an agricultural extension assistant for native-potato communities in the high Andes of Cusco, Peru. "
-    "Explain the data below in plain, friendly {lang} for a farmer or a community assembly, in at most 120 words "
-    "and 3 short paragraphs or bullet points. RULES: (1) Use ONLY the facts provided; never invent numbers, dates, "
+    "Explain the data below in plain, friendly {lang} for a farmer or a community assembly, in at most {words} words. "
+    "FORMAT (Markdown, exactly these three sections, in this order, headings translated to {lang}): "
+    "'## {h_now}' with 2-3 short bullet points starting with a verb; '## {h_why}' with one or two short sentences; "
+    "'## {h_care}' with one bullet about uncertainty or what to check locally. Use **bold** only for 1-3 key words. "
+    "No other headings, no tables, no emojis, no closing remarks. RULES: (1) Use ONLY the facts provided; never invent numbers, dates, "
     "places or recommendations that are not in the facts. (2) If the user's question cannot be answered from the "
     "facts, say so and suggest asking the local agricultural agency. (3) Start with what to do now. (4) Mention "
     "uncertainty when the facts say a value is provisional or a threshold was not met. (5) No medical, financial "
@@ -78,8 +81,16 @@ def check_rate(client: str, now: float | None = None, limit: int = RATE_PER_MIN)
         q.append(now)
 
 
-def build_facts(report: dict, sowing: dict | None, forecast: dict | None, place_name: str) -> dict:
-    """Solo resultados calculados, sin datos personales."""
+HEADINGS = {
+    "en": ("What to do now", "Why", "Keep in mind"),
+    "es": ("Qué hacer ahora", "Por qué", "Ten en cuenta"),
+}
+
+
+def build_facts(
+    report: dict, sowing: dict | None, forecast: dict | None, place_name: str, focus: str | None = None
+) -> dict:
+    """Solo resultados calculados, sin datos personales. focus = AHS|AEH|ADS limita a esa alerta."""
     facts = {
         "place": place_name,
         "altitude_m": report["location"]["altitude"],
@@ -96,6 +107,16 @@ def build_facts(report: dict, sowing: dict | None, forecast: dict | None, place_
             for a in report["alerts"]
         ],
     }
+    if focus:
+        chosen = [a for a in report["alerts"] if a["id"] == focus]
+        if chosen:
+            idx = report["alerts"].index(chosen[0])
+            facts["focus_alert"] = facts["alerts"][idx]
+            facts["focus_alert"]["trigger"] = chosen[0].get("trigger")
+            facts["other_alerts"] = [
+                {"question": x["question"], "level": x["level"]} for i, x in enumerate(facts["alerts"]) if i != idx
+            ]
+            del facts["alerts"]
     if sowing and sowing.get("window"):
         facts["recommended_sowing_window_days_after_aug1"] = sowing["window"]
     if forecast:
@@ -115,6 +136,7 @@ def explain(
     api_key: str | None = None,
     model: str | None = None,
     provider: str | None = None,
+    task: str | None = None,
 ) -> dict:
     """Explica con el proveedor configurado: gemini (por defecto), groq o xai."""
     provider = provider or configured_provider() or "gemini"
@@ -131,9 +153,11 @@ def explain(
         http_post = httpx.post
     q = (question or "").strip()[:MAX_QUESTION]
     user = "FACTS (JSON):\n" + json.dumps(facts, ensure_ascii=False) + (
-        f"\n\nFARMER QUESTION: {q}" if q else "\n\nTask: explain these alerts and what to do now."
+        f"\n\nFARMER QUESTION: {q}" if q else f"\n\nTask: {task or 'explain these alerts and what to do now.'}"
     )
-    system = SYSTEM.format(lang=LANG_NAME.get(lang, "English"))
+    h_now, h_why, h_care = HEADINGS.get(lang, HEADINGS["en"])
+    words = 70 if task else 120
+    system = SYSTEM.format(lang=LANG_NAME.get(lang, "English"), words=words, h_now=h_now, h_why=h_why, h_care=h_care)
     if provider != "gemini":
         return _openai_compatible(cfg, provider, key, model, system, user, http_post)
     body = {

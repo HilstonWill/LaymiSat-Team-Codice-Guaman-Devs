@@ -12,6 +12,7 @@ import {
 } from 'recharts'
 import { dynamicApi, type Explanation, type ForecastSummary, type Place, type SowingCurve } from '../api'
 import { fmtNum, sdayLabel, type Dict, type Lang } from '../i18n'
+import { AiAnswer } from './AiText'
 import { CalendarIcon, DropIcon, FrostIcon } from './Icons'
 
 interface Props {
@@ -179,59 +180,6 @@ function ForecastStrip({ place, plantAdjust, t, lang }: Props) {
   )
 }
 
-const prefersReducedMotion = () =>
-  typeof window !== 'undefined' && Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)
-
-/**
- * Escribe el texto palabra por palabra, como una persona tecleando (ver docs/ESTILO.md › Animación de escritura).
- * - Duración total acotada (≈ 4–6 s) aunque el texto sea largo.
- * - Con "reducir movimiento" el texto aparece completo.
- * - El texto animado es aria-hidden; los lectores de pantalla reciben el texto completo una sola vez.
- */
-function Typewriter({ text, skipLabel }: { text: string; skipLabel: string }) {
-  const tokens = useMemo(() => text.split(/(\s+)/), [text])
-  const [count, setCount] = useState(0)
-
-  useEffect(() => {
-    if (prefersReducedMotion()) {
-      setCount(tokens.length)
-      return
-    }
-    setCount(0)
-    const words = Math.ceil(tokens.length / 2)
-    const delay = Math.max(25, Math.min(70, 5000 / Math.max(1, words)))
-    const id = window.setInterval(() => {
-      setCount((c) => {
-        const next = c + 2 // palabra + espacio
-        if (next >= tokens.length) window.clearInterval(id)
-        return Math.min(next, tokens.length)
-      })
-    }, delay)
-    return () => window.clearInterval(id)
-  }, [tokens])
-
-  const done = count >= tokens.length
-  const lines = tokens.slice(0, count).join('').split(/\n+/)
-  return (
-    <>
-      <div className="typed" aria-hidden="true">
-        {lines.map((line, i) => (
-          <p key={i}>
-            {line.replace(/^\s*[-*•]\s*/, '• ')}
-            {!done && i === lines.length - 1 && <span className="caret" />}
-          </p>
-        ))}
-      </div>
-      <div className="sr-only">{text}</div>
-      {!done && (
-        <button type="button" className="link-btn" onClick={() => setCount(tokens.length)}>
-          {skipLabel}
-        </button>
-      )}
-    </>
-  )
-}
-
 function AiExplain({ place, plantAdjust, placeName, t, lang }: Props) {
   const [enabled, setEnabled] = useState<boolean | null>(null)
   const [question, setQuestion] = useState('')
@@ -279,10 +227,7 @@ function AiExplain({ place, plantAdjust, placeName, t, lang }: Props) {
             {busy && <p className="meta">{t.alertAiLoading}</p>}
             {error && <div className="error">{error}</div>}
             {result && (
-              <div className="ai-answer">
-                <p className="ai-label">{t.alertAiLabel(result.model)}</p>
-                <Typewriter text={result.text} skipLabel={t.alertAiSkip} />
-              </div>
+              <AiAnswer text={result.text} label={t.alertAiLabel(result.model)} skipLabel={t.alertAiSkip} />
             )}
           </div>
         </>

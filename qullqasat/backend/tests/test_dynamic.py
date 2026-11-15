@@ -195,3 +195,35 @@ def test_xai_uses_its_endpoint():
 
     AI.explain({}, "en", http_post=post, api_key="xk", provider="xai")
     assert seen["url"] == "https://api.x.ai/v1/chat/completions" and "reasoning_effort" not in seen["body"]
+
+
+def test_prompt_requests_fixed_markdown_sections():
+    seen = {}
+
+    def post(url, headers, json, timeout):
+        seen.update(body=json)
+        return FakeResp({"choices": [{"message": {"content": "ok"}}]})
+
+    AI.explain({}, "es", http_post=post, api_key="k", provider="groq")
+    system = seen["body"]["messages"][0]["content"]
+    assert "## Qué hacer ahora" in system and "## Por qué" in system and "## Ten en cuenta" in system
+    assert "at most 120 words" in system
+    AI.explain({}, "en", http_post=post, api_key="k", provider="groq", task="explain ONLY the focus_alert")
+    assert "at most 70 words" in seen["body"]["messages"][0]["content"]
+    assert "focus_alert" in seen["body"]["messages"][1]["content"]
+
+
+def test_api_explain_focus_on_one_alert(api):
+    captured = {}
+
+    def fake_explainer(facts, lang, question, task=None):
+        captured.update(facts=facts, task=task)
+        return {"text": "ok", "model": "fake", "generated_by": "x", "grounded_on": "y"}
+
+    main.app.dependency_overrides[main.get_ai_explainer] = lambda: fake_explainer
+    r = api.post("/api/explain", json=Q | {"focus": "AHS", "lang": "en"})
+    assert r.status_code == 200
+    assert "focus_alert" in captured["facts"] and "alerts" not in captured["facts"]
+    assert captured["facts"]["focus_alert"]["question"].startswith("Will it freeze")
+    assert len(captured["facts"]["other_alerts"]) == 2 and "frost" in captured["task"]
+    assert api.post("/api/explain", json=Q | {"focus": "XYZ"}).status_code == 422

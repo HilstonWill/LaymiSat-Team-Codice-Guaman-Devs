@@ -309,6 +309,14 @@ class ExplainRequest(BaseModel):
     lang: Literal["en", "es"] = "en"
     place_name: str = Field("plot", max_length=80)
     question: str | None = Field(default=None, max_length=AI.MAX_QUESTION)
+    focus: Literal["AHS", "AEH", "ADS"] | None = None
+
+
+FOCUS_TASK = {
+    "AHS": "explain ONLY the focus_alert (frost risk while the potato sprouts): what it means for this plot and what to do this week.",
+    "AEH": "explain ONLY the focus_alert (sowing-season rain and soil moisture): what it means for this plot and what to do this week.",
+    "ADS": "explain ONLY the focus_alert (rain onset vs the Guaman Poma calendar): what it means for this plot and what to do this week.",
+}
 
 
 def get_ai_explainer() -> Callable[..., dict]:
@@ -337,8 +345,10 @@ def explain(
         fc = _forecast_summary(fetcher, req.lat, req.lon, alt, adj)
     except HTTPException:
         fc = None  # sin pronóstico la explicación sigue siendo útil
-    facts = AI.build_facts(rep, sow, fc, req.place_name)
+    facts = AI.build_facts(rep, sow, fc, req.place_name, req.focus)
     try:
+        if req.focus:
+            return explainer(facts, req.lang, req.question, task=FOCUS_TASK[req.focus])
         return explainer(facts, req.lang, req.question)
     except AI.AIUnavailable as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc

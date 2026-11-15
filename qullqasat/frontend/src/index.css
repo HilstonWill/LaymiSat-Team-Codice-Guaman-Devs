@@ -383,3 +383,25 @@ section[id], [id^='alert-'], h2[id] { scroll-margin-top: 96px; }
 }
 .link-btn:focus-visible { outline: 3px solid var(--maize); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { .caret { animation: none; } }
+
+/* --- respuesta de IA con formato (Cristian) · ver docs/ESTILO.md › Explicación con IA --- */
+.ai-answer { background: linear-gradient(180deg, #f6f1fc 0%, #fbf9fe 100%); border: 1px solid #e3d8f0; border-left: 4px solid var(--potato); border-radius: 0 12px 12px 0; padding: 12px 14px; }
+.ai-answer.compact { margin-top: 8px; padding: 10px 12px; font-size: 0.9rem; }
+.ai-label { display: flex; align-items: center; gap: 6px; font-size: 0.7rem; font-weight: 700; color: var(--potato); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+.ai-spark { font-size: 0.9rem; }
+.ai-md .ai-h { font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--potato); margin: 12px 0 4px; display: flex; align-items: center; gap: 8px; }
+.ai-md .ai-h::after { content: ''; flex: 1; height: 1px; background: #e3d8f0; }
+.ai-md .ai-h:first-child { margin-top: 2px; }
+.ai-md p { margin: 4px 0; line-height: 1.55; }
+.ai-md ul, .ai-md ol { margin: 4px 0; padding-left: 0; list-style: none; }
+.ai-md li { position: relative; padding-left: 18px; margin: 4px 0; line-height: 1.5; }
+.ai-md ul li::before { content: ''; position: absolute; left: 4px; top: 0.62em; width: 6px; height: 6px; border-radius: 50%; background: var(--maize); }
+.ai-md ol { counter-reset: ai; }
+.ai-md ol li::before { counter-increment: ai; content: counter(ai) '.'; position: absolute; left: 0; font-weight: 700; color: var(--potato); }
+.ai-md strong { color: var(--ink); font-weight: 700; }
+.alert-ai { margin-top: 2px; }
+.ai-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 6px 12px; border-radius: 999px; border: 1px solid #d9c9ec; background: #f6f1fc; color: var(--potato); font-weight: 600; font-size: 0.85rem; cursor: pointer; }
+.ai-chip:hover { background: #efe5fa; }
+.ai-chip:disabled { opacity: 0.7; cursor: progress; }
+.ai-chip:focus-visible { outline: 3px solid var(--maize); outline-offset: 2px; }
+.ai-thinking::after { content: '…'; animation: caret-blink 0.9s steps(1) infinite; }

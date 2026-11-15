@@ -1,5 +1,7 @@
-import type { Alert, Level } from '../api'
+import { useEffect, useState } from 'react'
+import type { Alert, Explanation, Level } from '../api'
 import { fmtNum, pValue, type Dict, type Lang } from '../i18n'
+import { AiAnswer } from './AiText'
 import { ALERT_ICONS } from './Icons'
 
 /** Medidor horizontal: relleno del valor + marca del umbral de la alerta. Ver docs/ESTILO.md › Medidor. */
@@ -50,7 +52,53 @@ function meterFor(a: Alert, t: Dict, lang: Lang) {
   )
 }
 
-export default function AlertCards({ alerts, t, lang }: { alerts: Alert[]; t: Dict; lang: Lang }) {
+type AlertId = 'AHS' | 'AEH' | 'ADS'
+
+/** Explicación con IA de UNA alerta, bajo demanda (ver docs/ESTILO.md › Explicación con IA). */
+function AlertAi({ id, t, explain, resetKey }: {
+  id: AlertId
+  t: Dict
+  explain: (id: AlertId) => Promise<Explanation>
+  resetKey: unknown
+}) {
+  const [state, setState] = useState<{ busy: boolean; res: Explanation | null; err: string | null; open: boolean }>(
+    { busy: false, res: null, err: null, open: false },
+  )
+  useEffect(() => setState({ busy: false, res: null, err: null, open: false }), [resetKey])
+  const run = () => {
+    if (state.res) {
+      setState((s) => ({ ...s, open: !s.open }))
+      return
+    }
+    setState({ busy: true, res: null, err: null, open: true })
+    explain(id)
+      .then((res) => setState({ busy: false, res, err: null, open: true }))
+      .catch((e: Error) => setState({ busy: false, res: null, err: e.message, open: true }))
+  }
+  return (
+    <div className="alert-ai">
+      <button type="button" className="ai-chip" onClick={run} disabled={state.busy} aria-expanded={state.open}>
+        <span aria-hidden="true">✦</span> {state.res && state.open ? t.alertAiCardHide : t.alertAiCard}
+      </button>
+      <div aria-live="polite">
+        {state.open && state.busy && <p className="meta ai-thinking">{t.alertAiLoading}</p>}
+        {state.open && state.err && <div className="error">{state.err}</div>}
+        {state.open && state.res && (
+          <AiAnswer compact text={state.res.text} label={t.alertAiLabel(state.res.model)} skipLabel={t.alertAiSkip} />
+        )}
+      </div>
+    </div>
+  )
+}
+
+export default function AlertCards({ alerts, t, lang, aiEnabled = false, explain, resetKey }: {
+  alerts: Alert[]
+  t: Dict
+  lang: Lang
+  aiEnabled?: boolean
+  explain?: (id: AlertId) => Promise<Explanation>
+  resetKey?: unknown
+}) {
   return (
     <div className="grid grid-3 alerts" aria-live="polite">
       {alerts.map((a) => {
@@ -73,6 +121,7 @@ export default function AlertCards({ alerts, t, lang }: { alerts: Alert[]; t: Di
             <div className="action">
               <span className="action-label">{t.whatToDo}</span> {a.action}
             </div>
+            {aiEnabled && explain && <AlertAi id={a.id} t={t} explain={explain} resetKey={resetKey} />}
             <details className="tech">
               <summary>{t.technical}</summary>
               <p className="meta">
