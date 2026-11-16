@@ -65,8 +65,7 @@ calibration with SENAMHI stations, and a Quechua interface.
 ## 6. Use of Super Intelligence (SI)
 Yes. The source code, tests and documentation were written with the help of an AI coding assistant (Anthropic Claude,
 via Claude Code), directed and reviewed by the team. The idea, problem analysis and design (alerts, use of Guaman Poma's
-calendar, pilot communities) come from the team's own project document. An optional runtime button uses Google Gemini only to rewrite the already computed results in plain language (labelled
-as AI-generated, grounded on our data, key kept on the server). No generative AI produces any alert, score or
+calendar, pilot communities) come from the team's own project document. No generative AI is used at runtime, and no generative AI produces any alert, score or
 recommendation: all results come from NASA data and explicit rules. The video voice-over was generated with AI (ElevenLabs text-to-speech) from a script written by the team, and the video was built with AI assistance (Claude Code); no AI-generated images or video are used (all screens are real captures of the app). Details in `AI_DISCLOSURE.md` in the repository.
 
 ## 7. NASA Data
@@ -81,7 +80,6 @@ recommendation: all results come from NASA data and explicit rules. The video vo
 - Felipe Guaman Poma de Ayala, *Nueva corónica y buen gobierno* (1615), ch. 37, pp. 1140–1178, GKS 2232 4º, Royal Danish Library, https://poma.kb.dk
 - OpenStreetMap contributors (map tiles), OpenTopoData (SRTM access)
 - Open-Meteo weather forecast API (ECMWF/GFS/ICON models), https://open-meteo.com: 7-day frost and rain outlook (not NASA data)
-- Google Gemini / Groq / xAI APIs (one configurable provider): optional plain-language explanation of computed results (SI, declared)
 - Open-source software: FastAPI, pandas, NumPy, httpx, pytest, React, Vite, Recharts, Leaflet, react-leaflet
 - Font: Poppins (Google Fonts, SIL Open Font License)
 - Indicative crop parameters compiled from general Andean agronomy literature (FAO, CIP, INIA); to be validated locally

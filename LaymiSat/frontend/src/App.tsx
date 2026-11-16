@@ -1,7 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 import {
   api,
-  dynamicApi,
   DEFAULT_PRIORITIES,
   type Criterion,
   type CropsCatalog,
@@ -122,13 +121,6 @@ export default function App() {
   const [ndviStatus, setNdviStatus] = useState<'loading' | 'ok' | 'not_pilot' | 'error'>('loading')
   const [terrain, setTerrain] = useState<TerrainState>({ status: 'idle' })
   const [gps, setGps] = useState<GpsState>({ status: 'idle' })
-  const [aiEnabled, setAiEnabled] = useState(false)
-
-  useEffect(() => {
-    if (!FEATURES.aiExplain && !FEATURES.dynamicAlerts) return
-    dynamicApi.health().then((h) => setAiEnabled(Boolean(h.ai))).catch(() => setAiEnabled(false))
-  }, [])
-
   const dPlace = useDebounced(place, 350)
   const dAdjust = useDebounced(plantAdjust, 350)
   const dSeqs = useDebounced(sequences, 300)
@@ -587,9 +579,6 @@ export default function App() {
                   simple={!isTech}
                   t={t}
                   lang={lang}
-                  aiEnabled={FEATURES.aiExplain && aiEnabled}
-                  resetKey={report}
-                  explain={(id) => dynamicApi.explain(dPlace, dAdjust, lang, placeName, undefined, id)}
                 />
               </SectionBoundary>
               {FEATURES.dynamicAlerts && (

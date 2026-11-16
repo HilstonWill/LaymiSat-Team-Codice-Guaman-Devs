@@ -305,17 +305,6 @@ const en = {
   alertFcRain: (mm: string) => `${mm} mm of rain in total`,
   alertFcDown: 'Forecast unavailable right now (needs internet).',
   alertFcFrostDay: 'Frost',
-  alertAiTitle: 'Explain it in simple words',
-  alertAiButton: 'Explain with AI',
-  alertAiAsk: 'Ask a question about this plot (optional)',
-  alertAiPlaceholder: 'e.g. My field is on a slope, should I sow this week?',
-  alertAiLoading: 'Writing an explanation from the data above…',
-  alertAiLabel: (model: string) => `Generated with AI (${model}) only from the results above. Check it with your extension agent.`,
-  alertAiOff: 'AI explanations are not enabled on this server.',
-  alertAiPrivacy: 'Do not include names, phone numbers or other personal data.',
-  alertAiSkip: 'Show it all now',
-  alertAiCard: 'Explain this alert with AI',
-  alertAiCardHide: 'Hide explanation',
 }
 
 type Dict = typeof en
@@ -625,17 +614,6 @@ const es: Dict = {
   alertFcRain: (mm: string) => `${mm} mm de lluvia en total`,
   alertFcDown: 'Pronóstico no disponible ahora (necesita internet).',
   alertFcFrostDay: 'Helada',
-  alertAiTitle: 'Explícamelo en palabras sencillas',
-  alertAiButton: 'Explicar con IA',
-  alertAiAsk: 'Haz una pregunta sobre esta parcela (opcional)',
-  alertAiPlaceholder: 'p. ej. Mi chacra está en ladera, ¿siembro esta semana?',
-  alertAiLoading: 'Redactando una explicación a partir de los datos de arriba…',
-  alertAiLabel: (model: string) => `Generado con IA (${model}) solo a partir de los resultados de arriba. Verifícalo con tu técnico agrario.`,
-  alertAiOff: 'Las explicaciones con IA no están activadas en este servidor.',
-  alertAiPrivacy: 'No incluyas nombres, teléfonos ni otros datos personales.',
-  alertAiSkip: 'Mostrar todo ya',
-  alertAiCard: 'Explicar esta alerta con IA',
-  alertAiCardHide: 'Ocultar explicación',
 }
 
 export const DICTS: Record<Lang, Dict> = { en, es }

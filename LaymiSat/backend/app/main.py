@@ -16,7 +16,6 @@ from .climate import ClimateData, ClimateDataError, load_climate, snap_to_grid, 
 from .ndvi import load_ndvi, ndvi_summary
 from .rotations import SoilInfo, compare, load_crops
 from .service import DEFAULT_PLANT_ADJUST, build_report, rotation_context
-from . import ai as AI
 from .climate import at_altitude
 from .forecast import fetch_forecast, summarize_forecast
 from .sowing import sowing_curve
@@ -34,7 +33,7 @@ app = FastAPI(
 )
 
 # The deployed frontend (Vercel) is allowed by default; LAYMI_CORS_ORIGINS still overrides the whole list.
-_DEFAULT_ORIGINS = "http://localhost:5173,http://127.0.0.1:5173,https://qullqasat-frontend.vercel.app"
+_DEFAULT_ORIGINS = "http://localhost:5173,http://127.0.0.1:5173,https://qullqasat-frontend.vercel.app,https://laymisat.vercel.app"
 _origins = os.environ.get("LAYMI_CORS_ORIGINS", _DEFAULT_ORIGINS)
 app.add_middleware(
     CORSMiddleware,
@@ -94,8 +93,7 @@ def _load(loader, lat: float, lon: float) -> ClimateData:
 
 @app.get("/api/health")
 def health() -> dict:
-    provider = AI.configured_provider()
-    return {"status": "ok", "ai": provider is not None, "ai_provider": provider}
+    return {"status": "ok"}
 
 
 @app.get("/api/zones")
@@ -316,54 +314,3 @@ def forecast(
     return _forecast_summary(fetcher, lat, lon, altitude, plant_adjust)
 
 
-class ExplainRequest(BaseModel):
-    lat: float = Field(..., ge=-15.5, le=-11.0)
-    lon: float = Field(..., ge=-73.9, le=-70.3)
-    altitude: float = Field(..., ge=2500, le=5000)
-    plant_adjust: float = Field(DEFAULT_PLANT_ADJUST, ge=-5.0, le=2.0)
-    lang: Literal["en", "es"] = "en"
-    place_name: str = Field("plot", max_length=80)
-    question: str | None = Field(default=None, max_length=AI.MAX_QUESTION)
-    focus: Literal["AHS", "AEH", "ADS"] | None = None
-
-
-FOCUS_TASK = {
-    "AHS": "explain ONLY the focus_alert (frost risk while the potato sprouts): what it means for this plot and what to do this week.",
-    "AEH": "explain ONLY the focus_alert (sowing-season rain and soil moisture): what it means for this plot and what to do this week.",
-    "ADS": "explain ONLY the focus_alert (rain onset vs the Guaman Poma calendar): what it means for this plot and what to do this week.",
-}
-
-
-def get_ai_explainer() -> Callable[..., dict]:
-    return AI.explain
-
-
-@app.post("/api/explain")
-def explain(
-    req: ExplainRequest,
-    request: Request,
-    loader=Depends(get_loader),
-    fetcher=Depends(get_forecast_fetcher),
-    explainer=Depends(get_ai_explainer),
-) -> dict:
-    """Explicación en lenguaje sencillo (Gemini) basada SOLO en los resultados calculados por LaymiSat."""
-    client = request.client.host if request.client else "unknown"
-    try:
-        AI.check_rate(client)
-    except AI.RateLimited as exc:
-        raise HTTPException(status_code=429, detail=str(exc)) from exc
-    glat, glon = _snap(req.lat, req.lon)
-    alt, adj = _q_alt(req.altitude), _q_adj(req.plant_adjust)
-    rep = _report_cached(loader, glat, glon, alt, adj, req.lang, _ttl_bucket())
-    sow = _sowing_cached(loader, glat, glon, alt, adj, _ttl_bucket())
-    try:
-        fc = _forecast_summary(fetcher, req.lat, req.lon, alt, adj)
-    except HTTPException:
-        fc = None  # sin pronóstico la explicación sigue siendo útil
-    facts = AI.build_facts(rep, sow, fc, req.place_name, req.focus)
-    try:
-        if req.focus:
-            return explainer(facts, req.lang, req.question, task=FOCUS_TASK[req.focus])
-        return explainer(facts, req.lang, req.question)
-    except AI.AIUnavailable as exc:
-        raise HTTPException(status_code=503, detail=str(exc)) from exc

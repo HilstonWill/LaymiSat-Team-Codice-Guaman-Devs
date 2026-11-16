@@ -10,9 +10,8 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-import { dynamicApi, type Explanation, type ForecastSummary, type Place, type SowingCurve } from '../api'
+import { dynamicApi, type ForecastSummary, type Place, type SowingCurve } from '../api'
 import { fmtNum, sdayLabel, type Dict, type Lang } from '../i18n'
-import { AiAnswer } from './AiText'
 import { CalendarIcon, DropIcon, FrostIcon } from './Icons'
 
 interface Props {
@@ -180,69 +179,12 @@ function ForecastStrip({ place, plantAdjust, t, lang }: Props) {
   )
 }
 
-function AiExplain({ place, plantAdjust, placeName, t, lang }: Props) {
-  const [enabled, setEnabled] = useState<boolean | null>(null)
-  const [question, setQuestion] = useState('')
-  const [busy, setBusy] = useState(false)
-  const [result, setResult] = useState<Explanation | null>(null)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    dynamicApi.health().then((h) => setEnabled(Boolean(h.ai))).catch(() => setEnabled(false))
-  }, [])
-  useEffect(() => setResult(null), [place, plantAdjust, lang])
-
-  const ask = () => {
-    setBusy(true)
-    setError(null)
-    dynamicApi
-      .explain(place, plantAdjust, lang, placeName, question)
-      .then(setResult)
-      .catch((e: Error) => setError(e.message))
-      .finally(() => setBusy(false))
-  }
-
-  return (
-    <div className="card ai">
-      <h3>{t.alertAiTitle}</h3>
-      {enabled === false ? (
-        <p className="meta">{t.alertAiOff}</p>
-      ) : (
-        <>
-          <label className="field">
-            {t.alertAiAsk}
-            <textarea
-              rows={2}
-              maxLength={300}
-              value={question}
-              placeholder={t.alertAiPlaceholder}
-              onChange={(e) => setQuestion(e.target.value)}
-            />
-          </label>
-          <p className="help">{t.alertAiPrivacy}</p>
-          <button className="btn" onClick={ask} disabled={busy || enabled === null}>
-            {t.alertAiButton}
-          </button>
-          <div aria-live="polite">
-            {busy && <p className="meta">{t.alertAiLoading}</p>}
-            {error && <div className="error">{error}</div>}
-            {result && (
-              <AiAnswer text={result.text} label={t.alertAiLabel(result.model)} skipLabel={t.alertAiSkip} />
-            )}
-          </div>
-        </>
-      )}
-    </div>
-  )
-}
-
 export default function DynamicAlerts(props: Props) {
   return (
     <div className="dyn">
       <SowingSimulator {...props} />
       <div className="dyn-side">
         <ForecastStrip {...props} />
-        <AiExplain {...props} />
       </div>
     </div>
   )

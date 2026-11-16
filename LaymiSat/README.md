@@ -32,7 +32,7 @@ technical view (all figures, trends, frost by altitude, the full rotation compar
 ## What it does
 > **MVP view.** The main screen shows only what answers the problem (Zones, Today, Rotations, Calendar, 40 years).
 > The technical view (`?modo=tecnico`) keeps every figure. The NDVI panel, the sowing-date simulator, the 7-day
-> forecast and the AI explanations are hidden (not removed); open the technical view with `?full=1` to see them
+> forecast are hidden (not removed); open the technical view with `?full=1` to see them
 > (`frontend/src/features.ts`).
 
 | Feature | Detail |
@@ -46,7 +46,6 @@ technical view (all figures, trends, frost by altitude, the full rotation compar
 | Terrain | Click the map: altitude and slope from NASA SRTM 30 m |
 | Sowing-date simulator | Move a date: share of the last 15 seasons with firm rains already started and with frost while the potato sprouts; recommended window at the plot's altitude |
 | 7-day forecast | Frost nights and rain for the coming week (Open-Meteo), corrected to plot altitude and plant level |
-| AI explanation (optional) | Google Gemini rewrites the computed results in plain language; grounded, labelled and rate-limited (see AI_DISCLOSURE.md) |
 | Bilingual | English (default) and Spanish |
 
 ### Findings with real data

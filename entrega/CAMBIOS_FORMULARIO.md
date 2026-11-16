@@ -40,9 +40,13 @@ Reemplazar la línea "Software and design: The interface was built with React an
 > NASA and open map data: NASA GIBS (MODIS NDVI and land-surface-temperature layers), Esri World Imagery and AWS/Mapzen terrain tiles for the 3D map, OpenStreetMap contributors.
 > Development assistance: the source code was written with AI assistance (Anthropic Claude, via Claude Code), directed and reviewed by the team.
 
+## 4b. Quitar de Project Details la línea de IA en tiempo de ejecución
+
+En "What tools..." ELIMINA la línea que empieza con "Artificial intelligence: Optional integration with Google Gemini, Groq, or xAI Grok...". Ya no existe en el código.
+
 ## 5. Campo de uso de IA (si el formulario lo tiene)
 
-> Yes. The source code, tests and documentation were written with the help of an AI coding assistant (Anthropic Claude, via Claude Code), directed and reviewed by the team. The idea, problem analysis and design (alerts, use of Guaman Poma's calendar, pilot communities) come from the team's own project document. The voice-over of the project video was generated with AI (ElevenLabs text-to-speech) from a script written by the team; the video was built with AI assistance (Claude Code). An optional runtime button uses a configurable LLM (Google Gemini, Groq or xAI Grok) only to rewrite already-computed results in plain language, labelled as AI-generated. No generative AI produces any alert, score or recommendation: all results come from NASA data and explicit rules. No AI-generated images or video are used; all screens are real captures of the app. Details in AI_DISCLOSURE.md in the repository.
+> Yes. The source code, tests and documentation were written with the help of an AI coding assistant (Anthropic Claude, via Claude Code), directed and reviewed by the team. The idea, problem analysis and design (alerts, use of Guaman Poma's calendar, pilot communities) come from the team's own project document. The voice-over of the project video was generated with AI (ElevenLabs text-to-speech) from a script written by the team; the video was built with AI assistance (Claude Code). No generative AI is used at runtime: every alert, score and recommendation comes from NASA data and explicit rules. No AI-generated images or video are used; all screens are real captures of the app. Details in AI_DISCLOSURE.md in the repository.
 
 ## 6. Referencias / créditos (si hay campo)
 - ElevenLabs (text-to-speech narration)

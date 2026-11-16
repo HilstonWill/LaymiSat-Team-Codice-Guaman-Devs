@@ -6,8 +6,7 @@
  * y fuentes/límites.
  *
  * Ocultas por defecto (el código sigue ahí, no se borró nada):
- *  - dynamicAlerts: simulador "¿Y si siembro el…?", pronóstico de 7 días (Open-Meteo, no es NASA) e IA general
- *  - aiExplain:     botón "Explicar esta alerta con IA" en cada tarjeta
+ *  - dynamicAlerts: simulador "¿Y si siembro el…?", pronóstico de 7 días (Open-Meteo, no es NASA) 
  *  - ndvi:          panel NDVI MODIS de la zona piloto (contexto, solo 4 zonas)
  *
  * Para verlas todas: abrir la app con `?full=1` o compilar con `VITE_SHOW_ALL=1`.
@@ -17,7 +16,6 @@ const SHOW_ALL = fromUrl || import.meta.env.VITE_SHOW_ALL === '1'
 
 export const FEATURES = {
   dynamicAlerts: SHOW_ALL,
-  aiExplain: SHOW_ALL,
   ndvi: SHOW_ALL,
   // Siempre visible: el calendario de Guaman Poma es el corazón del problema (tradición vs. lluvias de hoy).
   calendar: true,

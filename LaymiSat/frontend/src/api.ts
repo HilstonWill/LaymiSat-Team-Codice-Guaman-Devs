@@ -369,12 +369,6 @@ export interface ForecastSummary {
   level: Level
 }
 
-export interface Explanation {
-  text: string
-  model: string
-  generated_by: string
-}
-
 const plotQuery = (p: Place, plantAdjust: number) =>
   new URLSearchParams({
     lat: p.lat.toFixed(2),
@@ -384,28 +378,9 @@ const plotQuery = (p: Place, plantAdjust: number) =>
   })
 
 export const dynamicApi = {
-  health: () => request<{ status: string; ai: boolean }>('/api/health', undefined, 1),
+  health: () => request<{ status: string }>('/api/health', undefined, 1),
   sowing: (p: Place, plantAdjust: number, signal?: AbortSignal) =>
     request<SowingCurve>(`/api/sowing?${plotQuery(p, plantAdjust)}`, { signal }),
   forecast: (p: Place, plantAdjust: number, signal?: AbortSignal) =>
     request<ForecastSummary>(`/api/forecast?${plotQuery(p, plantAdjust)}`, { signal }, 0),
-  explain: (p: Place, plantAdjust: number, lang: Lang, placeName: string, question?: string, focus?: 'AHS' | 'AEH' | 'ADS') =>
-    request<Explanation>(
-      '/api/explain',
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          lat: Number(p.lat.toFixed(2)),
-          lon: Number(p.lon.toFixed(2)),
-          altitude: Math.round(p.altitude),
-          plant_adjust: plantAdjust,
-          lang,
-          place_name: placeName.slice(0, 80),
-          question: question?.slice(0, 300) || null,
-          focus: focus ?? null,
-        }),
-      },
-      0,
-    ),
 }
