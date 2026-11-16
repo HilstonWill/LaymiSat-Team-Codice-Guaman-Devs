@@ -23,6 +23,8 @@ import { ALERT_ICONS } from '../components/Icons'
 import SectionBoundary from '../components/SectionBoundary'
 import { DICTS, fmtNum, type Dict, type Lang } from '../i18n'
 import { STORY_TEXT, type StoryDict } from './storyText'
+import Tour from './Tour'
+import { TOUR_TEXT } from './tourText'
 import './story.css'
 
 // El mapa 3D (MapLibre) y el plano (Leaflet) bajan aparte: el panel de Hoy se muestra sin esperarlos.
@@ -140,6 +142,7 @@ export default function StoryMode({ initialView = 'zonas' }: { initialView?: Vie
   const [speed, setSpeed] = useState(1)
   const [finished, setFinished] = useState(false)
   const [flat, setFlat] = useState(() => !supportsWebGL())
+  const [helpTick, setHelpTick] = useState(0) // sube al pulsar "?" para repetir la guía de la pantalla
   const firstPlay = useRef(initialView === 'historia')
 
   useEffect(() => {
@@ -373,6 +376,15 @@ export default function StoryMode({ initialView = 'zonas' }: { initialView?: Vie
             </button>
           ))}
         </div>
+        <button
+          type="button"
+          className="story-help"
+          onClick={() => setHelpTick((n) => n + 1)}
+          aria-label={TOUR_TEXT[lang].ui.help}
+          title={TOUR_TEXT[lang].ui.help}
+        >
+          ?
+        </button>
       </header>
 
       <div className="story-main">
@@ -609,6 +621,15 @@ export default function StoryMode({ initialView = 'zonas' }: { initialView?: Vie
           )}
         </footer>
       )}
+      <Tour
+        view={view}
+        lang={lang}
+        ready={ready}
+        openSignal={helpTick}
+        onActive={(open) => {
+          if (open) setPlaying(false) // la reproducción de 40 años espera mientras se lee la guía
+        }}
+      />
     </div>
   )
 }

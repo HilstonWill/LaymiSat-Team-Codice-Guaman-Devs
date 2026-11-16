@@ -1,0 +1,94 @@
+/* Guía de primer uso (Tour.tsx). Va en un portal sobre todo lo demás. */
+.tour-root {
+  --t-maize: var(--maize, #e0a43a);
+  --t-night: #10182c;
+  --t-text: #f4e7cf;
+  --t-muted: #b6bfd3;
+  position: fixed; inset: 0; z-index: 3000; font-family: 'Poppins', system-ui, sans-serif;
+}
+/* Capa invisible que evita tocar la app mientras dura la guía. */
+.tour-shield { position: fixed; inset: 0; }
+.tour-dim {
+  position: fixed; inset: 0; background: rgba(8, 12, 26, 0.78);
+  -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); animation: tour-fade 0.3s ease;
+}
+/* El foco: un recuadro transparente cuya sombra enorme oscurece el resto. Se desliza entre elementos. */
+.tour-spot {
+  position: fixed; border-radius: 16px; pointer-events: none;
+  box-shadow: 0 0 0 9999px rgba(8, 12, 26, 0.76), 0 0 0 2px var(--t-maize), 0 0 36px rgba(224, 164, 58, 0.4);
+  transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1), top 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    width 0.4s cubic-bezier(0.4, 0, 0.2, 1), height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.tour-spot::after {
+  content: ''; position: absolute; inset: -2px; border-radius: inherit; border: 2px solid var(--t-maize);
+  animation: tour-pulse 1.9s ease-out infinite;
+}
+@keyframes tour-pulse { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(1.07); opacity: 0; } }
+@keyframes tour-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes tour-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes tour-step { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: none; } }
+
+.tour-pop {
+  position: fixed; width: min(360px, calc(100vw - 24px)); box-sizing: border-box; overflow: hidden; color: var(--t-text);
+  background: rgba(20, 29, 52, 0.94); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+  border: 1px solid rgba(244, 231, 207, 0.2); border-radius: 20px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(0, 0, 0, 0.3);
+  animation: tour-in 0.3s ease; transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1), top 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.tour-pop.is-center { width: min(420px, calc(100vw - 24px)); }
+.tour-progress { height: 4px; background: rgba(244, 231, 207, 0.12); }
+.tour-progress i { display: block; height: 100%; background: linear-gradient(90deg, #7fd497, var(--t-maize)); transition: width 0.4s ease; }
+.tour-body { padding: 16px 18px 6px; animation: tour-step 0.3s ease; }
+.tour-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.tour-ico {
+  display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px; flex: none;
+  color: var(--t-night); background: linear-gradient(135deg, #f2c063, var(--t-maize));
+  box-shadow: 0 6px 16px rgba(224, 164, 58, 0.35);
+}
+.tour-count { flex: 1; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--t-muted); }
+.tour-x {
+  display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; border: 0; cursor: pointer;
+  background: rgba(255, 255, 255, 0.06); color: var(--t-muted);
+}
+.tour-x:hover { background: rgba(255, 255, 255, 0.12); color: var(--t-text); }
+.tour-title { margin: 0 0 6px; font-size: 1.12rem; line-height: 1.25; color: #fff; }
+.tour-text { margin: 0; font-size: 0.92rem; line-height: 1.55; color: #dfe4ef; }
+.tour-tip {
+  margin: 10px 0 0; padding: 8px 10px; font-size: 0.8rem; line-height: 1.45; color: #f2c063;
+  background: rgba(224, 164, 58, 0.1); border-left: 3px solid var(--t-maize); border-radius: 8px;
+}
+.tour-foot { padding: 10px 18px 16px; display: grid; gap: 10px; }
+.tour-dots { display: flex; gap: 6px; justify-content: center; }
+.tour-dots i { width: 7px; height: 7px; border-radius: 50%; background: rgba(244, 231, 207, 0.22); transition: all 0.3s ease; }
+.tour-dots i.past { background: rgba(224, 164, 58, 0.6); }
+.tour-dots i.on { width: 20px; border-radius: 4px; background: var(--t-maize); }
+.tour-actions { display: flex; gap: 10px; justify-content: space-between; }
+.tour-primary, .tour-ghost { font: inherit; font-weight: 600; font-size: 0.92rem; border-radius: 999px; cursor: pointer; min-height: 44px; padding: 0 20px; }
+.tour-primary { border: 0; color: var(--t-night); background: var(--t-maize); flex: 1; max-width: 190px; margin-left: auto; box-shadow: 0 6px 18px rgba(224, 164, 58, 0.35); }
+.tour-primary:hover { background: #f0b24a; }
+.tour-ghost { border: 1px solid rgba(244, 231, 207, 0.28); color: var(--t-text); background: transparent; }
+.tour-ghost:hover { background: rgba(255, 255, 255, 0.07); }
+.tour-never { border: 0; background: transparent; color: var(--t-muted); font: inherit; font-size: 0.78rem; cursor: pointer; text-decoration: underline; padding: 4px; justify-self: center; }
+.tour-never:hover { color: var(--t-text); }
+.tour-root button:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+
+/* Celular: la tarjeta se ancla abajo (o arriba si el elemento está abajo), como una hoja. */
+.tour-pop.is-dock { width: auto; border-radius: 22px; transition: none; }
+.tour-pop.is-dock .tour-body { padding: 14px 16px 4px; }
+.tour-pop.is-dock .tour-foot { padding: 8px 16px 14px; }
+.tour-pop.is-dock .tour-text { font-size: 0.9rem; line-height: 1.5; }
+
+@media (prefers-reduced-motion: reduce) {
+  .tour-spot, .tour-pop { transition: none; }
+  .tour-spot::after, .tour-dim, .tour-pop, .tour-body { animation: none; }
+  .tour-progress i, .tour-dots i { transition: none; }
+}
+@media print { .tour-root { display: none; } }
+
+/* Botón "?" de la cabecera para repetir la guía. */
+.story-help {
+  display: grid; place-items: center; width: 40px; height: 40px; flex: none; border-radius: 50%; cursor: pointer;
+  background: transparent; color: var(--s-text, #f4e7cf); border: 1px solid var(--s-line, rgba(244, 231, 207, 0.14));
+  font: 700 1rem 'Poppins', system-ui, sans-serif;
+}
+.story-help:hover { border-color: var(--maize, #e0a43a); color: var(--maize, #e0a43a); }
