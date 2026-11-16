@@ -12,7 +12,7 @@ decides every season: *when to sow, with what risk, and with which crop rotation
 
 ## For reviewers: please read before testing
 
-**Live demo:** https://qullqasat-frontend.vercel.app
+**Live demo:** https://laymisat.vercel.app
 
 > ⏳ **The first load can take up to ~1 minute.** The API runs on **Render's free plan**, which puts the server to
 > sleep after ~15 minutes without traffic. The first request wakes it up (about 30–60 s); the app shows a

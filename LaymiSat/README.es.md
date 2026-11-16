@@ -14,7 +14,7 @@ LaymiSat cruza 40 años de datos diarios de **NASA POWER** (1984 → hoy) con el
 
 ## Para revisores: leer antes de probar
 
-**Demo en vivo:** https://qullqasat-frontend.vercel.app
+**Demo en vivo:** https://laymisat.vercel.app
 
 > ⏳ **La primera carga puede tardar hasta ~1 minuto.** La API está en el **plan gratuito de Render**, que duerme el
 > servidor tras ~15 minutos sin tráfico. La primera petición lo despierta (unos 30–60 s); mientras tanto la app

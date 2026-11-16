@@ -67,8 +67,7 @@ Yes. The source code, tests and documentation were written with the help of an A
 via Claude Code), directed and reviewed by the team. The idea, problem analysis and design (alerts, use of Guaman Poma's
 calendar, pilot communities) come from the team's own project document. An optional runtime button uses Google Gemini only to rewrite the already computed results in plain language (labelled
 as AI-generated, grounded on our data, key kept on the server). No generative AI produces any alert, score or
-recommendation: all results come from NASA data and explicit rules. No SI-generated images, video or audio are used;
-if any are added they will carry a visible watermark. Details in `AI_DISCLOSURE.md` in the repository.
+recommendation: all results come from NASA data and explicit rules. The video voice-over was generated with AI (ElevenLabs text-to-speech) from a script written by the team, and the video was built with AI assistance (Claude Code); no AI-generated images or video are used (all screens are real captures of the app). Details in `AI_DISCLOSURE.md` in the repository.
 
 ## 7. NASA Data
 - **NASA POWER Daily API** (MERRA-2 based):
