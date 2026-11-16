@@ -60,32 +60,6 @@ npm run lint
 ```
 All must pass (currently 70 backend tests, 97 % coverage).
 
-### Optional settings (environment variables of the API)
-| Variable | Purpose |
-|---|---|
-| `AI_PROVIDER` | `gemini`, `groq` or `xai`. Optional: if empty, the first provider that has a key is used (in that order). |
-| `GEMINI_API_KEY` / `GEMINI_MODEL` | Google Gemini (default model `gemini-flash-latest`). |
-| `GROQ_API_KEY` / `GROQ_MODEL` | Groq, OpenAI-compatible (default model `openai/gpt-oss-20b`). |
-| `XAI_API_KEY` / `XAI_MODEL` | xAI Grok, OpenAI-compatible (default model `grok-4.7`). |
-
-Without any AI key the app works normally and the *Explain with AI* box says AI is off. **Never commit a key**: set it in your shell or in the hosting dashboard.
-
-**Where to get a key**
-| Provider | Steps | Free use? |
-|---|---|---|
-| Google Gemini | https://aistudio.google.com/apikey → *Create API key* | Free tier with rate limits (check current limits) |
-| Groq | https://console.groq.com/keys → *Create API Key* | Free plan with rate limits; check https://console.groq.com/settings/limits |
-| xAI Grok | https://console.x.ai → *API Keys* → *Create API key* | Requires loading credits (paid) |
-| `LAYMI_CORS_ORIGINS` | Allowed frontend origins in production. |
-| `LAYMI_PUBLIC_DOCS` | `0` hides `/docs` in production. |
-
-Windows PowerShell example (Groq):
-```powershell
-$env:AI_PROVIDER="groq"; $env:GROQ_API_KEY="<your key>"
-.venv/Scripts/python -m uvicorn app.main:app --port 8000
-```
-Check which provider is active at http://127.0.0.1:8000/api/health (`"ai_provider"`).
-
 ### Data and internet
 - `backend/cache/` already contains NASA POWER data for the 4 pilot zones and MODIS NDVI, so the app works **offline**.
 - Clicking a new point on the map downloads 40 years of NASA POWER data for that cell (a few seconds) and asks NASA SRTM
