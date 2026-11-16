@@ -3,6 +3,7 @@ import { isServerWaking, serverStatus } from '../api'
 
 /**
  * Aviso mientras el servidor gratuito (Render) despierta tras un rato sin tráfico.
+ * Se muestra centrado en pantalla (también en celular) para que nadie lo pase por alto.
  * Aparece en cuanto una petición tarda más de 2,5 s (o falla y se reintenta), cuenta los segundos
  * para que la pantalla nunca parezca colgada, y se quita en cuanto la API responde.
  * El idioma por defecto es inglés; solo pasa a español si la persona lo eligió antes.
@@ -48,14 +49,16 @@ export default function WakeNotice() {
   if (!waking) return null
   const t = TEXT[currentLang()]
   return (
-    <div className="wake-notice" role="status" aria-live="polite">
-      <span className="wake-spin" aria-hidden="true" />
-      <div>
-        <b>{t.title}</b>
-        <p>{t.body}</p>
-        <p className="wake-secs">{t.elapsed(secs)}</p>
-        <div className="wake-bar" aria-hidden="true">
-          <i style={{ width: `${Math.min(100, (secs / 60) * 100)}%` }} />
+    <div className="wake-overlay">
+      <div className="wake-notice" role="status" aria-live="polite">
+        <span className="wake-spin" aria-hidden="true" />
+        <div>
+          <b>{t.title}</b>
+          <p>{t.body}</p>
+          <p className="wake-secs">{t.elapsed(secs)}</p>
+          <div className="wake-bar" aria-hidden="true">
+            <i style={{ width: `${Math.min(100, (secs / 60) * 100)}%` }} />
+          </div>
         </div>
       </div>
     </div>
